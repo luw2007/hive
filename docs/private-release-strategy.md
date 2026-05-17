@@ -107,6 +107,8 @@ npm view @tt-a1i/hive version repository.url dist.tarball
 
 不要在 release workflow 里悄悄改变这个策略。
 
+当前决策：私有仓库 workflow **关闭 npm provenance**。npm 目前只支持 public GitHub Actions source repository 的 provenance；私有仓库开启 `--provenance` 会在 publish 阶段被 npm 拒绝。后续如果要恢复 provenance，需要另行设计公开 release metadata 仓库或其他不会暴露私有源码的发布链路。
+
 ## 公私仓同步规则
 
 私有仓库可以吸收公开仓库的改动：

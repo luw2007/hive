@@ -2,6 +2,16 @@
 
 All notable user-facing changes will be documented in this file.
 
+## 1.1.1 - 2026-05-17
+
+Private-release workflow fix.
+
+- Publishes from the private product repository without npm provenance because
+  npm provenance currently requires a public GitHub Actions source repository.
+  The package contents are otherwise the same 1.1.x private-release line:
+  Workspace terminal tabs, hidden dormant Blueprint entry, and no production
+  source maps in the npm tarball.
+
 ## 1.1.0 - 2026-05-17
 
 Private-release line.
