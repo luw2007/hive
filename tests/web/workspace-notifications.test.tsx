@@ -19,6 +19,17 @@ const workspace: WorkspaceSummary = {
 }
 let storage = new Map<string, string>()
 
+class FakeAudio {
+  preload = ''
+  volume = 1
+
+  constructor(readonly src: string) {}
+
+  play() {
+    return Promise.resolve()
+  }
+}
+
 const installLocalStorage = () => {
   storage = new Map<string, string>()
   Object.defineProperty(window, 'localStorage', {
@@ -54,6 +65,10 @@ const renderNotifications = (workers: TeamListItem[]) =>
 beforeEach(() => {
   installLocalStorage()
   window.localStorage.removeItem(NOTIFICATION_SETTINGS_KEY)
+  Object.defineProperty(window, 'Audio', {
+    configurable: true,
+    value: FakeAudio,
+  })
 })
 
 afterEach(() => {

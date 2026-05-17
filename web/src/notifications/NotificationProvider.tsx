@@ -37,74 +37,13 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   sound: 'soft',
 }
 
-type SoundProfile = {
-  notes: Array<{ at: number; frequency: number }>
-  noteDuration: number
-  peak: number
-  totalDuration: number
-  type: OscillatorType
-}
-
-const soundProfiles: Record<Exclude<NotificationSound, 'off'>, SoundProfile> = {
-  beacon: {
-    noteDuration: 0.18,
-    notes: [
-      { at: 0, frequency: 392 },
-      { at: 0.22, frequency: 392 },
-      { at: 0.44, frequency: 587.33 },
-    ],
-    peak: 0.075,
-    totalDuration: 0.72,
-    type: 'sine',
-  },
-  cascade: {
-    noteDuration: 0.15,
-    notes: [
-      { at: 0, frequency: 783.99 },
-      { at: 0.16, frequency: 659.25 },
-      { at: 0.32, frequency: 523.25 },
-      { at: 0.48, frequency: 392 },
-    ],
-    peak: 0.07,
-    totalDuration: 0.78,
-    type: 'triangle',
-  },
-  chime: {
-    noteDuration: 0.13,
-    notes: [
-      { at: 0, frequency: 523.25 },
-      { at: 0.055, frequency: 659.25 },
-    ],
-    peak: 0.08,
-    totalDuration: 0.19,
-    type: 'triangle',
-  },
-  ping: {
-    noteDuration: 0.08,
-    notes: [{ at: 0, frequency: 880 }],
-    peak: 0.08,
-    totalDuration: 0.08,
-    type: 'sine',
-  },
-  resolve: {
-    noteDuration: 0.2,
-    notes: [
-      { at: 0, frequency: 329.63 },
-      { at: 0.18, frequency: 392 },
-      { at: 0.36, frequency: 493.88 },
-      { at: 0.58, frequency: 659.25 },
-    ],
-    peak: 0.065,
-    totalDuration: 0.9,
-    type: 'triangle',
-  },
-  soft: {
-    noteDuration: 0.11,
-    notes: [{ at: 0, frequency: 440 }],
-    peak: 0.08,
-    totalDuration: 0.11,
-    type: 'sine',
-  },
+const soundAssets: Record<Exclude<NotificationSound, 'off'>, string> = {
+  beacon: '/sounds/hive-beacon.ogg',
+  cascade: '/sounds/hive-cascade.ogg',
+  chime: '/sounds/hive-chime.ogg',
+  ping: '/sounds/hive-ping.ogg',
+  resolve: '/sounds/hive-resolve.ogg',
+  soft: '/sounds/hive-soft.ogg',
 }
 
 const isNotificationSound = (sound: unknown): sound is NotificationSound =>
@@ -142,31 +81,15 @@ const writeSettings = (settings: NotificationSettings) => {
 
 const playSound = (sound: NotificationSound) => {
   if (sound === 'off' || typeof window === 'undefined') return
-  const audioWindow = window as Window & {
-    webkitAudioContext?: typeof AudioContext
-  }
-  const AudioCtor = window.AudioContext ?? audioWindow.webkitAudioContext
-  if (!AudioCtor) return
   try {
-    const context = new AudioCtor()
-    const profile = soundProfiles[sound]
-    const gain = context.createGain()
-    gain.connect(context.destination)
-    gain.gain.cancelScheduledValues(context.currentTime)
-    gain.gain.setValueAtTime(0.0001, context.currentTime)
-    gain.gain.exponentialRampToValueAtTime(profile.peak, context.currentTime + 0.01)
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + profile.totalDuration)
-
-    profile.notes.forEach(({ at, frequency }) => {
-      const oscillator = context.createOscillator()
-      oscillator.type = profile.type
-      oscillator.frequency.setValueAtTime(frequency, context.currentTime + at)
-      oscillator.connect(gain)
-      oscillator.start(context.currentTime + at)
-      oscillator.stop(context.currentTime + at + profile.noteDuration)
+    const audio = new window.Audio(soundAssets[sound])
+    audio.preload = 'auto'
+    audio.volume = 0.72
+    void audio.play()?.catch(() => {
+      // Browsers can block media playback until a user gesture; failed sound should not block work.
     })
   } catch {
-    // Browsers can block Web Audio until a user gesture; failed sound should not block work.
+    // Audio playback is best-effort UI feedback.
   }
 }
 

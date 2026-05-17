@@ -14,7 +14,7 @@ import { Toaster } from '../../web/src/ui/toast.js'
 import { ToastProvider } from '../../web/src/ui/useToast.js'
 
 const notifications: Array<{ body: string | undefined; title: string }> = []
-const oscillatorStart = vi.fn()
+const playedAudioSources: string[] = []
 let storage = new Map<string, string>()
 
 const installLocalStorage = () => {
@@ -39,29 +39,15 @@ class FakeNotification {
   }
 }
 
-class FakeAudioContext {
-  currentTime = 1
-  destination = {}
+class FakeAudio {
+  preload = ''
+  volume = 1
 
-  createGain() {
-    return {
-      connect: vi.fn(),
-      gain: {
-        cancelScheduledValues: vi.fn(),
-        exponentialRampToValueAtTime: vi.fn(),
-        setValueAtTime: vi.fn(),
-      },
-    }
-  }
+  constructor(readonly src: string) {}
 
-  createOscillator() {
-    return {
-      connect: vi.fn(),
-      frequency: { setValueAtTime: vi.fn() },
-      start: oscillatorStart,
-      stop: vi.fn(),
-      type: 'sine',
-    }
+  play() {
+    playedAudioSources.push(this.src)
+    return Promise.resolve()
   }
 }
 
@@ -103,14 +89,14 @@ beforeEach(() => {
     FakeNotification.permission = 'granted'
     return 'granted'
   })
-  oscillatorStart.mockClear()
+  playedAudioSources.length = 0
   Object.defineProperty(window, 'Notification', {
     configurable: true,
     value: FakeNotification,
   })
-  Object.defineProperty(window, 'AudioContext', {
+  Object.defineProperty(window, 'Audio', {
     configurable: true,
-    value: FakeAudioContext,
+    value: FakeAudio,
   })
 })
 
@@ -141,10 +127,7 @@ describe('notification settings', () => {
 
     const saved = JSON.parse(window.localStorage.getItem(NOTIFICATION_SETTINGS_KEY) ?? '{}')
     expect(saved.sound).toBe('soft')
-    expect(oscillatorStart).toHaveBeenCalledTimes(4)
-    const firstStartAt = oscillatorStart.mock.calls[0]?.[0] as number
-    const lastStartAt = oscillatorStart.mock.calls.at(-1)?.[0] as number
-    expect(lastStartAt - firstStartAt).toBeGreaterThanOrEqual(0.45)
+    expect(playedAudioSources).toEqual(['/sounds/hive-cascade.ogg'])
   })
 
   test('uses detailed copy, selected sound, and browser notification when enabled', async () => {
@@ -158,7 +141,7 @@ describe('notification settings', () => {
     )
 
     fireEvent.click(screen.getByTestId('topbar-settings'))
-    fireEvent.click(screen.getByRole('radio', { name: /Ping/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /Tap/ }))
     fireEvent.click(screen.getByRole('radio', { name: /Detailed/ }))
     fireEvent.click(screen.getByLabelText('Browser notifications'))
 
@@ -175,6 +158,6 @@ describe('notification settings', () => {
         title: 'Member report',
       },
     ])
-    expect(oscillatorStart).toHaveBeenCalledTimes(1)
+    expect(playedAudioSources).toEqual(['/sounds/hive-ping.ogg'])
   })
 })
