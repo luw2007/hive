@@ -73,6 +73,19 @@ tt-a1i/hive-private -> GitHub Actions release workflow -> npm @tt-a1i/hive
 
 公开仓库可以继续作为 npm 上展示的项目主页，但不要再把它当作所有 npm artifact 的源码来源。
 
+## 用户安装入口不变
+
+私有仓库只是新的构建和发布来源，不是用户安装入口。外部用户访问不了私有仓库，也不应该被引导去 clone 私有仓库。
+
+用户安装方式保持不变：
+
+```sh
+npm install -g @tt-a1i/hive
+npx @tt-a1i/hive
+```
+
+因此公开 README、官网、朋友试用文档里仍然写 npm 安装方式。需要调整的是措辞：避免让用户以为 GitHub release asset 或公开仓库源码是唯一安装来源。公开仓库负责解释产品和承接 issue；私有仓库负责构建并发布同一个 npm 包。
+
 每次从私有仓库发版前：
 
 1. 确认私有分支包含本次要发布的产品代码。
