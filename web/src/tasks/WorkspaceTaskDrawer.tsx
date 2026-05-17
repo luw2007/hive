@@ -30,10 +30,10 @@ type Props = {
 }
 
 /**
- * Thin adapter: takes a pre-mounted `useTasksFile` state and wires it
- * into the TaskGraphDrawer. The hook lives one level up (App.tsx) so
- * the Topbar can read open-task count off the same subscription
- * without spawning a second WS connection.
+ * Dormant Task Graph/Blueprint adapter. Early Hive treated `.hive/tasks.md`
+ * as a first-class planning surface, but current usage relies on the
+ * Orchestrator agent's own planning more than a second visible task system.
+ * Keep this adapter wired and tested for existing workspaces and future revival.
  */
 export const WorkspaceTaskDrawer = ({
   tasksFile,

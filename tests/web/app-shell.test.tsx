@@ -65,8 +65,8 @@ describe('app shell with real server', () => {
     expect(banner).toHaveClass('h-11')
     expect(banner.textContent ?? '').toContain('Hive')
     // Empty state hides Topbar actions so first-run users only see the brand
-    // and the central Welcome CTA. Notification + Blueprint actions reappear
-    // once a workspace is active (covered in worker-flow / tasks-flow tests).
+    // and the central Welcome CTA. Blueprint remains dormant even after a
+    // workspace is active; the drawer itself stays covered in task tests.
     expect(screen.queryByTestId('topbar-settings')).toBeNull()
     expect(screen.queryByTestId('topbar-blueprint')).toBeNull()
 

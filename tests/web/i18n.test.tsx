@@ -31,12 +31,7 @@ describe('UI language switcher', () => {
   test('switches shell copy to Chinese and persists the choice', () => {
     render(
       <AppProviders>
-        <Topbar
-          onToggleTaskGraph={() => {}}
-          taskGraphOpen={false}
-          version="0.6.0-alpha.5"
-          versionInfo={versionInfo}
-        />
+        <Topbar version="0.6.0-alpha.5" versionInfo={versionInfo} />
         <WelcomePane onAddWorkspace={() => {}} />
       </AppProviders>
     )
@@ -56,12 +51,7 @@ describe('UI language switcher', () => {
     })
     render(
       <AppProviders>
-        <Topbar
-          onToggleTaskGraph={() => {}}
-          taskGraphOpen={false}
-          version="0.6.0-alpha.5"
-          versionInfo={versionInfo}
-        />
+        <Topbar version="0.6.0-alpha.5" versionInfo={versionInfo} />
         <WelcomePane onAddWorkspace={() => {}} />
       </AppProviders>
     )

@@ -8,7 +8,9 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import WebSocket from 'ws'
 
-import { App } from '../../web/src/app.js'
+import { AppProviders } from '../../web/src/AppProviders.js'
+import { useTasksFile } from '../../web/src/tasks/useTasksFile.js'
+import { WorkspaceTaskDrawer } from '../../web/src/tasks/WorkspaceTaskDrawer.js'
 import { startTestServer } from '../helpers/test-server.js'
 
 let cleanupServer: (() => Promise<void>) | undefined
@@ -18,6 +20,25 @@ let workspaceId = ''
 let baseUrl = ''
 let uiCookie = ''
 const tempDirs: string[] = []
+
+const TaskDrawerHarness = () => {
+  const tasksFile = useTasksFile(workspaceId)
+  return (
+    <WorkspaceTaskDrawer
+      open
+      tasksFile={tasksFile}
+      onClose={() => {}}
+      workspacePath={workspacePath}
+    />
+  )
+}
+
+const renderTaskDrawer = () =>
+  render(
+    <AppProviders>
+      <TaskDrawerHarness />
+    </AppProviders>
+  )
 
 class ForwardedWebSocket {
   readonly OPEN = 1
@@ -96,9 +117,6 @@ afterEach(async () => {
 
 const openTaskGraph = async () => {
   const drawer = await screen.findByTestId('task-graph-drawer')
-  if (drawer.getAttribute('aria-hidden') === 'true') {
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle Todo' }))
-  }
   await waitFor(() => {
     expect(drawer).toHaveAttribute('aria-hidden', 'false')
   })
@@ -116,7 +134,7 @@ const enterRawEditor = async (expectedInitialValue: string) => {
 }
 
 describe('tasks flow driven from the Task Graph drawer', () => {
-  test('task graph starts closed and opens to a readable summary and nested task tree', async () => {
+  test('dormant task graph drawer still renders a readable summary and nested task tree', async () => {
     await nativeFetch(`${baseUrl}/api/workspaces/${workspaceId}/tasks`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json', cookie: uiCookie },
@@ -125,16 +143,8 @@ describe('tasks flow driven from the Task Graph drawer', () => {
       }),
     })
 
-    render(<App />)
-
-    const drawer = await screen.findByTestId('task-graph-drawer')
-    expect(drawer).toHaveAttribute('aria-hidden', 'true')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle Todo' }))
-
-    await waitFor(() => {
-      expect(drawer).toHaveAttribute('aria-hidden', 'false')
-    })
+    renderTaskDrawer()
+    const drawer = await openTaskGraph()
 
     const summary = await within(drawer).findByTestId('task-graph-summary')
     expect(summary).toHaveTextContent('2 / 3')
@@ -150,7 +160,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
   })
 
   test('toggling a checkbox persists to .hive/tasks.md', async () => {
-    render(<App />)
+    renderTaskDrawer()
     await openTaskGraph()
 
     const checkbox = await screen.findByTestId('task-checkbox-0')
@@ -177,7 +187,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
   })
 
   test('raw editor save persists edits to .hive/tasks.md', async () => {
-    render(<App />)
+    renderTaskDrawer()
     await enterRawEditor('- [ ] implement login\n')
 
     fireEvent.change(screen.getByLabelText('Tasks Markdown'), {
@@ -195,7 +205,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
   })
 
   test('raw editor shows conflict banner when .hive/tasks.md changes externally during dirty edit', async () => {
-    render(<App />)
+    renderTaskDrawer()
     await enterRawEditor('- [ ] implement login\n')
 
     fireEvent.change(screen.getByLabelText('Tasks Markdown'), {
@@ -220,7 +230,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
   })
 
   test('auto-updates tasks content without conflict when editor is clean', async () => {
-    render(<App />)
+    renderTaskDrawer()
     await enterRawEditor('- [ ] implement login\n')
 
     mkdirSync(join(workspacePath, '.hive'), { recursive: true })
@@ -233,7 +243,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
   })
 
   test('inline edit rewrites the task text and persists to .hive/tasks.md', async () => {
-    render(<App />)
+    renderTaskDrawer()
     await openTaskGraph()
     await screen.findByTestId('task-checkbox-0')
 
@@ -259,7 +269,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
       }),
     })
 
-    render(<App />)
+    renderTaskDrawer()
     await openTaskGraph()
     await screen.findByTestId('task-checkbox-0')
     await screen.findByTestId('task-checkbox-1')
@@ -275,7 +285,7 @@ describe('tasks flow driven from the Task Graph drawer', () => {
   })
 
   test('add subtask inserts a nested task under the parent', async () => {
-    render(<App />)
+    renderTaskDrawer()
     await openTaskGraph()
     await screen.findByTestId('task-checkbox-0')
 

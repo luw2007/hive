@@ -14,8 +14,6 @@ describe('Topbar version update hint', () => {
     render(
       <Topbar
         hideActions
-        onToggleTaskGraph={() => {}}
-        taskGraphOpen={false}
         version="0.6.0-alpha.3"
         versionInfo={{
           currentVersion: '0.6.0-alpha.3',

@@ -1,27 +1,20 @@
-import { Hexagon, ListChecks } from 'lucide-react'
+import { Hexagon } from 'lucide-react'
 
 import type { VersionInfo } from '../api.js'
 import { useI18n } from '../i18n.js'
 import { NotificationSettingsButton } from '../notifications/NotificationSettingsButton.js'
-import { Tooltip } from '../ui/Tooltip.js'
 import { useVersionInfo } from '../useVersionInfo.js'
 import { APP_VERSION } from '../version.js'
 import { LanguageToggle } from './LanguageToggle.js'
 
 type TopbarProps = {
   hideActions?: boolean
-  onToggleTaskGraph: () => void
-  openTaskCount?: number
-  taskGraphOpen: boolean
   version?: string
   versionInfo?: VersionInfo
 }
 
 export const Topbar = ({
   hideActions = false,
-  onToggleTaskGraph,
-  openTaskCount = 0,
-  taskGraphOpen,
   version = APP_VERSION,
   versionInfo: providedVersionInfo,
 }: TopbarProps) => {
@@ -29,12 +22,6 @@ export const Topbar = ({
   const versionInfo = useVersionInfo(providedVersionInfo)
   const updateInfo =
     versionInfo?.updateAvailable && versionInfo.latestVersion !== version ? versionInfo : null
-  const hasOpenTasks = openTaskCount > 0
-  const tooltipLabel = taskGraphOpen
-    ? t('topbar.hideTodo')
-    : hasOpenTasks
-      ? t('topbar.todoOpen', { count: openTaskCount })
-      : t('topbar.showTodo')
   return (
     <header
       className="flex h-11 shrink-0 items-center px-4"
@@ -69,28 +56,9 @@ export const Topbar = ({
       <div className="flex-1" />
       {hideActions ? null : (
         <div className="flex items-center gap-1">
-          <Tooltip label={tooltipLabel}>
-            <button
-              type="button"
-              onClick={onToggleTaskGraph}
-              aria-pressed={taskGraphOpen}
-              aria-label="Toggle Todo"
-              data-has-tasks={hasOpenTasks ? 'true' : undefined}
-              className="flex cursor-pointer items-center gap-1.5 rounded px-3 py-1 text-xs text-sec hover:bg-3 hover:text-pri"
-              data-testid="topbar-blueprint"
-            >
-              <ListChecks
-                size={14}
-                aria-hidden
-                /* Light up when there are open tasks so the icon reads as
-                   "you have something to look at" without a separate
-                   badge. text-accent on a dim button is enough; bumping
-                   the surrounding text would be too loud. */
-                className={hasOpenTasks ? 'text-accent' : undefined}
-              />
-              <span>{t('topbar.todo')}</span>
-            </button>
-          </Tooltip>
+          {/* Task Graph/Blueprint is intentionally hidden from the primary shell.
+              The dormant drawer/API remain behind TASK_GRAPH_PRIMARY_ENTRY_ENABLED
+              in app.tsx for existing `.hive/tasks.md` workspaces and possible revival. */}
           <LanguageToggle />
           <NotificationSettingsButton />
         </div>

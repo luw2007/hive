@@ -43,6 +43,9 @@ export const AppOverlays = ({
 }: AppOverlaysProps) => (
   <>
     {workspacePath ? (
+      /* Dormant Task Graph/Blueprint surface. App passes `open=false` while
+         TASK_GRAPH_PRIMARY_ENTRY_ENABLED is disabled; keep it wired so older
+         `.hive/tasks.md` workspaces and future reactivation have a tested path. */
       <WorkspaceTaskDrawer
         open={taskGraphOpen}
         tasksFile={tasksFile}
