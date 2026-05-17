@@ -2,6 +2,13 @@
 
 All notable user-facing changes will be documented in this file.
 
+## 1.1.2 - 2026-05-17
+
+Private-release workflow fix.
+
+- Runs npm publish on Ubuntu instead of macOS. Publishing does not require
+  macOS, and the Ubuntu runner avoids unnecessary private-repo Actions cost.
+
 ## 1.1.1 - 2026-05-17
 
 Private-release workflow fix.
