@@ -163,7 +163,6 @@ export const RoleInstructionsField = ({
 const AgentChip = ({
   active,
   command,
-  disabled = false,
   displayName,
   notFound = false,
   testId,
@@ -171,7 +170,6 @@ const AgentChip = ({
 }: {
   active: boolean
   command: string
-  disabled?: boolean
   displayName: string
   notFound?: boolean
   testId: string
@@ -183,9 +181,8 @@ const AgentChip = ({
       type="button"
       onClick={onSelect}
       aria-pressed={active}
-      disabled={disabled}
       data-testid={testId}
-      className="selectable-card flex items-center justify-between gap-2 px-3 py-2 disabled:cursor-not-allowed disabled:opacity-45"
+      className="selectable-card flex items-center justify-between gap-2 px-3 py-2"
     >
       <span className="flex min-w-0 flex-col items-start gap-0.5">
         <span className="truncate text-base font-medium text-pri">{displayName}</span>
@@ -211,7 +208,6 @@ const PresetAgentChip = ({
   <AgentChip
     active={active}
     command={preset.command}
-    disabled={preset.available === false}
     displayName={preset.displayName}
     notFound={preset.available === false}
     testId={`agent-radio-${preset.id}`}

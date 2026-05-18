@@ -318,7 +318,7 @@ describe('AddWorkspaceDialog — native folder picker default flow', () => {
     expect(within(confirm).getByTestId('confirm-workspace-create')).toBeDisabled()
 
     fireEvent.click(within(confirm).getByTestId('workspace-command-preset'))
-    expect(within(confirm).getByTestId('workspace-command-preset-option-claude')).toBeDisabled()
+    expect(within(confirm).getByTestId('workspace-command-preset-option-claude')).not.toBeDisabled()
 
     fireEvent.click(within(confirm).getByTestId('confirm-workspace-startup-toggle'))
     fireEvent.change(within(confirm).getByTestId('confirm-workspace-startup-command'), {

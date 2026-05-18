@@ -93,10 +93,8 @@ export const WorkspaceCommandPresetSelect = ({
                   role="option"
                   aria-selected={isSelected}
                   data-testid={`workspace-command-preset-option-${preset.id}`}
-                  disabled={isUnavailable}
                   className="cli-select__option"
                   onClick={() => {
-                    if (isUnavailable) return
                     onChange(preset.id)
                     setOpen(false)
                   }}
