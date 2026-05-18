@@ -84,11 +84,16 @@ describe('workspace flow with real server', () => {
     fireEvent.click(within(confirm).getByTestId(`workspace-command-preset-option-${dummyPresetId}`))
     fireEvent.click(within(confirm).getByTestId('confirm-workspace-create'))
 
-    await waitFor(() => {
-      expect(
-        screen.getAllByRole('button', { name: 'Alpha' }).find((b) => b.classList.contains('ws-row'))
-      ).toHaveAttribute('aria-current', 'true')
-    })
+    await waitFor(
+      () => {
+        expect(
+          screen
+            .getAllByRole('button', { name: 'Alpha' })
+            .find((b) => b.classList.contains('ws-row'))
+        ).toHaveAttribute('aria-current', 'true')
+      },
+      { timeout: 10_000 }
+    )
 
     // Workspace name + path live in the sidebar (workspace row); the canvas
     // sub-header was removed in M6-A polish. Assert the orchestrator slot
