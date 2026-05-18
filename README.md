@@ -14,7 +14,7 @@
 
 [![npm](https://img.shields.io/npm/v/@tt-a1i/hive.svg)](https://www.npmjs.com/package/@tt-a1i/hive)
 [![ci](https://img.shields.io/github/actions/workflow/status/tt-a1i/hive/release.yml?branch=main&label=ci)](https://github.com/tt-a1i/hive/actions/workflows/release.yml)
-[![Website](https://img.shields.io/badge/website-hive--site.pages.dev-5a8a8a.svg)](https://hivehq.dev)
+[![Website](https://img.shields.io/badge/website-hivehq.dev-5a8a8a.svg)](https://hivehq.dev)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-3c873a.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-BUSL--1.1-orange.svg)](./LICENSE.BSL)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows%20(best--effort)-lightgrey.svg)](#平台支持)
@@ -217,10 +217,8 @@ pnpm release:dry
 
 ## 状态
 
-Hive 已发布稳定版。当前重点是继续打磨多 Agent 协作体验、Windows 支持和更清晰的调度可观测性。
+Hive 目前处于 alpha 阶段，核心流程已可用。当前重点是继续打磨多 Agent 协作体验、Windows 支持和更清晰的调度可观测性。欢迎试用、提 issue——反馈会直接影响后续节奏。
 
 ## License
 
-Hive 使用 Business Source License 1.1（[LICENSE.BSL](LICENSE.BSL)）。BSL 允许个人使用、内部部署、嵌入其他产品、非商业 fork；**仅禁止**把 Hive 包装成多 agent 协作 SaaS 卖给第三方。
-
-详细边界见 [LICENSE.BSL](LICENSE.BSL) 的 Additional Use Grant。
+Hive 在 Business Source License 1.1 下开源。个人使用、内部部署、嵌入、fork 都可以；详细边界见 [LICENSE.BSL](LICENSE.BSL)。

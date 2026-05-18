@@ -19,7 +19,7 @@ Code, research, drafts, translations — if a team can split the work, a hive ca
 
 [![npm](https://img.shields.io/npm/v/@tt-a1i/hive.svg)](https://www.npmjs.com/package/@tt-a1i/hive)
 [![ci](https://img.shields.io/github/actions/workflow/status/tt-a1i/hive/release.yml?branch=main&label=ci)](https://github.com/tt-a1i/hive/actions/workflows/release.yml)
-[![Website](https://img.shields.io/badge/website-hive--site.pages.dev-5a8a8a.svg)](https://hivehq.dev)
+[![Website](https://img.shields.io/badge/website-hivehq.dev-5a8a8a.svg)](https://hivehq.dev)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-3c873a.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-BUSL--1.1-orange.svg)](./LICENSE.BSL)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows%20(best--effort)-lightgrey.svg)](#platform-support)
@@ -271,12 +271,11 @@ verifies macOS, Ubuntu, and Windows, then publishes to npm with `NPM_TOKEN`.
 
 ## Status
 
-Hive is published as a stable release. Current work focuses on polishing the
-multi-agent collaboration workflow, Windows support, and clearer orchestration
-observability.
+Hive is in alpha. The core flow is usable today; current work focuses on
+polishing the multi-agent collaboration workflow, Windows support, and clearer
+orchestration observability. Try it out and open issues — feedback shapes what
+gets prioritized next.
 
 ## License
 
-Hive is licensed under the Business Source License 1.1 (see [LICENSE.BSL](LICENSE.BSL)). BSL permits personal use, internal deployment, embedding in non-competitive products, and non-commercial forks; it **only prohibits** offering Hive as a hosted multi-agent orchestration service to third parties.
-
-See the Additional Use Grant in [LICENSE.BSL](LICENSE.BSL) for the exact boundary.
+Hive is open source under the Business Source License 1.1. Personal use, internal deployment, embedding, and forks are permitted — see [LICENSE.BSL](LICENSE.BSL) for the exact boundary.
