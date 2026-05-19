@@ -204,16 +204,20 @@ describe('worker flow with real server', () => {
       .find((run) => run.agent_name === 'Alice')
     expect(workerRun?.run_id).toEqual(expect.any(String))
 
-    // Verify clicking the card opens the modal and the PTY portal mounts.
+    // Verify clicking the card opens a tab in the bottom panel and the PTY
+    // portal mounts inside the panel slot.
     fireEvent.click(card)
-    await screen.findByRole('dialog', { name: 'Alice' })
+    const panel = await screen.findByTestId('terminal-bottom-panel')
+    expect(within(panel).getByTestId(/^terminal-tab-worker:/)).toBeInTheDocument()
     await waitFor(() => {
       expect(document.querySelector('[id^="worker-pty-"]')).not.toBeNull()
     })
-    // Close modal — control actions (Stop/Restart/Delete) live on the card now.
-    fireEvent.click(screen.getByLabelText('Close worker detail'))
+    // Close the tab via its × — the tab disappears, panel hides when last
+    // tab closes. (PTY keeps running; worker lifecycle is on the card cluster.)
+    const closeBtn = within(panel).getByTestId(/^terminal-tab-close-worker:/)
+    fireEvent.click(closeBtn)
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Alice' })).toBeNull()
+      expect(screen.queryByTestId('terminal-bottom-panel')).toBeNull()
     })
 
     // Delete via the card's hover-revealed action cluster.
@@ -412,12 +416,15 @@ describe('worker flow with real server', () => {
     )
     fireEvent.click(card)
 
-    const modal = await screen.findByRole('dialog', { name: 'Immediate' })
-    expect(within(modal).queryByTestId('worker-start-empty')).toBeNull()
+    const panel = await screen.findByTestId('terminal-bottom-panel')
+    expect(within(panel).getByTestId(/^terminal-tab-worker:/)).toBeInTheDocument()
+    // Stopped-worker empty state would render `terminal-panel-stopped-worker` —
+    // assert it's NOT there (optimistic-runs gave us a runId immediately).
+    expect(screen.queryByTestId('terminal-panel-stopped-worker')).toBeNull()
     expect(document.querySelector('[id^="worker-pty-"]')).not.toBeNull()
   })
 
-  test('stopped worker can be started from the detail modal after reload', async () => {
+  test('stopped worker can be started from the panel tab after reload', async () => {
     const response = await nativeFetch(
       `${serverContext?.baseUrl}/api/workspaces/${workspaceId}/workers`,
       {
@@ -440,9 +447,10 @@ describe('worker flow with real server', () => {
     expect(within(card).getByText('stopped')).toBeInTheDocument()
     fireEvent.click(card)
 
-    const modal = await screen.findByRole('dialog', { name: 'Bob' })
-    expect(within(modal).getByText(/PTY stopped|not started/)).toBeInTheDocument()
-    fireEvent.click(within(modal).getAllByRole('button', { name: /Start/ })[0] as HTMLElement)
+    const panel = await screen.findByTestId('terminal-bottom-panel')
+    const stopped = within(panel).getByTestId('terminal-panel-stopped-worker')
+    expect(stopped).toBeInTheDocument()
+    fireEvent.click(within(stopped).getByTestId('terminal-panel-start-worker'))
 
     await waitFor(() => {
       expect(document.querySelector('[id^="worker-pty-"]')).not.toBeNull()
