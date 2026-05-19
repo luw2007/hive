@@ -2,7 +2,7 @@ import { LoaderCircle, Play, Terminal as TerminalIcon } from 'lucide-react'
 
 import { useI18n } from '../i18n.js'
 import { TerminalTabs } from './TerminalTabs.js'
-import { useTerminalPanelHeight } from './useTerminalPanelHeight.js'
+import { TERMINAL_PANEL_MIN_HEIGHT, useTerminalPanelHeight } from './useTerminalPanelHeight.js'
 import type { TerminalTab } from './useTerminalPanelTabs.js'
 
 type TerminalBottomPanelProps = {
@@ -57,6 +57,7 @@ export const TerminalBottomPanel = ({
         role="separator"
         aria-orientation="horizontal"
         aria-label={t('terminalPanel.resizeAria')}
+        aria-valuemin={TERMINAL_PANEL_MIN_HEIGHT}
         aria-valuenow={Math.round(resize.height)}
         className="absolute top-0 right-0 left-0 z-10 h-2 -translate-y-1 cursor-ns-resize"
         tabIndex={-1}
