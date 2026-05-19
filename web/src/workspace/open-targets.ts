@@ -7,7 +7,7 @@ import {
   type OpenTargetPlatform,
 } from '../../../src/shared/open-targets.js'
 import cursorIcon from '../assets/open-targets/cursor.svg'
-import finderIcon from '../assets/open-targets/finder.jpeg'
+import finderIcon from '../assets/open-targets/finder.png'
 import ghosttyIcon from '../assets/open-targets/ghostty.png'
 import terminalIcon from '../assets/open-targets/terminal.svg'
 import vscodeIcon from '../assets/open-targets/vscode.svg'
@@ -35,6 +35,12 @@ export interface OpenTargetOption {
     | 'openWorkspace.target.ghostty'
     | 'openWorkspace.target.zed'
   iconSrc: string
+  /**
+   * Optional per-icon visual scale relative to the default render size.
+   * Defaults to 1. Use sparingly — only when the brand mark has so much built-in
+   * padding that it visibly reads smaller than its row neighbors.
+   */
+  iconScale?: number
 }
 
 const FINDER_LABEL_KEY_BY_PLATFORM: Record<OpenTargetPlatform, OpenTargetOption['labelKey']> = {
@@ -54,7 +60,10 @@ const TARGET_DATA: Record<OpenTargetId, Omit<OpenTargetOption, 'id'>> = {
   // The actual labelKey is resolved per platform in getOpenTargetOption.
   finder: { labelKey: 'openWorkspace.target.finder.mac', iconSrc: finderIcon },
   terminal: { labelKey: 'openWorkspace.target.terminal', iconSrc: terminalIcon },
-  ghostty: { labelKey: 'openWorkspace.target.ghostty', iconSrc: ghosttyIcon },
+  // Ghostty's brand mark is rendered inside a generous safe-zone, so at the
+  // dropdown render size it reads smaller than its neighbors. Bump the visual
+  // scale ~20% to balance the row.
+  ghostty: { labelKey: 'openWorkspace.target.ghostty', iconSrc: ghosttyIcon, iconScale: 1.2 },
   zed: { labelKey: 'openWorkspace.target.zed', iconSrc: zedIcon },
 }
 
@@ -71,19 +80,25 @@ export const getOpenTargetOption = (
   const supportedId = isOpenTargetSupported(targetId, platform)
     ? targetId
     : getDefaultOpenTargetIdForPlatform(platform)
+  const data = TARGET_DATA[supportedId]
   return {
     id: supportedId,
-    iconSrc: TARGET_DATA[supportedId].iconSrc,
+    iconSrc: data.iconSrc,
     labelKey: resolveLabelKey(supportedId, platform),
+    ...(data.iconScale !== undefined ? { iconScale: data.iconScale } : {}),
   }
 }
 
 export const getOpenTargetOptions = (platform: OpenTargetPlatform): readonly OpenTargetOption[] =>
-  OPEN_TARGET_IDS_BY_PLATFORM[platform].map((targetId) => ({
-    id: targetId,
-    iconSrc: TARGET_DATA[targetId].iconSrc,
-    labelKey: resolveLabelKey(targetId, platform),
-  }))
+  OPEN_TARGET_IDS_BY_PLATFORM[platform].map((targetId) => {
+    const data = TARGET_DATA[targetId]
+    return {
+      id: targetId,
+      iconSrc: data.iconSrc,
+      labelKey: resolveLabelKey(targetId, platform),
+      ...(data.iconScale !== undefined ? { iconScale: data.iconScale } : {}),
+    }
+  })
 
 /**
  * Browser-side platform detection. Server already validates the requested

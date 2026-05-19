@@ -58,8 +58,10 @@ chrome.
   Cursor, File Explorer / File Manager, Zed). A stored preference for any
   removed target silently falls back to the platform default at load time.
 - Swaps the Zed, Ghostty, and Finder dropdown icons for the apps' official
-  brand marks (downsized to 64×64 raster) so each entry in the dropdown is
-  recognizable as the real application rather than an abstract glyph.
+  brand marks (Finder uses the macOS app icon, Ghostty 96×96 / Zed 64×64
+  raster) so each entry reads as the real application rather than an
+  abstract glyph. Ghostty's mark renders inside a generous safe-zone so its
+  display size is bumped 20% via CSS scale to balance the row visually.
 
 ## 1.2.0 - 2026-05-18
 

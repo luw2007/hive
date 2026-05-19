@@ -128,6 +128,13 @@ export const OpenWorkspaceButton = ({ workspace }: OpenWorkspaceButtonProps) => 
                   width: 13,
                   height: 13,
                   objectFit: 'contain',
+                  // CSS transform scales the rendered image without enlarging
+                  // the layout box, so a scaled-up icon doesn't make this row
+                  // taller than its neighbors.
+                  transform: selectedOption.iconScale
+                    ? `scale(${selectedOption.iconScale})`
+                    : undefined,
+                  transformOrigin: 'center',
                 }}
               />
             )}
@@ -179,6 +186,8 @@ export const OpenWorkspaceButton = ({ workspace }: OpenWorkspaceButtonProps) => 
                     width: 14,
                     height: 14,
                     objectFit: 'contain',
+                    transform: option.iconScale ? `scale(${option.iconScale})` : undefined,
+                    transformOrigin: 'center',
                   }}
                 />
                 <span className="flex-1">{t(option.labelKey)}</span>
