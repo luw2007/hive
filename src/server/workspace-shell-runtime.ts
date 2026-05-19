@@ -4,6 +4,7 @@ import type { AgentManager } from './agent-manager.js'
 import type { LiveAgentRun } from './agent-runtime-types.js'
 
 const WORKSPACE_SHELL_SUFFIX = ':shell'
+const SHELL_LABEL_PATTERN = /^Shell (\d+)$/
 
 export const getWorkspaceShellAgentId = (workspaceId: string): string =>
   `${workspaceId}${WORKSPACE_SHELL_SUFFIX}`
@@ -38,7 +39,6 @@ export const resolveWorkspaceShellLaunch = (
 
 export const createWorkspaceShellRuntime = (agentManager: AgentManager | undefined) => {
   const labelsByRunId = new Map<string, string>()
-  const nextShellNumberByWorkspaceId = new Map<string, number>()
   const workspaceIdsByRunId = new Map<string, string>()
   const runIdsByWorkspaceId = new Map<string, string[]>()
   const startedAtByRunId = new Map<string, number>()
@@ -82,8 +82,14 @@ export const createWorkspaceShellRuntime = (agentManager: AgentManager | undefin
   }
 
   const nextLabel = (workspaceId: string) => {
-    const next = nextShellNumberByWorkspaceId.get(workspaceId) ?? 1
-    nextShellNumberByWorkspaceId.set(workspaceId, next + 1)
+    const usedNumbers = new Set<number>()
+    for (const runId of runIdsByWorkspaceId.get(workspaceId) ?? []) {
+      const match = SHELL_LABEL_PATTERN.exec(labelsByRunId.get(runId) ?? '')
+      if (match) usedNumbers.add(Number(match[1]))
+    }
+
+    let next = 1
+    while (usedNumbers.has(next)) next += 1
     return `Shell ${next}`
   }
 
@@ -112,7 +118,6 @@ export const createWorkspaceShellRuntime = (agentManager: AgentManager | undefin
       workspaceIdsByRunId.clear()
       startedAtByRunId.clear()
       labelsByRunId.clear()
-      nextShellNumberByWorkspaceId.clear()
     },
     closeRun(workspaceId: string, runId: string): boolean {
       if (workspaceIdsByRunId.get(runId) !== workspaceId) return false
@@ -128,7 +133,6 @@ export const createWorkspaceShellRuntime = (agentManager: AgentManager | undefin
         }
       }
       runIdsByWorkspaceId.delete(workspaceId)
-      nextShellNumberByWorkspaceId.delete(workspaceId)
     },
     getLiveRun(runId: string): LiveAgentRun | undefined {
       if (!hasRun(runId)) return undefined

@@ -122,6 +122,21 @@ describe('workspace shell terminal', () => {
       expect(afterCloseRuns).not.toContainEqual(expect.objectContaining({ run_id: shell.run_id }))
       expect(afterCloseRuns).toContainEqual(expect.objectContaining({ run_id: secondShell.run_id }))
 
+      const recycledStart = await fetch(
+        `${server.baseUrl}/api/workspaces/${workspace.id}/shell/start`,
+        { method: 'POST', headers: { cookie } }
+      )
+      expect(recycledStart.status).toBe(201)
+      const recycledShell = (await recycledStart.json()) as {
+        agent_id: string
+        agent_name: string
+        run_id: string
+        status: string
+      }
+      expect(recycledShell.run_id).not.toBe(shell.run_id)
+      expect(recycledShell.run_id).not.toBe(secondShell.run_id)
+      expect(recycledShell.agent_name).toBe('Shell 1')
+
       const io = await openSocket(
         toWsUrl(server.baseUrl, `/ws/terminal/${secondShell.run_id}/io`),
         cookie
