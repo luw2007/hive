@@ -20,12 +20,11 @@ type TerminalTabsProps = {
  * visually merges with the terminal content beneath it. Inactive tabs sit on
  * a slightly darker `var(--bg-2)` strip.
  *
- * Structure: each tab is a wrapper `<div role="tab">` containing a
- * tab-select `<button>` and a sibling close `<button>`. Buttons-inside-buttons
- * is invalid HTML — browsers hoist the inner button out and break the layout —
- * so we mirror the `WorkspaceShellDialog` pattern of two sibling buttons in a
- * group `<div>`. The wrapper `<div>` carries the `role="tab"` + `aria-selected`
- * + the data-testid the panel tests assert on.
+ * Structure: each tab is a wrapper `<div role="tab">` containing two sibling
+ * `<button>` elements (select + close). Buttons-inside-buttons is invalid
+ * HTML — browsers hoist the inner button out and break the layout — so the
+ * wrapper `<div>` carries the `role="tab"` + `aria-selected` + the
+ * data-testid the panel tests assert on.
  */
 export const TerminalTabs = ({
   tabs,

@@ -281,9 +281,9 @@ html, body {
   background: color-mix(in oklab, #ffffff 7%, transparent);
 }
 
-/* Sidebar inline delete (per-row) — hover mirrors .float-action[data-variant="danger"]:
-   18% red wash + 50% red ring (inset, so the row geometry stays stable). The icon
-   colour switches via the tailwind hover:text-status-red class on the button. */
+/* Sidebar inline delete (per-row) — 18% red wash + 50% red ring (inset, so
+   the row geometry stays stable). The icon colour switches via the tailwind
+   hover:text-status-red class on the button. */
 .ws-row-delete:hover {
   background: color-mix(in oklab, var(--status-red) 18%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--status-red) 50%, var(--border-bright));
@@ -1303,67 +1303,6 @@ html, body {
   .toast-pop { animation: none; }
 }
 
-/* Floating action button — used in WorkerModal's top-right cluster, sits
-   over the PTY with a frosted backdrop so it's readable on any content. */
-/* Floating action — flat surface, no backdrop blur, no ambient shadow.
-   The previous incarnation wore glass + drop shadow which was the last
-   "designed" surface in the app; everything else dropped that recipe. */
-.float-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-  border: 1px solid var(--border-bright);
-  background: var(--bg-1);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) ease,
-    color var(--dur-fast) ease,
-    border-color var(--dur-fast) ease;
-}
-.float-action:hover {
-  background: color-mix(in oklab, var(--bg-2) 85%, transparent);
-  border-color: var(--border-bright);
-  color: var(--text-primary);
-}
-/* Press affordance — Twenty uses background-darken alone, no transform.
-   The scale(0.95) we used to ship reads as "mobile / playful" and fights
-   the rest of the desktop chrome. */
-.float-action:active {
-  background: color-mix(in oklab, var(--bg-3) 90%, transparent);
-}
-.float-action:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
-}
-.float-action:disabled { opacity: 0.5; cursor: not-allowed; }
-.float-action[data-variant="primary"] {
-  background: var(--accent);
-  color: #ffffff;
-  border-color: var(--accent);
-}
-.float-action[data-variant="primary"]:hover {
-  background: var(--accent-hover);
-}
-.float-action[data-variant="danger"] {
-  color: var(--status-red);
-}
-.float-action[data-variant="danger"]:hover {
-  background: color-mix(in oklab, var(--status-red) 18%, transparent);
-  border-color: color-mix(in oklab, var(--status-red) 50%, var(--border-bright));
-  color: var(--status-red);
-}
-.float-action-divider {
-  width: 1px;
-  height: 18px;
-  margin: 0 4px;
-  background: color-mix(in oklab, var(--border-bright) 80%, transparent);
-}
-
 /* Worker tile grid — elastic auto-fill. Each tile has a 200px minimum and
    stretches to fill the remaining row width, so columns adapt smoothly to
    the WorkersPane width: ~200 → 1, ~440 → 2, ~660 → 3, ~880 → 4 … */
@@ -1462,41 +1401,6 @@ html, body {
   background: color-mix(in oklab, var(--status-red) 14%, transparent);
   border-color: color-mix(in oklab, var(--status-red) 40%, var(--border-bright));
   color: var(--status-red);
-}
-
-/* WorkerModal width-resize handles — left + right edges. Same aesthetic as
-   the workspace-sidebar / pane-splitter: invisible 8px hit zone, accent
-   1px line on hover / drag. */
-.modal-resize-handle {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 8px;
-  cursor: ew-resize;
-  z-index: 6;
-  outline: none;
-  user-select: none;
-  touch-action: none;
-}
-.modal-resize-handle--left  { left: -4px; }
-.modal-resize-handle--right { right: -4px; }
-.modal-resize-handle::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: transparent;
-  transition:
-    background var(--dur-fast) ease,
-    box-shadow var(--dur-fast) ease;
-}
-.modal-resize-handle--left::before  { left: 4px; }
-.modal-resize-handle--right::before { right: 4px; }
-.modal-resize-handle:hover::before,
-.modal-resize-handle[data-resizing]::before {
-  background: color-mix(in oklab, var(--accent) 68%, var(--border-bright));
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 12%, transparent);
 }
 
 /* Vertical splitter between Orchestrator and Workers panes — absolute-
