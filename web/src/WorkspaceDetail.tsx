@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { TeamListItem, WorkspaceSummary } from '../../src/shared/types.js'
 import {
@@ -61,6 +61,11 @@ export const WorkspaceDetail = ({
   const [shellStarting, setShellStarting] = useState(false)
   const [startWorkerError, setStartWorkerError] = useState<string | null>(null)
   const [startingWorkerId, setStartingWorkerId] = useState<string | null>(null)
+  // Synchronous lock so a fast double-click on the "+" tab button can't fire
+  // startWorkspaceShell twice before React commits `disabled={shellStarting}`.
+  // The server's shell numbering counter would otherwise skip ahead, leaving
+  // the user with shells named "Shell 1" / "Shell 3" / ... .
+  const shellStartInFlightRef = useRef(false)
   const toast = useToast()
   const composer = useWorkerComposer({ createWorker: onCreateWorker, open: composerOpen })
 
@@ -93,6 +98,7 @@ export const WorkspaceDetail = ({
     setShellError(null)
     setShellRunId(null)
     setShellStarting(false)
+    shellStartInFlightRef.current = false
     setStartWorkerError(null)
     setStartingWorkerId(null)
   }, [workspace?.id])
@@ -169,6 +175,8 @@ export const WorkspaceDetail = ({
   }
 
   const startShell = () => {
+    if (shellStartInFlightRef.current) return
+    shellStartInFlightRef.current = true
     setShellError(null)
     setShellStarting(true)
     void startWorkspaceShell(workspace.id)
@@ -179,7 +187,10 @@ export const WorkspaceDetail = ({
       .catch((error) => {
         setShellError(error instanceof Error ? error.message : String(error))
       })
-      .finally(() => setShellStarting(false))
+      .finally(() => {
+        shellStartInFlightRef.current = false
+        setShellStarting(false)
+      })
   }
 
   const openShell = () => {
