@@ -84,12 +84,12 @@ npm copy will shadow your existing install.
 
 Install Hive as an app (optional):
 
-Open `http://127.0.0.1:3000/` in Chrome, Edge, or Brave and click the topbar
-**Install as app** button — or use the browser's omnibox install icon. The
-PWA launches in its own dock-anchored window without browser chrome and shows
-**Add Workspace** / **Try Demo** shortcuts from the dock right-click menu.
-Firefox and Safari currently don't implement the install-prompt protocol, so
-the **Install as app** button only appears in Chromium-based browsers.
+Open `http://127.0.0.1:3000/` in Chrome, Edge, or Brave and click the install
+icon at the right edge of the browser's omnibox. The PWA launches in its own
+dock-anchored window without browser chrome and shows **Add Workspace** /
+**Try Demo** shortcuts from the dock right-click menu. Firefox and Safari
+currently don't implement the install-prompt protocol, so the omnibox icon
+only appears in Chromium-based browsers.
 
 The Hive daemon must still be running for the PWA to do anything; if the
 runtime isn't reachable when you launch the app, you'll see a "Hive runtime

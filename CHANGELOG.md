@@ -11,10 +11,9 @@ chrome.
 - Adds a web app manifest with icons (192, 512, maskable 512, apple-touch 180),
   a wide screenshot, and shortcuts for "Add Workspace" and "Try Demo" so
   right-clicking the dock icon jumps straight to those flows.
-- Adds an `Install as app` button to the topbar between the language toggle and
-  notification settings. The button only shows when the browser exposes a
-  `beforeinstallprompt` and the page isn't already running standalone, so it
-  disappears the moment the user installs.
+- Installation is driven entirely by the browser's omnibox install icon
+  (Chrome / Edge / Brave); Hive deliberately does not add a redundant topbar
+  button.
 - Ships a service worker (`/sw.js`) that caches the SPA shell + hashed asset
   chunks + static icons / sounds / cli-icons, but never intercepts `/api/*`,
   `/ws/*`, or non-GET requests — auth cookies and WebSockets keep their
