@@ -33,6 +33,12 @@ English · [简体中文](./README.md)
 > [npm](https://www.npmjs.com/package/@tt-a1i/hive) and the badge above resolves
 > to it.
 
+> Release note: this public repository keeps Hive's baseline public source
+> line. The latest stable npm package may be built from a private release line
+> and may include product capabilities that are not mirrored here yet. This
+> repository's `CHANGELOG.md` tracks public-source changes only; install and
+> update from the npm package.
+
 ## Why Hive
 
 CLI agents are powerful, but coordinating several of them manually is

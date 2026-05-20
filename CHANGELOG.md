@@ -2,6 +2,17 @@
 
 All notable user-facing changes will be documented in this file.
 
+## Public source line - 2026-05-20
+
+This public repository now tracks Hive's baseline public source line. The
+latest stable npm package may be built from a private release line and can be
+newer than the code mirrored here.
+
+- Install and update Hive from npm: `npm install -g @tt-a1i/hive@latest`.
+- The public changelog records changes that are mirrored into this repository.
+- Product changes that ship only from the private release line are intentionally
+  not expanded here until they are mirrored into the public source line.
+
 ## 1.0.0 - 2026-05-17
 
 Stable release.
