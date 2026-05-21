@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { FormEvent } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { ToastProvider } from '../../web/src/ui/useToast.js'
 import { AddWorkerDialog } from '../../web/src/worker/AddWorkerDialog.js'
+import { AgentCliPicker } from '../../web/src/worker/AddWorkerDialogFields.js'
 import { useWorkerComposer } from '../../web/src/worker/useWorkerComposer.js'
 
 const {
@@ -89,6 +90,43 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+})
+
+describe('Agent CLI picker', () => {
+  test('renders built-in CLI logos on the left side of each preset card', () => {
+    const onPresetChange = vi.fn()
+    const presets = [
+      {
+        id: 'claude',
+        displayName: 'Claude Code (CC)',
+        command: 'claude',
+        args: [],
+        available: true,
+      },
+      { id: 'codex', displayName: 'Codex', command: 'codex', args: [], available: true },
+      { id: 'opencode', displayName: 'OpenCode', command: 'opencode', args: [], available: true },
+      { id: 'gemini', displayName: 'Gemini', command: 'gemini', args: [], available: true },
+    ]
+
+    render(
+      <AgentCliPicker
+        commandPresetId="claude"
+        commandPresets={presets}
+        onPresetChange={onPresetChange}
+      />
+    )
+
+    for (const preset of presets) {
+      const card = screen.getByTestId(`agent-radio-${preset.id}`)
+      const logo = within(card).getByTestId('cli-agent-logo')
+      expect(logo.getAttribute('data-command-preset')).toBe(preset.id)
+    }
+    expect(
+      within(screen.getByTestId('agent-radio-generic')).getByTestId(
+        'agent-radio-generic-generic-icon'
+      )
+    ).toBeInTheDocument()
+  })
 })
 
 describe('Add Worker dialog: custom role templates', () => {

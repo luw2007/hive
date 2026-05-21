@@ -1,4 +1,12 @@
-import { BookmarkPlus, Check, ChevronDown, RotateCcw, Search, Trash2 } from 'lucide-react'
+import {
+  BookmarkPlus,
+  Check,
+  ChevronDown,
+  RotateCcw,
+  Search,
+  SquareTerminal,
+  Trash2,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -6,6 +14,7 @@ import type { WorkerRole } from '../../../src/shared/types.js'
 import type { CommandPreset, RoleTemplate } from '../api.js'
 import { useI18n } from '../i18n.js'
 import { Confirm } from '../ui/Confirm.js'
+import { CliAgentLogo } from './CliAgentAvatar.js'
 import { RoleAvatar } from './RoleAvatar.js'
 
 interface RoleCardSpec {
@@ -427,6 +436,7 @@ const AgentChip = ({
   active,
   command,
   displayName,
+  logoPresetId,
   notFound = false,
   testId,
   onSelect,
@@ -434,24 +444,37 @@ const AgentChip = ({
   active: boolean
   command: string
   displayName: string
+  logoPresetId?: string | undefined
   notFound?: boolean
   testId: string
   onSelect: () => void
 }) => {
   const { t } = useI18n()
+  const fallbackIcon = (
+    <span
+      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-surface-1 text-ter"
+      data-testid={`${testId}-generic-icon`}
+      aria-hidden
+    >
+      <SquareTerminal size={13} />
+    </span>
+  )
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={active}
       data-testid={testId}
-      className="selectable-card flex items-center justify-between gap-2 px-3 py-2"
+      className="selectable-card flex items-center justify-between gap-3 px-3 py-2"
     >
-      <span className="flex min-w-0 flex-col items-start gap-0.5">
-        <span className="truncate text-base font-medium text-pri">{displayName}</span>
-        <span className="mono truncate text-xs text-ter">
-          {command}
-          {notFound ? ` · ${t('addWorker.agentNotFound')}` : ''}
+      <span className="flex min-w-0 items-center gap-3">
+        <CliAgentLogo commandPresetId={logoPresetId} fallback={fallbackIcon} size={22} />
+        <span className="flex min-w-0 flex-col items-start gap-0.5">
+          <span className="truncate text-base font-medium text-pri">{displayName}</span>
+          <span className="mono truncate text-xs text-ter">
+            {command}
+            {notFound ? ` · ${t('addWorker.agentNotFound')}` : ''}
+          </span>
         </span>
       </span>
       {active ? <Check size={14} className="shrink-0 text-accent" aria-hidden /> : null}
@@ -472,6 +495,7 @@ const PresetAgentChip = ({
     active={active}
     command={preset.command}
     displayName={preset.displayName}
+    logoPresetId={preset.id}
     notFound={preset.available === false}
     testId={`agent-radio-${preset.id}`}
     onSelect={onSelect}

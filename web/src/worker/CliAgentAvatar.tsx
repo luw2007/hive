@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import type { WorkerRole } from '../../../src/shared/types.js'
 import { Avatar } from '../ui/Avatar.js'
 
@@ -15,6 +17,13 @@ type CliAgentAvatarProps = {
   workerRole: WorkerRole
   size?: number
   statusRing?: StatusRing
+}
+
+type CliAgentLogoProps = {
+  commandPresetId?: string | undefined
+  fallback?: ReactNode
+  size?: number
+  testId?: string
 }
 
 interface LogoSpec {
@@ -42,6 +51,40 @@ const ringColorByStatus: Record<Exclude<StatusRing, 'none'>, string> = {
 
 const getKnownLogo = (commandPresetId: string | undefined): LogoSpec | null =>
   commandPresetId ? (LOGO_REGISTRY[commandPresetId] ?? null) : null
+
+export const CliAgentLogo = ({
+  commandPresetId,
+  fallback = null,
+  size = 20,
+  testId = 'cli-agent-logo',
+}: CliAgentLogoProps) => {
+  const logo = getKnownLogo(commandPresetId)
+  if (!logo) return fallback
+  const innerSize = Math.round(size * 0.78)
+  return (
+    <span
+      data-testid={testId}
+      data-command-preset={commandPresetId}
+      className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded"
+      aria-hidden
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        background: logo.surface,
+        border: '1px solid color-mix(in oklab, var(--text-primary) 12%, transparent)',
+      }}
+    >
+      <img
+        src={logo.src}
+        alt=""
+        decoding="sync"
+        width={innerSize}
+        height={innerSize}
+        style={{ width: `${innerSize}px`, height: `${innerSize}px`, objectFit: 'contain' }}
+      />
+    </span>
+  )
+}
 
 const initialsByRole: Record<WorkerRole, string> = {
   coder: 'Co',
