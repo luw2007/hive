@@ -177,21 +177,52 @@ describe('runtime store', () => {
     expect(store.getWorker(workspace.id, worker.id).status).toBe('idle')
   })
 
-  test('startAgent success keeps a queued worker in working', async () => {
+  test('startAgent resets a queued worker back to idle (status tracks activity, not backlog)', async () => {
     const store = createRuntimeStore({ agentManager: createFakeAgentManager() })
     const workspace = store.createWorkspace('/tmp/hive-alpha', 'Alpha')
     const worker = store.addWorker(workspace.id, {
       name: 'Alice',
       role: 'coder',
     })
-    // Simulate the worker already having an active PTY before queuing.
+    // Worker was running, took a dispatch (pendingTaskCount=1, status='working'),
+    // then user hit [Restart]. A fresh PTY hasn't done any work yet — the next
+    // team send is what should flip status back to 'working', not the leftover
+    // queue depth.
     store.getWorker(workspace.id, worker.id).status = 'idle'
     store.dispatchTask(workspace.id, worker.id, 'Implement feature')
     store.configureAgentLaunch(workspace.id, worker.id, { command: '/bin/bash', args: [] })
 
     await store.startAgent(workspace.id, worker.id, { hivePort: '4010' })
 
-    expect(store.getWorker(workspace.id, worker.id).status).toBe('working')
+    const updatedWorker = store.getWorker(workspace.id, worker.id)
+    expect(updatedWorker.status).toBe('idle')
+    // pendingTaskCount stays so WorkerModal / recovery summary can still surface
+    // the backlog — the status field just doesn't read from it anymore.
+    expect(updatedWorker.pendingTaskCount).toBe(1)
+  })
+
+  test('startAgent transitions a stopped worker with pending backlog to idle (restart path)', async () => {
+    const store = createRuntimeStore({ agentManager: createFakeAgentManager() })
+    const workspace = store.createWorkspace('/tmp/hive-alpha', 'Alpha')
+    const worker = store.addWorker(workspace.id, {
+      name: 'Alice',
+      role: 'coder',
+    })
+    // Simulate the hydration end-state after a hive restart: worker status is
+    // 'stopped' (PTY isn't running), but dispatch ledger replay left
+    // pendingTaskCount > 0 because the previous session ended before the
+    // worker reported back. User hits [Restart] -> startAgent -> must NOT
+    // auto-promote to 'working'.
+    store.dispatchTask(workspace.id, worker.id, 'Implement feature')
+    expect(store.getWorker(workspace.id, worker.id).pendingTaskCount).toBe(1)
+    expect(store.getWorker(workspace.id, worker.id).status).toBe('stopped')
+    store.configureAgentLaunch(workspace.id, worker.id, { command: '/bin/bash', args: [] })
+
+    await store.startAgent(workspace.id, worker.id, { hivePort: '4010' })
+
+    const updatedWorker = store.getWorker(workspace.id, worker.id)
+    expect(updatedWorker.status).toBe('idle')
+    expect(updatedWorker.pendingTaskCount).toBe(1)
   })
 
   test('reportTask resets worker pending count and returns it to idle', () => {
