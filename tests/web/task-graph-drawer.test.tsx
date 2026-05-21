@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { TaskGraphDrawer } from '../../web/src/tasks/TaskGraphDrawer.js'
+import { DEFAULT_WORKERS_PANE_WIDTH } from '../../web/src/usePaneSplit.js'
 
 afterEach(() => cleanup())
 
@@ -28,6 +29,15 @@ const baseProps = () => ({
   onAppendSubtask: vi.fn(),
   onUpdateTaskText: vi.fn(),
   onDeleteTask: vi.fn(),
+})
+
+describe('TaskGraphDrawer layout', () => {
+  test('defaults to the same width as the team members pane', () => {
+    render(<TaskGraphDrawer {...baseProps()} content={'- [ ] task\n'} />)
+    expect(screen.getByTestId('task-graph-drawer')).toHaveStyle({
+      width: DEFAULT_WORKERS_PANE_WIDTH,
+    })
+  })
 })
 
 describe('TaskGraphDrawer §6.6.5 — folding is in-memory only', () => {

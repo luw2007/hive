@@ -19,6 +19,7 @@ import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useI18n } from '../i18n.js'
 import { EmptyState } from '../ui/EmptyState.js'
 import { Tooltip } from '../ui/Tooltip.js'
+import { DEFAULT_WORKERS_PANE_WIDTH } from '../usePaneSplit.js'
 import { renderInlineMarkdown } from './inline-markdown.js'
 import { TaskGraphRawEditor } from './TaskGraphRawEditor.js'
 import { countDirectCheckboxChildren, type ParsedTask, parseTaskMarkdown } from './task-markdown.js'
@@ -656,7 +657,7 @@ export const TaskGraphDrawer = ({
         borderColor: 'var(--border)',
         maxWidth: 'calc(100vw - 3.5rem)',
         minWidth: 360,
-        width: '40%',
+        width: DEFAULT_WORKERS_PANE_WIDTH,
       }}
     >
       <header className="task-drawer__header">
