@@ -1,7 +1,21 @@
-import { useEffect, useState } from 'react'
+import DOMPurify from 'isomorphic-dompurify'
+import { marked } from 'marked'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { MarketplaceAgentDetail, MarketplaceAgentEntry } from '../api.js'
 import { useI18n } from '../i18n.js'
+
+// marked@18 parse() returns string when configured sync; we set async:false
+// once at module load so call sites don't need to await.
+marked.setOptions({ async: false, breaks: false, gfm: true })
+
+const renderMarkdownToSafeHtml = (body: string): string => {
+  const rawHtml = marked.parse(body) as string
+  return DOMPurify.sanitize(rawHtml, {
+    USE_PROFILES: { html: true },
+    ALLOWED_ATTR: ['href', 'name', 'target', 'rel', 'title', 'class', 'id'],
+  })
+}
 
 interface MarketplaceAgentPreviewProps {
   agent: MarketplaceAgentEntry
@@ -46,6 +60,11 @@ export const MarketplaceAgentPreview = ({
 
   const sourceUrl = `https://github.com/${sourceRepo}/blob/HEAD/${agent.path}`
 
+  const renderedHtml = useMemo(() => {
+    if (state.status !== 'loaded' || !state.detail) return null
+    return renderMarkdownToSafeHtml(state.detail.body)
+  }, [state])
+
   return (
     <div
       data-testid="marketplace-agent-preview"
@@ -69,10 +88,12 @@ export const MarketplaceAgentPreview = ({
             {t('marketplace.loadFailed')}: {state.error}
           </p>
         ) : null}
-        {state.status === 'loaded' && state.detail ? (
-          <pre className="whitespace-pre-wrap break-words font-sans text-pri">
-            {state.detail.body}
-          </pre>
+        {state.status === 'loaded' && renderedHtml ? (
+          <div
+            className="marketplace-prose"
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: marked output sanitized via DOMPurify with restricted attribute allowlist
+            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          />
         ) : null}
       </div>
       <footer className="flex items-center justify-between gap-2">

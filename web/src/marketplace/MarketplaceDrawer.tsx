@@ -12,9 +12,15 @@ interface MarketplaceDrawerProps {
   open: boolean
   onClose: () => void
   onImport: (detail: { name: string; description: string }) => void
+  importedNames?: ReadonlySet<string>
 }
 
-export const MarketplaceDrawer = ({ open, onClose, onImport }: MarketplaceDrawerProps) => {
+export const MarketplaceDrawer = ({
+  open,
+  onClose,
+  onImport,
+  importedNames,
+}: MarketplaceDrawerProps) => {
   const { t, language } = useI18n()
   const { manifestState, loadAgent } = useMarketplace(language, open)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -131,6 +137,7 @@ export const MarketplaceDrawer = ({ open, onClose, onImport }: MarketplaceDrawer
                       key={agent.path}
                       agent={agent}
                       selected={selectedAgent?.path === agent.path}
+                      imported={importedNames?.has(agent.name) ?? false}
                       onSelect={() => setSelectedAgent(agent)}
                     />
                   ))}

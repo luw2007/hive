@@ -1,4 +1,5 @@
 import { useI18n } from '../i18n.js'
+import { localizeMarketplaceCategory } from './categoryLabels.js'
 
 interface CategoryTreeProps {
   categories: readonly string[]
@@ -13,7 +14,7 @@ export const MarketplaceCategoryTree = ({
   onSelect,
   counts,
 }: CategoryTreeProps) => {
-  const { t } = useI18n()
+  const { t, language } = useI18n()
   const totalCount = counts
     ? Object.values(counts).reduce((sum, value) => sum + value, 0)
     : undefined
@@ -40,7 +41,7 @@ export const MarketplaceCategoryTree = ({
           className={buttonClass(selected === category)}
           onClick={() => onSelect(category)}
         >
-          <span className="capitalize">{category.replace(/-/g, ' ')}</span>
+          <span>{localizeMarketplaceCategory(category, language)}</span>
           {counts?.[category] !== undefined ? (
             <span className="text-xs text-ter">{counts[category]}</span>
           ) : null}

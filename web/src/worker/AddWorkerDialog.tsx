@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Dices, Store } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useMemo, useState } from 'react'
 
 import type { WorkerRole } from '../../../src/shared/types.js'
 import type { CommandPreset, RoleTemplate } from '../api.js'
@@ -75,6 +75,14 @@ export const AddWorkerDialog = ({
   const { t } = useI18n()
   const toast = useToast()
   const [marketplaceOpen, setMarketplaceOpen] = useState(false)
+  const importedNames = useMemo(
+    () => new Set(customTemplates.map((template) => template.name)),
+    [customTemplates]
+  )
+  const handleMarketplaceImport = (detail: { name: string; description: string }) => {
+    onApplyMarketplaceImport(detail)
+    toast.show({ kind: 'success', message: t('marketplace.imported', { name: detail.name }) })
+  }
   const handleClose = (open: boolean) => {
     if (!open) onClose()
   }
@@ -238,7 +246,8 @@ export const AddWorkerDialog = ({
       <MarketplaceDrawer
         open={marketplaceOpen}
         onClose={() => setMarketplaceOpen(false)}
-        onImport={onApplyMarketplaceImport}
+        onImport={handleMarketplaceImport}
+        importedNames={importedNames}
       />
     </Dialog.Root>
   )

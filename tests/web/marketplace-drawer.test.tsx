@@ -66,9 +66,10 @@ describe('MarketplaceDrawer', () => {
       expect(screen.getByText('Code Reviewer')).toBeInTheDocument()
     })
     expect(screen.getByText('UI Designer')).toBeInTheDocument()
-    // Category labels are de-kebab'd; capitalized via CSS so text is lower-case here.
-    expect(screen.getByText('engineering')).toBeInTheDocument()
-    expect(screen.getByText('design')).toBeInTheDocument()
+    // Category labels are localized via categoryLabels.ts; en falls back to
+    // the dictionary entry (Engineering, Design).
+    expect(screen.getByText('Engineering')).toBeInTheDocument()
+    expect(screen.getByText('Design')).toBeInTheDocument()
   })
 
   test('filters agent list when search query matches name', async () => {
@@ -113,5 +114,25 @@ describe('MarketplaceDrawer', () => {
       target: { value: 'nonexistent-search-term' },
     })
     expect(screen.getByText('No matching agents')).toBeInTheDocument()
+  })
+
+  test('marks agents that match an importedNames entry with the imported badge', async () => {
+    const importedNames = new Set(['Code Reviewer'])
+    render(
+      <MarketplaceDrawer
+        open
+        onClose={() => {}}
+        onImport={() => {}}
+        importedNames={importedNames}
+      />
+    )
+    await waitFor(() => expect(screen.getByText('Code Reviewer')).toBeInTheDocument())
+    const cards = screen.getAllByTestId('marketplace-agent-card')
+    const importedCard = cards.find(
+      (card) => card.dataset.agentPath === 'engineering/code-reviewer.md'
+    )
+    const otherCard = cards.find((card) => card.dataset.agentPath === 'design/ui-designer.md')
+    expect(importedCard?.dataset.imported).toBe('true')
+    expect(otherCard?.dataset.imported).toBeUndefined()
   })
 })

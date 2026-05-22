@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import type { FormEvent } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { Toaster } from '../../web/src/ui/Toast.js'
 import { ToastProvider } from '../../web/src/ui/useToast.js'
 import { AddWorkerDialog } from '../../web/src/worker/AddWorkerDialog.js'
 import { useWorkerComposer } from '../../web/src/worker/useWorkerComposer.js'
@@ -50,6 +51,7 @@ const Harness = ({ onSubmitCapture }: { onSubmitCapture?: (snapshot: unknown) =>
 
   return (
     <ToastProvider>
+      <Toaster />
       <AddWorkerDialog
         commandPresets={composer.commandPresets}
         commandPresetId={composer.commandPresetId}
@@ -145,6 +147,20 @@ describe('AddWorkerDialog marketplace integration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('marketplace-content')).toBeInTheDocument()
     })
+  })
+
+  test('importing an agent shows a success toast with the agent name', async () => {
+    render(<Harness />)
+
+    fireEvent.click(screen.getByTestId('open-marketplace'))
+    await waitFor(() => expect(screen.getByText('Code Reviewer')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Code Reviewer'))
+    const importButton = await screen.findByTestId('marketplace-import-button')
+    await waitFor(() => expect(importButton).not.toBeDisabled())
+    fireEvent.click(importButton)
+
+    const toast = await screen.findByTestId('toast')
+    expect(toast.textContent ?? '').toContain('Code Reviewer')
   })
 
   test('importing an agent fills the AddWorker form with name + description and flips role to custom', async () => {
