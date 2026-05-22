@@ -23,7 +23,7 @@ vi.mock('../../web/src/api.js', async () => {
 const sampleManifest = {
   source: { repo: 'msitarzewski/agency-agents', commit: 'abc', fetched_at: '2026-05-22T00:00:00Z' },
   language: 'en' as const,
-  categories: ['design', 'engineering'],
+  categories: ['design', 'engineering', 'marketing'],
   agents: [
     {
       path: 'engineering/code-reviewer.md',
@@ -32,6 +32,7 @@ const sampleManifest = {
       description: 'Reviews code',
       emoji: '👁️',
       color: 'purple',
+      vibe: null,
     },
     {
       path: 'design/ui-designer.md',
@@ -40,6 +41,16 @@ const sampleManifest = {
       description: 'Designs UI',
       emoji: '🎨',
       color: 'pink',
+      vibe: null,
+    },
+    {
+      path: 'marketing/growth-hacker.md',
+      category: 'marketing',
+      name: 'Growth Hacker',
+      description: 'Drives growth',
+      emoji: '📈',
+      color: 'green',
+      vibe: null,
     },
   ],
 }
@@ -114,6 +125,28 @@ describe('MarketplaceDrawer', () => {
       target: { value: 'nonexistent-search-term' },
     })
     expect(screen.getByText('No matching agents')).toBeInTheDocument()
+  })
+
+  test('hides non-core categories by default and reveals them via the show-all toggle', async () => {
+    render(<MarketplaceDrawer open onClose={() => {}} onImport={() => {}} />)
+    await waitFor(() => expect(screen.getByText('Code Reviewer')).toBeInTheDocument())
+
+    // Marketing is non-core. The category label and its agent should be hidden.
+    expect(screen.queryByText('Marketing')).not.toBeInTheDocument()
+    expect(screen.queryByText('Growth Hacker')).not.toBeInTheDocument()
+
+    // Toggle button reads "Show all categories (+1)".
+    const toggle = screen.getByTestId('marketplace-toggle-show-all')
+    expect(toggle.textContent ?? '').toContain('1')
+
+    fireEvent.click(toggle)
+    expect(screen.getByText('Marketing')).toBeInTheDocument()
+    expect(screen.getByText('Growth Hacker')).toBeInTheDocument()
+
+    // Toggle flips to "Show core only"; click again folds non-core away.
+    fireEvent.click(screen.getByTestId('marketplace-toggle-show-all'))
+    expect(screen.queryByText('Marketing')).not.toBeInTheDocument()
+    expect(screen.queryByText('Growth Hacker')).not.toBeInTheDocument()
   })
 
   test('marks agents that match an importedNames entry with the imported badge', async () => {

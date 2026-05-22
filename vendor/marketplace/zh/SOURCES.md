@@ -4,7 +4,7 @@ This directory mirrors [jnMetaCode/agency-agents-zh](https://github.com/jnMetaCo
 
 - Language: zh
 - Agents: 216
-- Synced: 2026-05-22T00:10:24.981Z
+- Synced: 2026-05-22T01:26:06.695Z
 - License: MIT (see LICENSE in this directory)
 
 All markdown content is unmodified from upstream. Hive only filters out top-level

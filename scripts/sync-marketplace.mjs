@@ -220,6 +220,7 @@ const syncOne = async (lang, options) => {
         description: String(fm.description),
         emoji: fm.emoji ? String(fm.emoji) : null,
         color: fm.color ? String(fm.color) : null,
+        vibe: fm.vibe ? String(fm.vibe) : null,
       })
 
       const targetPath = join(stagingDir, normalizedPath)

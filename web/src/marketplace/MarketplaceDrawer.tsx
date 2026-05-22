@@ -8,6 +8,20 @@ import { MarketplaceAgentPreview } from './MarketplaceAgentPreview.js'
 import { MarketplaceCategoryTree } from './MarketplaceCategoryTree.js'
 import { useMarketplace } from './useMarketplace.js'
 
+// Categories surfaced by default in the marketplace. 200+ agents include many
+// off-topic roles (marketing, game-dev, academic, etc.) that a CLI-coding tool
+// doesn't need front-and-center. User can click "Show all categories" to
+// surface the rest.
+const CORE_CATEGORIES: ReadonlySet<string> = new Set([
+  'engineering',
+  'design',
+  'product',
+  'testing',
+  'project-management',
+  'specialized',
+  'integrations',
+])
+
 interface MarketplaceDrawerProps {
   open: boolean
   onClose: () => void
@@ -26,6 +40,7 @@ export const MarketplaceDrawer = ({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<MarketplaceAgentEntry | null>(null)
   const [query, setQuery] = useState('')
+  const [showAllCategories, setShowAllCategories] = useState(false)
 
   const handleOpenChange = (next: boolean) => {
     if (!next) onClose()
@@ -42,17 +57,45 @@ export const MarketplaceDrawer = ({
     return counts
   }, [manifest])
 
+  const visibleCategories = useMemo(() => {
+    if (!manifest) return [] as readonly string[]
+    if (showAllCategories) return manifest.categories
+    return manifest.categories.filter((category) => CORE_CATEGORIES.has(category))
+  }, [manifest, showAllCategories])
+
+  const hiddenCategoryCount = useMemo(() => {
+    if (!manifest) return 0
+    return manifest.categories.length - visibleCategories.length
+  }, [manifest, visibleCategories])
+
   const filteredAgents = useMemo(() => {
     if (!manifest) return []
     const lower = query.trim().toLowerCase()
     return manifest.agents.filter((agent) => {
-      if (selectedCategory && agent.category !== selectedCategory) return false
+      if (selectedCategory) {
+        if (agent.category !== selectedCategory) return false
+      } else if (!showAllCategories && !CORE_CATEGORIES.has(agent.category)) {
+        return false
+      }
       if (!lower) return true
       return (
         agent.name.toLowerCase().includes(lower) || agent.description.toLowerCase().includes(lower)
       )
     })
-  }, [manifest, query, selectedCategory])
+  }, [manifest, query, selectedCategory, showAllCategories])
+
+  const handleToggleShowAll = () => {
+    setShowAllCategories((current) => {
+      const next = !current
+      // Reset selection when collapsing back to core view if the current
+      // selection is now hidden — otherwise the grid silently empties.
+      if (!next && selectedCategory && !CORE_CATEGORIES.has(selectedCategory)) {
+        setSelectedCategory(null)
+        setSelectedAgent(null)
+      }
+      return next
+    })
+  }
 
   const handleImport = (detail: { name: string; description: string }) => {
     onImport(detail)
@@ -70,7 +113,7 @@ export const MarketplaceDrawer = ({
         <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-4">
           <Dialog.Content
             data-testid="marketplace-content"
-            className="dialog-scale-pop elev-2 pointer-events-auto flex max-h-[calc(100vh-32px)] w-[1100px] max-w-full flex-col rounded-lg border"
+            className="dialog-scale-pop elev-2 pointer-events-auto flex max-h-[calc(100vh-32px)] w-[1280px] max-w-full flex-col rounded-lg border"
             style={{
               background: 'var(--bg-elevated)',
               borderColor: 'var(--border-bright)',
@@ -102,19 +145,27 @@ export const MarketplaceDrawer = ({
               />
             </header>
             <div
-              className="grid min-h-0 flex-1 grid-cols-[180px_minmax(0,1fr)_380px] divide-x"
-              style={{ borderColor: 'var(--border)' }}
+              className="grid min-h-0 flex-1 divide-x transition-[grid-template-columns] duration-200 ease-out"
+              style={{
+                borderColor: 'var(--border)',
+                gridTemplateColumns: selectedAgent
+                  ? '180px minmax(0, 1fr) 380px'
+                  : '180px minmax(0, 1fr)',
+              }}
             >
               <aside className="min-h-0 overflow-y-auto px-3 py-3">
                 {manifest ? (
                   <MarketplaceCategoryTree
-                    categories={manifest.categories}
+                    categories={visibleCategories}
                     selected={selectedCategory}
                     onSelect={(category) => {
                       setSelectedCategory(category)
                       setSelectedAgent(null)
                     }}
                     counts={categoryCounts}
+                    showAll={showAllCategories}
+                    onToggleShowAll={handleToggleShowAll}
+                    hiddenCount={hiddenCategoryCount}
                   />
                 ) : null}
               </aside>
@@ -131,7 +182,10 @@ export const MarketplaceDrawer = ({
                 {manifestState.status === 'loaded' && filteredAgents.length === 0 ? (
                   <p className="text-sm text-ter">{t('marketplace.empty')}</p>
                 ) : null}
-                <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+                <div
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}
+                >
                   {filteredAgents.map((agent) => (
                     <MarketplaceAgentCard
                       key={agent.path}
@@ -143,20 +197,16 @@ export const MarketplaceDrawer = ({
                   ))}
                 </div>
               </section>
-              <section className="min-h-0">
-                {selectedAgent && manifest ? (
+              {selectedAgent && manifest ? (
+                <section className="min-h-0">
                   <MarketplaceAgentPreview
                     agent={selectedAgent}
                     sourceRepo={manifest.source.repo}
                     loadAgent={loadAgent}
                     onImport={handleImport}
                   />
-                ) : (
-                  <div className="flex h-full items-center justify-center px-4 text-sm text-ter">
-                    —
-                  </div>
-                )}
-              </section>
+                </section>
+              ) : null}
             </div>
           </Dialog.Content>
         </div>

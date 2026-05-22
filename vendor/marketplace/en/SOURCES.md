@@ -4,7 +4,7 @@ This directory mirrors [msitarzewski/agency-agents](https://github.com/msitarzew
 
 - Language: en
 - Agents: 184
-- Synced: 2026-05-22T00:10:21.293Z
+- Synced: 2026-05-22T01:26:03.412Z
 - License: MIT (see LICENSE in this directory)
 
 All markdown content is unmodified from upstream. Hive only filters out top-level

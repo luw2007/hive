@@ -28,6 +28,7 @@ export interface MarketplaceAgentEntry {
   description: string
   emoji: string | null
   color: string | null
+  vibe: string | null
 }
 
 export interface MarketplaceManifest {
