@@ -183,7 +183,6 @@ export const AddWorkerDialog = ({
                   style={{
                     background: 'var(--bg-0)',
                     borderColor: 'var(--border-bright)',
-                    // biome-ignore lint/style/useNamingConvention: CSS custom prop
                     ['--tw-ring-color' as string]:
                       'color-mix(in oklab, var(--accent) 45%, transparent)',
                   }}

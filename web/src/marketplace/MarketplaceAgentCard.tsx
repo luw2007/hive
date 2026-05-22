@@ -43,7 +43,6 @@ export const MarketplaceAgentCard = ({
       style={{
         background: cardBackground(selected),
         borderColor: cardBorder(selected),
-        // biome-ignore lint/style/useNamingConvention: react allows --custom-prop CSS vars on style
         ['--tw-ring-color' as string]: 'color-mix(in oklab, var(--accent) 55%, transparent)',
       }}
     >
