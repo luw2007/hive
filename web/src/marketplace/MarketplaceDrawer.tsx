@@ -166,7 +166,7 @@ export const MarketplaceDrawer = ({
             }}
           >
             <header
-              className="flex shrink-0 items-center justify-between gap-4 border-b px-4 py-3"
+              className="flex shrink-0 items-center justify-between gap-4 border-b px-5 py-4"
               style={{ borderColor: 'var(--border)' }}
             >
               <div className="flex flex-col gap-0.5">
@@ -178,17 +178,11 @@ export const MarketplaceDrawer = ({
                 </Dialog.Description>
               </div>
               <div className="flex items-center gap-2">
-                <div
-                  className="relative flex w-72 items-center rounded-md border transition-colors focus-within:border-accent"
-                  style={{
-                    background: 'var(--bg-0)',
-                    borderColor: 'var(--border-bright)',
-                  }}
-                >
+                <div className="relative flex w-72 items-center">
                   <Search
                     size={14}
                     aria-hidden
-                    className="pointer-events-none absolute left-2.5 text-ter"
+                    className="pointer-events-none absolute left-3 text-ter"
                   />
                   <input
                     type="search"
@@ -196,7 +190,7 @@ export const MarketplaceDrawer = ({
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={t('marketplace.searchPlaceholder')}
                     data-testid="marketplace-search"
-                    className="w-full bg-transparent py-1.5 pl-8 pr-3 text-sm text-pri outline-none placeholder:text-sec"
+                    className="input pl-9"
                   />
                 </div>
                 <Dialog.Close asChild>
@@ -204,13 +198,9 @@ export const MarketplaceDrawer = ({
                     type="button"
                     aria-label={t('marketplace.close')}
                     data-testid="marketplace-close"
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border text-sec transition-colors hover:text-pri"
-                    style={{
-                      background: 'var(--bg-0)',
-                      borderColor: 'var(--border-bright)',
-                    }}
+                    className="flex h-7 w-7 items-center justify-center rounded text-sec hover:bg-3 hover:text-pri"
                   >
-                    <X size={16} aria-hidden />
+                    <X size={14} aria-hidden />
                   </button>
                 </Dialog.Close>
               </div>

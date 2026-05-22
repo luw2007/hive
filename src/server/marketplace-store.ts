@@ -25,6 +25,8 @@ export interface MarketplaceAgentEntry {
   path: string
   category: string
   name: string
+  displayName?: string
+  nameOverflows?: boolean
   description: string
   emoji: string | null
   color: string | null

@@ -87,23 +87,60 @@ const ZH_PERSONALITY_RE = /\*\*\s*(?:个性|性格)\s*\*\*\s*[:：]\s*([^\n]+)/
 
 const isLikelyPlaceholder = (text) => /^\[[^\n]*\]$/.test(text.trim())
 
+// Description fallback: a 14/33 (EN/ZH) entries have neither a `vibe`
+// frontmatter field nor a ZH **个性** body line. Their `description` is
+// often a 200-char comma-separated jargon dump that gets line-clamped to
+// noise on the card. Snip the first clause so the card at least carries
+// a coherent sentence instead of a truncated job listing.
+const FIRST_CLAUSE_SPLIT_RE =
+  /\s—\s|——|。|，(?:精通|擅长|专注|包括|涵盖)|, (?:proficient|covering|skilled|specializing|including|focused)/i
+
+const extractDescriptionLead = (description) => {
+  if (!description) return null
+  const text = String(description).trim()
+  if (!text) return null
+  if (text.length <= VIBE_MAX_LEN) return text
+  const head = text.split(FIRST_CLAUSE_SPLIT_RE)[0].trim()
+  if (head.length >= 12 && head.length <= VIBE_MAX_LEN) return head
+  return null
+}
+
 const extractVibe = (lang, fm, body) => {
   if (fm.vibe) {
     const value = String(fm.vibe).trim()
-    if (!value || value.length > VIBE_MAX_LEN) return null
-    if (isLikelyPlaceholder(value)) return null
-    return value
+    if (value && value.length <= VIBE_MAX_LEN && !isLikelyPlaceholder(value)) return value
   }
   if (lang === 'zh' && typeof body === 'string') {
     const match = body.match(ZH_PERSONALITY_RE)
     if (match?.[1]) {
       const value = match[1].trim().replace(/^["“”'`]+|["“”'`]+$/g, '')
-      if (!value || value.length > VIBE_MAX_LEN) return null
-      if (isLikelyPlaceholder(value)) return null
-      return value
+      if (value && value.length <= VIBE_MAX_LEN && !isLikelyPlaceholder(value)) return value
     }
   }
-  return null
+  return extractDescriptionLead(fm.description)
+}
+
+// Treat each ASCII char as 1 visual cell, each non-ASCII (CJK / emoji /
+// fullwidth punctuation) as 2 — matches how the card grid measures
+// truncation when both languages share the same 220px floor.
+const visualLength = (text) => {
+  let total = 0
+  for (const ch of text) {
+    const code = ch.codePointAt(0) ?? 0
+    total += code < 0x80 ? 1 : 2
+  }
+  return total
+}
+
+const NAME_OVERFLOW_VISUAL = 22
+
+// Drop entries where ZH didn't actually translate (CJK absent in the name).
+// Today only `integrations/mcp-memory/backend-architect-with-memory.md`
+// trips this — it ships an English name and no emoji in the ZH repo.
+const looksLocalized = (lang, fm) => {
+  if (lang !== 'zh') return true
+  const name = String(fm.name ?? '')
+  return /[一-鿿]/.test(name)
 }
 
 const ghJson = (path) => {
@@ -241,13 +278,20 @@ const syncOne = async (lang, options) => {
         parseFailures += 1
         continue
       }
+      if (!looksLocalized(lang, fm)) {
+        console.warn(`[${lang}] non-localized entry: ${relativePath} — skipping`)
+        parseFailures += 1
+        continue
+      }
       const normalizedPath = relativePath.split(sep).join('/')
       const category = normalizedPath.includes('/') ? normalizedPath.split('/')[0] : 'misc'
       const vibe = extractVibe(lang, fm, parsed.content)
+      const name = String(fm.name)
       agents.push({
         path: normalizedPath,
         category,
-        name: String(fm.name),
+        name,
+        nameOverflows: visualLength(name) > NAME_OVERFLOW_VISUAL,
         description: String(fm.description),
         emoji: fm.emoji ? String(fm.emoji) : null,
         color: fm.color ? String(fm.color) : null,
@@ -265,6 +309,18 @@ const syncOne = async (lang, options) => {
       cpSync(licenseSource, join(stagingDir, 'LICENSE'))
     } else {
       console.warn(`[${lang}] no LICENSE file found in upstream — please verify manually`)
+    }
+
+    // Disambiguate duplicate names across categories (e.g. EN has two
+    // "Backend Architect"s, ZH has two "招聘专家"s). Cards render
+    // displayName ?? name, so collisions get a (category) suffix only
+    // when they actually collide.
+    const nameCounts = new Map()
+    for (const a of agents) nameCounts.set(a.name, (nameCounts.get(a.name) ?? 0) + 1)
+    for (const a of agents) {
+      if ((nameCounts.get(a.name) ?? 0) > 1) {
+        a.displayName = `${a.name} (${a.category})`
+      }
     }
 
     const manifest = buildManifest(lang, sourceInfo, agents)

@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Bookmark } from 'lucide-react'
 
 import type { MarketplaceAgentEntry } from '../api.js'
 import { useI18n } from '../i18n.js'
@@ -29,6 +29,8 @@ export const MarketplaceAgentCard = ({
   const { t } = useI18n()
   const tagline = agent.vibe?.trim() ? agent.vibe : agent.description
   const importedLabel = t('marketplace.importedBadge')
+  const displayName = agent.displayName ?? agent.name
+  const nameTitle = agent.nameOverflows ? displayName : undefined
   return (
     <button
       type="button"
@@ -48,7 +50,9 @@ export const MarketplaceAgentCard = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {agent.emoji ? <span className="text-base leading-none">{agent.emoji}</span> : null}
-          <span className="truncate text-sm font-semibold text-pri">{agent.name}</span>
+          <span className="truncate text-sm font-semibold text-pri" title={nameTitle}>
+            {displayName}
+          </span>
         </div>
         {imported ? (
           <span
@@ -70,7 +74,7 @@ export const MarketplaceAgentCard = ({
               color: selected ? '#ffffff' : 'color-mix(in oklab, var(--accent) 60%, white)',
             }}
           >
-            <Check size={10} aria-hidden />
+            <Bookmark size={10} aria-hidden />
           </span>
         ) : null}
       </div>

@@ -116,27 +116,18 @@ export const MarketplaceAgentPreview = ({
           {t('marketplace.viewSource')}
           <ExternalLink size={11} aria-hidden />
         </a>
-        {(() => {
-          const importDisabled = state.status !== 'loaded' || !state.detail
-          return (
-            <button
-              type="button"
-              disabled={importDisabled}
-              onClick={() => {
-                if (!state.detail) return
-                onImport({ name: agent.name, description: state.detail.body.trim() })
-              }}
-              data-testid="marketplace-import-button"
-              className="cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed"
-              style={{
-                background: importDisabled ? 'var(--bg-3)' : 'var(--accent)',
-                color: importDisabled ? 'var(--text-tertiary)' : '#ffffff',
-              }}
-            >
-              {t('marketplace.importButton')}
-            </button>
-          )
-        })()}
+        <button
+          type="button"
+          disabled={state.status !== 'loaded' || !state.detail}
+          onClick={() => {
+            if (!state.detail) return
+            onImport({ name: agent.name, description: state.detail.body.trim() })
+          }}
+          data-testid="marketplace-import-button"
+          className="icon-btn icon-btn--primary"
+        >
+          {t('marketplace.importButton')}
+        </button>
       </footer>
     </div>
   )
