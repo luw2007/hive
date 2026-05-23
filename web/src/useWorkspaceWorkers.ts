@@ -34,6 +34,7 @@ const areWorkersEqual = (a: TeamListItem[], b: TeamListItem[]): boolean => {
     const other = b[index]
     return (
       other !== undefined &&
+      worker.commandPresetId === other.commandPresetId &&
       worker.id === other.id &&
       worker.lastPtyLine === other.lastPtyLine &&
       worker.name === other.name &&
@@ -51,7 +52,10 @@ const areWorkerMapsEqual = (
   const aKeys = Object.keys(a)
   const bKeys = Object.keys(b)
   if (aKeys.length !== bKeys.length) return false
-  return bKeys.every((workspaceId) => areWorkersEqual(a[workspaceId] ?? [], b[workspaceId] ?? []))
+  return bKeys.every(
+    (workspaceId) =>
+      Object.hasOwn(a, workspaceId) && areWorkersEqual(a[workspaceId] ?? [], b[workspaceId] ?? [])
+  )
 }
 
 export const useWorkspaceWorkers = (

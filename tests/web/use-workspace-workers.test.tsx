@@ -139,6 +139,79 @@ describe('useWorkspaceWorkers', () => {
     expect(result.current[0]).toBe(firstMap)
   })
 
+  test('updates when only a worker command preset changes', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        json([
+          {
+            id: 'wa',
+            name: 'Alice',
+            role: 'coder',
+            status: 'idle',
+            pending_task_count: 0,
+            command_preset_id: 'claude',
+          },
+        ])
+      )
+      .mockResolvedValueOnce(
+        json([
+          {
+            id: 'wa',
+            name: 'Alice',
+            role: 'coder',
+            status: 'idle',
+            pending_task_count: 0,
+            command_preset_id: 'codex',
+          },
+        ])
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useWorkspaceWorkers(['a'], { activeWorkspaceId: 'a' }))
+
+    await act(async () => {
+      await flushPromises()
+    })
+    expect(result.current[0].a?.[0]?.commandPresetId).toBe('claude')
+
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+      await flushPromises()
+    })
+
+    expect(result.current[0].a?.[0]?.commandPresetId).toBe('codex')
+  })
+
+  test('replaces stale workspace keys even when the next workspace has no workers', async () => {
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      if (url === '/api/ui/workspaces/a/team') {
+        return json([
+          { id: 'wa', name: 'Alice', role: 'coder', status: 'idle', pending_task_count: 0 },
+        ])
+      }
+      if (url === '/api/ui/workspaces/b/team') return json([])
+      throw new Error(`Unexpected fetch ${url}`)
+    })
+
+    const { rerender, result } = renderHook(
+      ({ workspaceIds }: { workspaceIds: string[] }) => useWorkspaceWorkers(workspaceIds),
+      { initialProps: { workspaceIds: ['a'] } }
+    )
+
+    await waitFor(() => {
+      expect(result.current[0]).toHaveProperty('a')
+    })
+
+    rerender({ workspaceIds: ['b'] })
+
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({ b: [] })
+    })
+  })
+
   test('backs off failed refreshes and does not overlap in-flight worker requests', async () => {
     vi.useFakeTimers()
     let resolveFirstFetch: ((response: Response) => void) | undefined
