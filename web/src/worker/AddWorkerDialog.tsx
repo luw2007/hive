@@ -1,11 +1,10 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Dices, Store } from 'lucide-react'
-import { type FormEvent, useMemo, useState } from 'react'
+import { type FormEvent, lazy, Suspense, useMemo, useState } from 'react'
 
 import type { WorkerRole } from '../../../src/shared/types.js'
 import type { CommandPreset, RoleTemplate } from '../api.js'
 import { useI18n } from '../i18n.js'
-import { MarketplaceDrawer } from '../marketplace/MarketplaceDrawer.js'
 import { Tooltip } from '../ui/Tooltip.js'
 import { useToast } from '../ui/useToast.js'
 import {
@@ -16,6 +15,12 @@ import {
   SectionLabel,
   StartupCommandField,
 } from './AddWorkerDialogFields.js'
+
+const MarketplaceDrawer = lazy(() =>
+  import('../marketplace/MarketplaceDrawer.js').then((module) => ({
+    default: module.MarketplaceDrawer,
+  }))
+)
 
 type AddWorkerDialogProps = {
   commandPresets: CommandPreset[]
@@ -75,6 +80,7 @@ export const AddWorkerDialog = ({
   const { t } = useI18n()
   const toast = useToast()
   const [marketplaceOpen, setMarketplaceOpen] = useState(false)
+  const [marketplaceMounted, setMarketplaceMounted] = useState(false)
   const importedNames = useMemo(
     () => new Set(customTemplates.map((template) => template.name)),
     [customTemplates]
@@ -177,7 +183,10 @@ export const AddWorkerDialog = ({
                 <RolePicker workerRole={workerRole} onRoleChange={onRoleChange} />
                 <button
                   type="button"
-                  onClick={() => setMarketplaceOpen(true)}
+                  onClick={() => {
+                    setMarketplaceMounted(true)
+                    setMarketplaceOpen(true)
+                  }}
                   data-testid="open-marketplace"
                   className="marketplace-browse-btn flex cursor-pointer items-center gap-2 self-start rounded-md border px-3 py-1.5 text-xs text-sec outline-none transition-colors focus-visible:ring-2"
                   style={{
@@ -248,12 +257,16 @@ export const AddWorkerDialog = ({
           </Dialog.Content>
         </div>
       </Dialog.Portal>
-      <MarketplaceDrawer
-        open={marketplaceOpen}
-        onClose={() => setMarketplaceOpen(false)}
-        onImport={handleMarketplaceImport}
-        importedNames={importedNames}
-      />
+      {marketplaceMounted ? (
+        <Suspense fallback={null}>
+          <MarketplaceDrawer
+            open={marketplaceOpen}
+            onClose={() => setMarketplaceOpen(false)}
+            onImport={handleMarketplaceImport}
+            importedNames={importedNames}
+          />
+        </Suspense>
+      ) : null}
     </Dialog.Root>
   )
 }

@@ -119,6 +119,27 @@ export const parseTaskMarkdown = (
   return root
 }
 
+export const countOpenRootTasks = (content: string): number => {
+  let openRoots = 0
+  const stack: Array<{ indent: number }> = []
+  const lines = content.split(/\r?\n/)
+  for (const rawLine of lines) {
+    if (!rawLine) continue
+    const match = rawLine.match(TASK_LINE)
+    if (!match) continue
+    const [, indentRaw = '', mark = ' '] = match
+    const indent = indentRaw.replace(/\t/g, '  ').length
+    while (stack.length > 0) {
+      const top = stack[stack.length - 1]
+      if (top && top.indent < indent) break
+      stack.pop()
+    }
+    if (!stack[stack.length - 1] && mark.toLowerCase() !== 'x') openRoots += 1
+    stack.push({ indent })
+  }
+  return openRoots
+}
+
 /**
  * Direct-child progress for a parent task. Counts only the parent's
  * immediate `[ ]` / `[x]` children — not grandchildren, not bullets that

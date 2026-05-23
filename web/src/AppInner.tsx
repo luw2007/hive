@@ -11,7 +11,7 @@ import { RuntimeOfflinePage } from './pwa/RuntimeOfflinePage.js'
 import { UpdateAvailableToast } from './pwa/UpdateAvailableToast.js'
 import { useShortcutAction } from './pwa/use-shortcut-action.js'
 import { Sidebar } from './sidebar/Sidebar.js'
-import { parseTaskMarkdown } from './tasks/task-markdown.js'
+import { countOpenRootTasks } from './tasks/task-markdown.js'
 import { useTasksFile } from './tasks/useTasksFile.js'
 import { useOptimisticTerminalRuns } from './terminal/useOptimisticTerminalRuns.js'
 import { useTerminalRuns } from './terminal/useTerminalRuns.js'
@@ -33,7 +33,9 @@ export const AppInner = () => {
   const { activeWorkspaceId, selectWorkspace, setActiveWorkspaceId } = useWorkspaceSelection()
   const { demoMode, enableDemo, exitDemo } = useDemoMode()
   const localPollIds = demoMode || !workspaces ? [] : workspaces.map(({ id }) => id)
-  const [workersByWorkspaceId, setWorkersByWorkspaceId] = useWorkspaceWorkers(localPollIds)
+  const [workersByWorkspaceId, setWorkersByWorkspaceId] = useWorkspaceWorkers(localPollIds, {
+    activeWorkspaceId,
+  })
   const [addDialogTrigger, setAddDialogTrigger] = useState(0)
   const [taskGraphOpen, setTaskGraphOpen] = useState(false)
   const toast = useToast()
@@ -70,10 +72,7 @@ export const AppInner = () => {
     demoMode ? DEMO_TASKS_MD : undefined
   )
   const openTaskCount = useMemo(
-    () =>
-      eff.effectiveActiveWorkspace
-        ? parseTaskMarkdown(tasksFile.content).filter((task) => !task.checked).length
-        : 0,
+    () => (eff.effectiveActiveWorkspace ? countOpenRootTasks(tasksFile.content) : 0),
     [eff.effectiveActiveWorkspace, tasksFile.content]
   )
   const workerActions = useWorkerActions({

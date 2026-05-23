@@ -1,4 +1,5 @@
 import { Bookmark } from 'lucide-react'
+import { memo, useCallback } from 'react'
 
 import type { MarketplaceAgentEntry } from '../api.js'
 import { useI18n } from '../i18n.js'
@@ -7,7 +8,7 @@ interface MarketplaceAgentCardProps {
   agent: MarketplaceAgentEntry
   selected: boolean
   imported: boolean
-  onSelect: () => void
+  onSelect: (path: string) => void
 }
 
 // Card surface uses bg-2 (a step below the drawer's bg-elevated container) so
@@ -20,13 +21,14 @@ const cardBackground = (selected: boolean): string =>
 const cardBorder = (selected: boolean): string =>
   selected ? 'var(--accent)' : 'var(--border-bright)'
 
-export const MarketplaceAgentCard = ({
+const MarketplaceAgentCardComponent = ({
   agent,
   selected,
   imported,
   onSelect,
 }: MarketplaceAgentCardProps) => {
   const { t } = useI18n()
+  const handleClick = useCallback(() => onSelect(agent.path), [agent.path, onSelect])
   const tagline = agent.vibe?.trim() ? agent.vibe : agent.description
   const importedLabel = t('marketplace.importedBadge')
   const displayName = agent.displayName ?? agent.name
@@ -34,7 +36,7 @@ export const MarketplaceAgentCard = ({
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={handleClick}
       data-testid="marketplace-agent-card"
       data-agent-path={agent.path}
       data-imported={imported ? 'true' : undefined}
@@ -81,3 +83,5 @@ export const MarketplaceAgentCard = ({
     </button>
   )
 }
+
+export const MarketplaceAgentCard = memo(MarketplaceAgentCardComponent)

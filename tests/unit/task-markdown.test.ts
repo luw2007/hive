@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   appendChildTaskAtLine,
   countDirectCheckboxChildren,
+  countOpenRootTasks,
   deleteTaskLine,
   parseTaskMarkdown,
   updateTaskTextAtLine,
@@ -160,6 +161,27 @@ describe('parseTaskMarkdown — fail-soft (with knownWorkerNames)', () => {
     const [task] = parseTaskMarkdown('- [ ] @Alice please review\n', { knownWorkerNames: [] })
     expect(task?.mentions).toEqual([])
     expect(task?.text).toContain('@Alice')
+  })
+})
+
+describe('countOpenRootTasks', () => {
+  test('counts only unchecked root tasks, not unchecked children', () => {
+    const content = '- [ ] root\n  - [ ] child\n- [x] done root\n- [ ] second root\n'
+    expect(countOpenRootTasks(content)).toBe(2)
+  })
+
+  test('uses parser root semantics when the first task is indented', () => {
+    const content = '  - [ ] indented root\n    - [ ] child\n  - [x] done indented root\n'
+    expect(countOpenRootTasks(content)).toBe(1)
+  })
+
+  test('ignores prose and non-checkbox bullets', () => {
+    const content = '# heading\n- ordinary bullet\n- [ ] task\nprose\n'
+    expect(countOpenRootTasks(content)).toBe(1)
+  })
+
+  test('handles CRLF input', () => {
+    expect(countOpenRootTasks('- [ ] alpha\r\n- [x] beta\r\n')).toBe(1)
   })
 })
 

@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Search, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 import type { MarketplaceAgentEntry } from '../api.js'
 import { useI18n } from '../i18n.js'
@@ -51,6 +51,11 @@ interface MarketplaceDrawerProps {
   importedNames?: ReadonlySet<string>
 }
 
+interface IndexedMarketplaceAgent {
+  agent: MarketplaceAgentEntry
+  searchText: string
+}
+
 export const MarketplaceDrawer = ({
   open,
   onClose,
@@ -62,6 +67,7 @@ export const MarketplaceDrawer = ({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<MarketplaceAgentEntry | null>(null)
   const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
   const [showAllCategories, setShowAllCategories] = useState(true)
 
   // Switching UI language repoints `useMarketplace` to the other repo's
@@ -80,6 +86,23 @@ export const MarketplaceDrawer = ({
   }
 
   const manifest = manifestState.data
+
+  const indexedAgents = useMemo((): readonly IndexedMarketplaceAgent[] => {
+    if (!manifest) return []
+    return manifest.agents.map((agent) => ({
+      agent,
+      searchText: `${agent.name}\n${agent.description}`.toLowerCase(),
+    }))
+  }, [manifest])
+
+  const agentsByPath = useMemo(() => {
+    const agents = new Map<string, MarketplaceAgentEntry>()
+    if (!manifest) return agents
+    for (const agent of manifest.agents) {
+      agents.set(agent.path, agent)
+    }
+    return agents
+  }, [manifest])
 
   const categoryCounts = useMemo(() => {
     if (!manifest) return {}
@@ -104,20 +127,26 @@ export const MarketplaceDrawer = ({
   }, [manifest, visibleCategories])
 
   const filteredAgents = useMemo(() => {
-    if (!manifest) return []
-    const lower = query.trim().toLowerCase()
-    return manifest.agents.filter((agent) => {
+    const lower = deferredQuery.trim().toLowerCase()
+    const agents: MarketplaceAgentEntry[] = []
+    for (const { agent, searchText } of indexedAgents) {
       if (selectedCategory) {
-        if (agent.category !== selectedCategory) return false
+        if (agent.category !== selectedCategory) continue
       } else if (!showAllCategories && !CORE_CATEGORIES.has(agent.category)) {
-        return false
+        continue
       }
-      if (!lower) return true
-      return (
-        agent.name.toLowerCase().includes(lower) || agent.description.toLowerCase().includes(lower)
-      )
-    })
-  }, [manifest, query, selectedCategory, showAllCategories])
+      if (!lower || searchText.includes(lower)) agents.push(agent)
+    }
+    return agents
+  }, [indexedAgents, deferredQuery, selectedCategory, showAllCategories])
+
+  const handleSelectAgent = useCallback(
+    (path: string) => {
+      const agent = agentsByPath.get(path)
+      if (agent) setSelectedAgent(agent)
+    },
+    [agentsByPath]
+  )
 
   const handleToggleShowAll = () => {
     setShowAllCategories((current) => {
@@ -264,7 +293,7 @@ export const MarketplaceDrawer = ({
                         agent={agent}
                         selected={selectedAgent?.path === agent.path}
                         imported={importedNames?.has(agent.name) ?? false}
-                        onSelect={() => setSelectedAgent(agent)}
+                        onSelect={handleSelectAgent}
                       />
                     ))}
                   </div>

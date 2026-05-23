@@ -560,19 +560,27 @@ const AddTaskInline = ({
   )
 }
 
-const flattenTasks = (tasks: ParsedTask[]): ParsedTask[] =>
-  tasks.flatMap((task) => [task, ...flattenTasks(task.children)])
-
 const getTaskSummary = (tasks: ParsedTask[]) => {
-  const flatTasks = flattenTasks(tasks)
-  const totalTasks = flatTasks.length
-  const completedTasks = flatTasks.filter((task) => task.checked).length
+  let totalTasks = 0
+  let completedTasks = 0
+  const openRoots: ParsedTask[] = []
+  const doneRoots: ParsedTask[] = []
+  const visit = (task: ParsedTask) => {
+    totalTasks += 1
+    if (task.checked) completedTasks += 1
+    for (const child of task.children) visit(child)
+  }
+  for (const task of tasks) {
+    if (task.checked) doneRoots.push(task)
+    else openRoots.push(task)
+    visit(task)
+  }
   const completionPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100)
   return {
     completedTasks,
     completionPercent,
-    doneRoots: tasks.filter((task) => task.checked),
-    openRoots: tasks.filter((task) => !task.checked),
+    doneRoots,
+    openRoots,
     totalTasks,
   }
 }

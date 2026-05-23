@@ -122,7 +122,7 @@ describe('useWorkspaceWorkers', () => {
       )
     vi.stubGlobal('fetch', fetchMock)
 
-    const { result } = renderHook(() => useWorkspaceWorkers(['a']))
+    const { result } = renderHook(() => useWorkspaceWorkers(['a'], { activeWorkspaceId: 'a' }))
 
     await act(async () => {
       await flushPromises()
@@ -156,7 +156,7 @@ describe('useWorkspaceWorkers', () => {
       )
     vi.stubGlobal('fetch', fetchMock)
 
-    renderHook(() => useWorkspaceWorkers(['a']))
+    renderHook(() => useWorkspaceWorkers(['a'], { activeWorkspaceId: 'a' }))
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
     await act(async () => {
@@ -188,5 +188,148 @@ describe('useWorkspaceWorkers', () => {
       await flushPromises()
     })
     expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  test('polls the active workspace frequently while background workspaces stay on the slow interval', async () => {
+    vi.useFakeTimers()
+    const calls: string[] = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      calls.push(url)
+      const workerName = url.includes('/a/') ? 'Alice' : 'Bob'
+      return json([
+        {
+          id: `w-${workerName}`,
+          name: workerName,
+          role: 'coder',
+          status: 'idle',
+          pending_task_count: 0,
+        },
+      ])
+    })
+
+    renderHook(() => useWorkspaceWorkers(['a', 'b'], { activeWorkspaceId: 'a' }))
+
+    await act(async () => {
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(1)
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(1)
+
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(2)
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(1)
+
+    await act(async () => {
+      vi.advanceTimersByTime(4500)
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(2)
+  })
+
+  test('refreshes a workspace promptly when it becomes active', async () => {
+    vi.useFakeTimers()
+    const calls: string[] = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      calls.push(url)
+      return json([])
+    })
+
+    const { rerender } = renderHook(
+      ({ activeWorkspaceId }: { activeWorkspaceId: string }) =>
+        useWorkspaceWorkers(['a', 'b'], { activeWorkspaceId }),
+      { initialProps: { activeWorkspaceId: 'a' } }
+    )
+
+    await act(async () => {
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(1)
+
+    rerender({ activeWorkspaceId: 'b' })
+    await act(async () => {
+      await flushPromises()
+    })
+
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(2)
+  })
+
+  test('refreshes a preserved workspace promptly after stale in-flight polling is cancelled', async () => {
+    vi.useFakeTimers()
+    const calls: string[] = []
+    let resolveFirstA!: (response: Response) => void
+    const firstAResponse = new Promise<Response>((resolve) => {
+      resolveFirstA = resolve
+    })
+    vi.stubGlobal('fetch', (async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      calls.push(url)
+      if (
+        url === '/api/ui/workspaces/a/team' &&
+        calls.filter((call) => call === url).length === 1
+      ) {
+        return firstAResponse
+      }
+      return json([])
+    }) as typeof fetch)
+
+    const { rerender } = renderHook(
+      ({ workspaceIds }: { workspaceIds: string[] }) => useWorkspaceWorkers(workspaceIds),
+      { initialProps: { workspaceIds: ['a', 'b'] } }
+    )
+
+    await act(async () => {
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(1)
+
+    await act(async () => {
+      rerender({ workspaceIds: ['a', 'c'] })
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(1)
+    expect(calls.filter((url) => url === '/api/ui/workspaces/c/team')).toHaveLength(1)
+
+    await act(async () => {
+      resolveFirstA(json([]))
+      await flushPromises()
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+      await flushPromises()
+    })
+
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(2)
+  })
+
+  test('a failing background workspace does not slow down the active workspace', async () => {
+    vi.useFakeTimers()
+    const calls: string[] = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      calls.push(url)
+      if (url === '/api/ui/workspaces/b/team') throw new Error('background failed')
+      return json([])
+    })
+
+    renderHook(() => useWorkspaceWorkers(['a', 'b'], { activeWorkspaceId: 'a' }))
+
+    await act(async () => {
+      await flushPromises()
+    })
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(1)
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(1)
+
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+      await flushPromises()
+    })
+
+    expect(calls.filter((url) => url === '/api/ui/workspaces/a/team')).toHaveLength(2)
+    expect(calls.filter((url) => url === '/api/ui/workspaces/b/team')).toHaveLength(1)
   })
 })

@@ -175,6 +175,7 @@ afterEach(() => {
 const addPortalSlot = (runId: string) => {
   const slot = document.createElement('div')
   slot.id = `orch-pty-${runId}`
+  slot.dataset.ptySlot = 'orchestrator'
   document.body.appendChild(slot)
   return slot
 }
@@ -182,6 +183,7 @@ const addPortalSlot = (runId: string) => {
 const addWorkerPortalSlot = (runId: string) => {
   const slot = document.createElement('div')
   slot.id = `worker-pty-${runId}`
+  slot.dataset.ptySlot = 'worker'
   document.body.appendChild(slot)
   return slot
 }
@@ -189,6 +191,7 @@ const addWorkerPortalSlot = (runId: string) => {
 const addShellPortalSlot = (runId: string) => {
   const slot = document.createElement('div')
   slot.id = `shell-pty-${runId}`
+  slot.dataset.ptySlot = 'shell'
   document.body.appendChild(slot)
   return slot
 }
@@ -327,6 +330,27 @@ describe('TerminalView', () => {
     await waitFor(() => {
       expect(firstSlot.querySelector('[data-testid="terminal-run-duplicate-slot"]')).toBeNull()
       expect(secondSlot.querySelector('[data-testid="terminal-run-duplicate-slot"]')).not.toBeNull()
+      expect(MockWebSocket.instances).toHaveLength(2)
+    })
+  })
+
+  test('ignores unrelated matching ids when resolving portal slots', async () => {
+    vi.stubGlobal('WebSocket', MockWebSocket as never)
+    const unrelatedMatch = document.createElement('div')
+    unrelatedMatch.id = 'worker-pty-run-narrow-slot'
+    document.body.appendChild(unrelatedMatch)
+    for (let index = 0; index < 200; index++) {
+      const node = document.createElement('div')
+      node.id = index % 2 === 0 ? 'worker-pty-run-narrow-slot' : `unrelated-${index}`
+      document.body.appendChild(node)
+    }
+    const slot = addWorkerPortalSlot('run-narrow-slot')
+
+    render(<TerminalView runId="run-narrow-slot" title="Alice" />)
+
+    await waitFor(() => {
+      expect(unrelatedMatch.querySelector('[data-testid="terminal-run-narrow-slot"]')).toBeNull()
+      expect(slot.querySelector('[data-testid="terminal-run-narrow-slot"]')).not.toBeNull()
       expect(MockWebSocket.instances).toHaveLength(2)
     })
   })

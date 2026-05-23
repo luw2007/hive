@@ -28,8 +28,8 @@ const candidateIds = (runId: string): string[] => [
   `shell-pty-${runId}`,
 ]
 
-const getLastElementById = (id: string): HTMLElement | null => {
-  const matches = Array.from(document.querySelectorAll<HTMLElement>('[id]')).filter(
+const getLastTerminalSlotById = (id: string): HTMLElement | null => {
+  const matches = Array.from(document.querySelectorAll<HTMLElement>('[data-pty-slot]')).filter(
     (node) => node.id === id
   )
   return matches[matches.length - 1] ?? null
@@ -76,7 +76,7 @@ const ensurePortalTargetWatcher = (): void => {
   if (typeof MutationObserver !== 'undefined' && root) {
     portalTargetObserver = new MutationObserver(notifyPortalTargetSubscribers)
     portalTargetObserver.observe(root, {
-      attributeFilter: ['id'],
+      attributeFilter: ['data-pty-slot', 'id'],
       attributes: true,
       childList: true,
       subtree: true,
@@ -110,7 +110,7 @@ const usePortalTarget = (runId: string): HTMLElement | null => {
     const ids = candidateIds(runId)
     const resolve = () => {
       for (const id of ids) {
-        const node = getLastElementById(id)
+        const node = getLastTerminalSlotById(id)
         if (node) return node
       }
       return null

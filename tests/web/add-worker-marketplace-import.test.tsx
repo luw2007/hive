@@ -141,6 +141,14 @@ afterEach(() => {
 })
 
 describe('AddWorkerDialog marketplace integration', () => {
+  test('does not load the marketplace manifest until the drawer is opened', async () => {
+    render(<Harness />)
+
+    await waitFor(() => expect(listCommandPresets).toHaveBeenCalled())
+    expect(fetchMarketplaceManifest).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('marketplace-content')).not.toBeInTheDocument()
+  })
+
   test('clicking Browse marketplace opens the drawer', async () => {
     render(<Harness />)
     fireEvent.click(screen.getByTestId('open-marketplace'))
