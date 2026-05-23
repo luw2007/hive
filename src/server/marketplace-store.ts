@@ -112,9 +112,6 @@ export const readAgent = (
       `Marketplace agent path escapes language root: ${relativePath}`
     )
   }
-  const cacheKey = `${vendorRoot}\0${language}\0${relativePath}`
-  const cached = agentCache.get(cacheKey)
-  if (cached) return cached
   if (!existsSync(candidate)) {
     throw new MarketplaceNotFoundError(`Marketplace agent not found: ${language}/${relativePath}`)
   }
@@ -124,6 +121,9 @@ export const readAgent = (
   if (!statSync(candidate).isFile()) {
     throw new MarketplaceNotFoundError(`Marketplace agent not a file: ${language}/${relativePath}`)
   }
+  const cacheKey = `${vendorRoot}\0${language}\0${relativePath}`
+  const cached = agentCache.get(cacheKey)
+  if (cached) return cached
   const raw = readFileSync(candidate, 'utf8')
   const parsed = matter(raw)
   const detail = {

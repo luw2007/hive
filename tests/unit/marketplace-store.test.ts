@@ -46,6 +46,7 @@ const writeAgent = (vendorRoot: string, body: string) => {
   const filePath = join(vendorRoot, 'en', 'engineering', 'agent.md')
   mkdirSync(dirname(filePath), { recursive: true })
   writeFileSync(filePath, `---\nname: Agent\n---\n${body}`)
+  return filePath
 }
 
 describe('marketplace-store cache', () => {
@@ -74,5 +75,16 @@ describe('marketplace-store cache', () => {
     writeAgent(vendorRoot, 'Changed body.')
 
     expect(readAgent('en', 'engineering/agent.md').body.trim()).toBe('Original body.')
+  })
+
+  test('checks the backing agent path before returning cached details', () => {
+    const vendorRoot = createVendorRoot()
+    const filePath = writeAgent(vendorRoot, 'Original body.')
+    process.env.HIVE_MARKETPLACE_VENDOR_ROOT = vendorRoot
+
+    expect(readAgent('en', 'engineering/agent.md').body.trim()).toBe('Original body.')
+    rmSync(filePath)
+
+    expect(() => readAgent('en', 'engineering/agent.md')).toThrow('Marketplace agent not found')
   })
 })
