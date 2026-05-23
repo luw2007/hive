@@ -1,9 +1,16 @@
+import { lazy, Suspense } from 'react'
+
 import type { TeamListItem, WorkspaceSummary } from '../../src/shared/types.js'
 import type { OrchestratorStartResult, TerminalRunSummary } from './api.js'
 import { DemoWorkspaceView } from './demo/DemoWorkspaceView.js'
 import { WorkspaceDetail } from './WorkspaceDetail.js'
-import { WorkspaceTerminalPanels } from './WorkspaceTerminalPanels.js'
 import type { WorkerActions } from './worker/useWorkerActions.js'
+
+const WorkspaceTerminalPanels = lazy(() =>
+  import('./WorkspaceTerminalPanels.js').then((module) => ({
+    default: module.WorkspaceTerminalPanels,
+  }))
+)
 
 type AppWorkspaceContentProps = {
   activeId: string | undefined
@@ -46,15 +53,21 @@ export const AppWorkspaceContent = ({
 }: AppWorkspaceContentProps) => {
   if (demoMode) return <DemoWorkspaceView onExit={onExitDemo} />
 
+  const activeOptimisticRuns = activeId ? (optimisticRunsByWorkspaceId[activeId] ?? []) : []
+  const shouldMountTerminalPanels =
+    activeId !== undefined && (terminalRuns.length > 0 || activeOptimisticRuns.length > 0)
+
   return (
     <>
-      {activeId ? (
-        <WorkspaceTerminalPanels
-          key={`terminal-${activeId}`}
-          optimisticRuns={optimisticRunsByWorkspaceId[activeId] ?? []}
-          terminalRuns={terminalRuns}
-          workspaceId={activeId}
-        />
+      {shouldMountTerminalPanels ? (
+        <Suspense fallback={null}>
+          <WorkspaceTerminalPanels
+            key={`terminal-${activeId}`}
+            optimisticRuns={activeOptimisticRuns}
+            terminalRuns={terminalRuns}
+            workspaceId={activeId}
+          />
+        </Suspense>
       ) : null}
       <WorkspaceDetail
         onCreateWorker={workerActions.createWorker}

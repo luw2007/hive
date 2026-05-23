@@ -65,7 +65,7 @@ const workerActions: WorkerActions = {
 }
 
 describe('AppWorkspaceContent', () => {
-  test('passes shell runs through the active workspace content boundary', () => {
+  test('passes shell runs through the active workspace content boundary', async () => {
     const onShellRunStarted = vi.fn()
     const inactiveRun: TerminalRunSummary = {
       agent_id: 'ws-2:shell',
@@ -102,13 +102,40 @@ describe('AppWorkspaceContent', () => {
       />
     )
 
-    expect(screen.getByTestId('terminal-panels')).toHaveAttribute('data-workspace-id', workspace.id)
-    expect(screen.getByTestId('terminal-panels')).toHaveTextContent(polledRun.run_id)
-    expect(screen.getByTestId('terminal-panels')).toHaveTextContent(shellRun.run_id)
-    expect(screen.getByTestId('terminal-panels')).not.toHaveTextContent(inactiveRun.run_id)
+    const panels = await screen.findByTestId('terminal-panels')
+    expect(panels).toHaveAttribute('data-workspace-id', workspace.id)
+    expect(panels).toHaveTextContent(polledRun.run_id)
+    expect(panels).toHaveTextContent(shellRun.run_id)
+    expect(panels).not.toHaveTextContent(inactiveRun.run_id)
 
     fireEvent.click(screen.getByTestId('emit-shell-run'))
 
     expect(onShellRunStarted).toHaveBeenCalledWith(workspace.id, shellRun)
+  })
+
+  test('does not mount terminal panels before the workspace has runs', () => {
+    render(
+      <AppWorkspaceContent
+        activeId={workspace.id}
+        activeWorkspace={workspace}
+        bootstrapError={null}
+        demoMode={false}
+        onDeleteWorkspace={vi.fn()}
+        onExitDemo={vi.fn()}
+        onRequestAddWorkspace={vi.fn()}
+        onShellRunClosed={vi.fn()}
+        onShellRunStarted={vi.fn()}
+        onTryDemo={vi.fn()}
+        optimisticRunsByWorkspaceId={{}}
+        orchestratorAutostartErrors={{}}
+        orchestratorAutostartRunIds={{}}
+        recordOrchestratorResult={vi.fn()}
+        terminalRuns={[]}
+        workerActions={workerActions}
+        workers={[]}
+      />
+    )
+
+    expect(screen.queryByTestId('terminal-panels')).toBeNull()
   })
 })
