@@ -105,12 +105,7 @@ export interface TaskWithDetails {
   recentEvents: TaskEventRecord[]
 }
 
-export interface TaskServiceOptions {
-  onChange?: (workspaceId: string) => void
-}
-
-export const createTaskService = (db: Database, options?: TaskServiceOptions) => {
-  const emitChange = (workspaceId: string) => options?.onChange?.(workspaceId)
+export const createTaskService = (db: Database) => {
   const createTask = (input: CreateTaskInput): TaskRecord => {
     const id = randomUUID()
     const now = Date.now()
@@ -127,7 +122,7 @@ export const createTaskService = (db: Database, options?: TaskServiceOptions) =>
        VALUES (?, ?, 'created', ?, ?, ?)`
     ).run(input.workspaceId, id, input.agentId ?? null, null, now)
 
-    const record: TaskRecord = {
+    return {
       id,
       workspaceId: input.workspaceId,
       title: input.title,
@@ -137,8 +132,6 @@ export const createTaskService = (db: Database, options?: TaskServiceOptions) =>
       seq,
       createdAt: now,
     }
-    emitChange(input.workspaceId)
-    return record
   }
 
   const listTasks = (
@@ -223,9 +216,7 @@ export const createTaskService = (db: Database, options?: TaskServiceOptions) =>
        VALUES (?, ?, ?, ?, ?, ?)`
     ).run(row.workspace_id, taskId, eventType, agentId ?? null, payload, now)
 
-    const result = { ...toTaskRecord(row), status }
-    emitChange(row.workspace_id)
-    return result
+    return { ...toTaskRecord(row), status }
   }
 
   const deleteTask = (taskId: string, agentId?: string): boolean => {
@@ -240,7 +231,6 @@ export const createTaskService = (db: Database, options?: TaskServiceOptions) =>
        VALUES (?, ?, 'cancelled', ?, ?)`
     ).run(row.workspace_id, taskId, agentId ?? null, now)
 
-    emitChange(row.workspace_id)
     return true
   }
 
@@ -264,7 +254,6 @@ export const createTaskService = (db: Database, options?: TaskServiceOptions) =>
       db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run('in_progress', taskId)
     }
 
-    emitChange(taskRow.workspace_id)
     return true
   }
 

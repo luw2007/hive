@@ -203,7 +203,6 @@ describe('task-service', () => {
       expect(service.recordSuggestion('fake-id', 'dispatch-x', null)).toBe(false)
     })
   })
-
   describe('getTaskBySeq', () => {
     it('returns task by workspace seq number', () => {
       const task = service.createTask({ workspaceId, title: 'Seq lookup', source: 'orch' })

@@ -184,8 +184,8 @@ export const teamRoutes: RouteDefinition[] = [
           fromAgentId
         )
       }
-      const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
-      appendEntry(workspacePath, agent.name, {
+      const workspacePath2 = store.getWorkspaceSnapshot(projectId).summary.path
+      appendEntry(workspacePath2, agent.name, {
         type: 'report_sent',
         summary: resultText.slice(0, 120),
         body: resultText,
