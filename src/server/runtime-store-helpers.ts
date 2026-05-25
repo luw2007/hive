@@ -17,6 +17,7 @@ import { createTasksFileWatcher } from './tasks-file-watcher.js'
 import { createTeamOperations } from './team-operations.js'
 import { resolveTerminalInputProfile } from './terminal-input-profile.js'
 import { createUiAuth } from './ui-auth.js'
+import { createTeamChangeBus, type TeamChangeBus } from './team-change-bus.js'
 import { createWorkerOutputTracker, type WorkerOutputTracker } from './worker-output-tracker.js'
 import { createWorkspaceShellRuntime } from './workspace-shell-runtime.js'
 import { createWorkspaceStore } from './workspace-store.js'
@@ -33,6 +34,7 @@ export interface RuntimeStoreServices {
   tasksFileWatcher: ReturnType<typeof createTasksFileWatcher>
   tasksFileWatchCallbacks: Set<(workspaceId: string, content: string) => void>
   tasksFileService: ReturnType<typeof createTasksFileService>
+  teamChangeBus: TeamChangeBus
   teamOps: ReturnType<typeof createTeamOperations>
   taskService: ReturnType<typeof createTaskService>
   uiAuth: ReturnType<typeof createUiAuth>
@@ -101,8 +103,11 @@ export const createRuntimeStoreServices = (
     tasksFileService,
     workspaceStore,
   })
+  const teamChangeBus = createTeamChangeBus()
   const workerOutputTracker = options.agentManager
-    ? createWorkerOutputTracker(options.agentManager.getOutputBus())
+    ? createWorkerOutputTracker(options.agentManager.getOutputBus(), (workspaceId) => {
+        teamChangeBus.notifyPtyOutput(workspaceId)
+      })
     : null
   const agentRuntime = createAgentRuntime(
     options.agentManager,
@@ -113,6 +118,7 @@ export const createRuntimeStoreServices = (
       workerOutputTracker?.detach(workspaceId, agentId)
       if (!workspaceStore.hasAgent(workspaceId, agentId)) return
       workspaceStore.markAgentStopped(workspaceId, agentId)
+      teamChangeBus.notifyImmediate(workspaceId)
     },
     restartPolicy,
     (workspaceId, agentId) => workspaceStore.getAgent(workspaceId, agentId)
@@ -144,6 +150,7 @@ export const createRuntimeStoreServices = (
     tasksFileWatcher,
     tasksFileWatchCallbacks,
     tasksFileService,
+    teamChangeBus,
     teamOps,
     uiAuth,
     workerOutputTracker,

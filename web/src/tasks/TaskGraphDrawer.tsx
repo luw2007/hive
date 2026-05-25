@@ -175,6 +175,14 @@ const TaskInlineEditor = ({
   placeholder?: string
 }) => {
   const [value, setValue] = useState(initial)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const autoResize = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }
+  useEffect(autoResize, [value])
   const submit = () => {
     const trimmed = value.trim()
     if (!trimmed) {
@@ -183,8 +191,8 @@ const TaskInlineEditor = ({
     }
     onSubmit(trimmed)
   }
-  const onKey = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+  const onKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       submit()
     } else if (event.key === 'Escape') {
@@ -193,8 +201,9 @@ const TaskInlineEditor = ({
     }
   }
   return (
-    <input
-      type="text"
+    <textarea
+      ref={textareaRef}
+      rows={1}
       // biome-ignore lint/a11y/noAutofocus: only mounted in response to a direct user activation (Edit/Add-subtask button)
       autoFocus
       value={value}
@@ -203,7 +212,7 @@ const TaskInlineEditor = ({
       onKeyDown={onKey}
       onBlur={submit}
       data-testid="task-inline-input"
-      className="task-row__input"
+      className="task-row__input task-row__input--textarea"
     />
   )
 }
@@ -314,10 +323,11 @@ const TaskItem = ({
             <>
               <span className="flex min-w-0 items-start gap-2">
                 <span
-                  className={`task-row__title min-w-0 flex-1 ${
+                  className={`task-row__title task-row__title--clamp min-w-0 flex-1 ${
                     task.checked ? 'text-ter line-through' : 'text-pri'
                   }`}
                   onDoubleClick={() => { if (canEdit) setEditing(true) }}
+                  title={title}
                 >
                   <span className="text-xs font-mono text-neutral-400 mr-1.5">#{task.seq}</span>
                   {renderInlineMarkdown(title)}
