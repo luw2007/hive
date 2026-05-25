@@ -1,7 +1,7 @@
 import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ClipboardList, Plus, Terminal, UserPlus, Users } from 'lucide-react'
+import { ChevronDown, ClipboardList, FileCode, Plus, Terminal, UserPlus, Users } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { TeamListItem, WorkspaceSummary } from '../../src/shared/types.js'
@@ -55,14 +55,20 @@ const SortablePanel = ({
   onToggle,
   children,
   rightSlot,
+  subtitle,
+  headerContent,
+  showChevron,
 }: {
   id: string
-  title: string
-  icon: React.ReactNode
+  title?: string
+  icon?: React.ReactNode
   collapsed: boolean
   onToggle: () => void
   children: React.ReactNode
   rightSlot?: React.ReactNode
+  subtitle?: React.ReactNode
+  headerContent?: React.ReactNode
+  showChevron?: boolean
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
   const style = {
@@ -78,6 +84,8 @@ const SortablePanel = ({
         collapsed={collapsed}
         onToggle={onToggle}
         rightSlot={rightSlot}
+        headerContent={headerContent}
+        showChevron={showChevron}
         dragHandleProps={listeners ? { onPointerDown: listeners.onPointerDown as (e: React.PointerEvent) => void, 'data-drag-handle': true } : undefined}
       >
         {children}
@@ -284,12 +292,9 @@ export const WorkspaceDetail = ({
 
   const panelSummary = (panelId: PanelId): React.ReactNode => {
     if (panelId === 'workers') {
-      const working = workers.filter((w) => w.status === 'working').length
-      const stopped = workers.filter((w) => w.status === 'stopped').length
-      const idle = workers.length - working - stopped
       return (
         <>
-          <span>{workers.length} ({working}{t('common.running')} · {idle}{t('common.idle')} · {stopped}{t('common.stopped')})</span>
+          <span className="mono text-xs text-sec">{workers.length}</span>
           <button
             type="button"
             className="panel-header-btn"
@@ -307,7 +312,7 @@ export const WorkspaceDetail = ({
       const done = lines.filter((l) => /^\s*-\s+\[[xX]\]/.test(l)).length
       return (
         <>
-          {total > 0 ? <span>{done}/{total} done</span> : null}
+          {total > 0 ? <span className="mono text-xs text-sec">{done}/{total}</span> : null}
           <button
             type="button"
             className="panel-header-btn"
@@ -322,7 +327,7 @@ export const WorkspaceDetail = ({
     if (panelId === 'terminal') {
       return (
         <>
-          {shellPanelTabs.length > 0 ? <span>{shellPanelTabs.length} tabs</span> : null}
+          {shellPanelTabs.length > 0 ? <span className="mono text-xs text-sec">{shellPanelTabs.length} tabs</span> : null}
           <button
             type="button"
             className="panel-header-btn"
@@ -332,6 +337,45 @@ export const WorkspaceDetail = ({
             <Plus size={12} aria-hidden />
           </button>
         </>
+      )
+    }
+    return null
+  }
+
+  const panelSubtitle = (panelId: PanelId): React.ReactNode => {
+    if (panelId === 'workers') {
+      if (workers.length === 0) return null
+      const working = workers.filter((w) => w.status === 'working').length
+      const stopped = workers.filter((w) => w.status === 'stopped').length
+      const idle = workers.length - working - stopped
+      return (
+        <>
+          <span className="inline-flex items-center gap-1">
+            <span className="status-dot status-dot--working" aria-hidden />
+            <span className="text-sec">{working}</span> {t('common.running')}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="status-dot status-dot--idle" aria-hidden />
+            <span className="text-sec">{idle}</span> {t('common.idle')}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="status-dot status-dot--stopped" aria-hidden />
+            <span className="text-sec">{stopped}</span> {t('common.stopped')}
+          </span>
+        </>
+      )
+    }
+    if (panelId === 'tasks') {
+      const lines = tasksFile.content.split('\n')
+      const total = lines.filter((l) => /^\s*-\s+\[[ xX]\]/.test(l)).length
+      const done = lines.filter((l) => /^\s*-\s+\[[xX]\]/.test(l)).length
+      if (total === 0) return null
+      const pct = Math.round((done / total) * 100)
+      return (
+        <span className="inline-flex flex-1 items-center gap-2">
+          <span className="panel-progress-bar" style={{ '--progress': `${pct}%` } as React.CSSProperties} />
+          <span className="text-sec">{pct}%</span>
+        </span>
       )
     }
     return null
@@ -471,6 +515,7 @@ export const WorkspaceDetail = ({
                       }
                     }}
                     rightSlot={panelSummary(panelId)}
+                    subtitle={panelSubtitle(panelId)}
                   >
                     {panelContent(panelId)}
                   </SortablePanel>

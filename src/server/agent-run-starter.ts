@@ -1,5 +1,5 @@
 import type { AgentSummary, WorkspaceSummary } from '../shared/types.js'
-import type { AgentManager } from './agent-manager.js'
+import type { AgentManager, StartAgentInput } from './agent-manager.js'
 import { buildAgentRunBootstrap, startAgentRunCapture } from './agent-run-bootstrap.js'
 import { handleAgentRunExit } from './agent-run-exit-handler.js'
 import type { AgentRunExitContext, AgentRunStarterStorePort } from './agent-run-start-context.js'
@@ -76,7 +76,7 @@ export const createAgentRunStarter =
       tokenRegistry,
       workspace,
     }
-    const startInput = {
+    const startInput: StartAgentInput = {
       agentId,
       ...(agent?.name ? { agentName: agent.name } : {}),
       command: startConfig.command,
@@ -86,7 +86,6 @@ export const createAgentRunStarter =
         ...startEnv,
         COLORTERM: 'truecolor',
         FORCE_COLOR: '1',
-        NO_COLOR: undefined,
         TERM: 'xterm-256color',
         TERM_PROGRAM: 'hive',
         HIVE_PORT: hivePort,

@@ -1649,15 +1649,31 @@ html, body {
 }
 .collapsible-panel__header {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 8px;
+  flex-direction: column;
+  padding: 6px 8px;
   flex-shrink: 0;
   background: var(--bg-2);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   user-select: none;
+}
+.collapsible-panel__header--two-line {
+  padding: 6px 8px 5px;
+}
+.collapsible-panel__row1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+.collapsible-panel__row2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 22px;
+  font-size: 11px;
+  color: var(--text-ter);
+  min-height: 20px;
 }
 .collapsible-panel__header:hover {
   background: var(--bg-3);
