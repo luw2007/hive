@@ -193,6 +193,14 @@ export const runHiveCommand = async (
   console.log(`Hive running at http://127.0.0.1:${address.port}`)
   void maybePrintUpdateHint(versionService).catch(() => {})
 
+  // 服务启动后恢复 orchestrator：先 reattach 存活的 tmux sessions，
+  // 再 autostart 所有 workspace 的 orchestrator（如果尚无 active run）。
+  const hivePort = String(address.port)
+  app.store.reattachTmuxSessions()
+  void app.store.autostartOrchestrators({ hivePort }).catch((error: unknown) => {
+    console.error('[hive] autostart failed:', error instanceof Error ? error.message : error)
+  })
+
   return {
     port: address.port,
     close,

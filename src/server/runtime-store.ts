@@ -80,6 +80,15 @@ interface RuntimeStore {
       workspace_id: string
     }>
   >
+  autostartOrchestrators: (input: StartAgentOptions) => Promise<
+    Array<{
+      agent_id: string
+      error: string | null
+      ok: boolean
+      run_id: string | null
+      workspace_id: string
+    }>
+  >
   startWorkspaceWatch: (workspaceId: string) => Promise<void>
   getLiveRun: (runId: string) => LiveAgentRun
   getActiveRunByAgentId: (workspaceId: string, agentId: string) => LiveAgentRun | undefined
@@ -117,6 +126,7 @@ interface RuntimeStore {
         isPendingHandoff: (workspaceId: string, agentId: string) => boolean
       }
     | undefined
+  reattachTmuxSessions: () => number
   registerTeamListener: (workspaceId: string, listener: () => void) => () => void
 }
 
@@ -277,6 +287,17 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
       }
       return results
     },
+    autostartOrchestrators: async (input) => {
+      const results = await lifecycle.autostartOrchestrators(input)
+      const notified = new Set<string>()
+      for (const r of results) {
+        if (r.ok && r.run_id && !notified.has(r.workspace_id)) {
+          services.teamChangeBus.notifyImmediate(r.workspace_id)
+          notified.add(r.workspace_id)
+        }
+      }
+      return results
+    },
     startWorkspaceWatch: lifecycle.startWorkspaceWatch,
     startWorkspaceShell: lifecycle.startWorkspaceShell,
     getLiveRun: lifecycle.getLiveRun,
@@ -303,6 +324,7 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     validateUiToken: (token) => services.uiAuth.validate(token),
     getDb: () => services.db,
     handoffHandler,
+    reattachTmuxSessions: lifecycle.reattachTmuxSessions,
     registerTeamListener: (workspaceId, listener) =>
       services.teamChangeBus.subscribe(workspaceId, listener),
   }
