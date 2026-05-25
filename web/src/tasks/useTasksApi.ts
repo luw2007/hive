@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { initializeUiSession } from '../api.js'
+
 export type DispatchStatus = 'queued' | 'submitted' | 'reported' | 'cancelled'
 
 export interface DispatchItem {
@@ -67,10 +69,22 @@ export const groupDispatchesByTaskId = (dispatches: DispatchItem[]): Map<string 
   return map
 }
 
+/** 最大重连延迟 */
+const MAX_RECONNECT_MS = 10_000
+const getReconnectDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, MAX_RECONNECT_MS)
+
+const areDispatchesEqual = (a: DispatchItem[], b: DispatchItem[]): boolean => {
+  if (a.length !== b.length) return false
+  return a.every((item, i) => {
+    const other = b[i]
+    return other !== undefined && item.id === other.id && item.state === other.state
+  })
+}
+
 export const useDispatchesForWorkspace = (workspaceId: string | null) => {
   const [dispatches, setDispatches] = useState<DispatchItem[]>([])
   const [loading, setLoading] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const refreshingRef = useRef(false)
 
   const refresh = useCallback(async () => {
     if (!workspaceId) return
@@ -87,13 +101,66 @@ export const useDispatchesForWorkspace = (workspaceId: string | null) => {
       setDispatches([])
       return
     }
+
     setLoading(true)
-    void refresh().finally(() => setLoading(false))
-    intervalRef.current = setInterval(() => void refresh(), 5000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+    let cancelled = false
+    const reconnectTimers: number[] = []
+    const sources: EventSource[] = []
+
+    const connect = (attempt = 0) => {
+      if (cancelled) return
+
+      const url = `/api/ui/workspaces/${encodeURIComponent(workspaceId)}/dispatches/events`
+      const es = new EventSource(url)
+      sources.push(es)
+
+      es.onmessage = (event) => {
+        if (cancelled) return
+        setLoading(false)
+        try {
+          const payload = JSON.parse(event.data) as DispatchItem[]
+          setDispatches((prev) => {
+            if (areDispatchesEqual(prev, payload)) return prev
+            return payload
+          })
+        } catch (error) {
+          console.error('[hive] dispatch SSE parse error', error)
+        }
+      }
+
+      es.onerror = () => {
+        if (cancelled) return
+        es.close()
+        const idx = sources.indexOf(es)
+        if (idx >= 0) sources.splice(idx, 1)
+
+        // token 可能过期，尝试 refresh session
+        if (!refreshingRef.current) {
+          refreshingRef.current = true
+          void initializeUiSession()
+            .catch(() => {})
+            .finally(() => { refreshingRef.current = false })
+        }
+
+        const delay = getReconnectDelay(attempt)
+        const timer = window.setTimeout(
+          () => connect(Math.min(attempt + 1, 5)),
+          delay
+        )
+        reconnectTimers.push(timer)
+      }
     }
-  }, [workspaceId, refresh])
+
+    connect()
+
+    return () => {
+      cancelled = true
+      for (const es of sources) es.close()
+      for (const timer of reconnectTimers) window.clearTimeout(timer)
+      sources.length = 0
+      reconnectTimers.length = 0
+    }
+  }, [workspaceId])
 
   return { dispatches, loading, refresh }
 }
