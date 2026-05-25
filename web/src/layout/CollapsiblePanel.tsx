@@ -8,36 +8,34 @@ type DragHandleProps = {
 
 type CollapsiblePanelProps = {
   id: string
-  title: string
-  icon?: ReactNode | undefined
   children: ReactNode
   collapsed: boolean
   onToggle: () => void
   dragHandleProps?: DragHandleProps | undefined
+  title?: string | undefined
+  icon?: ReactNode | undefined
   rightSlot?: ReactNode | undefined
+  subtitle?: ReactNode | undefined
+  headerContent?: ReactNode | undefined
+  showChevron?: boolean | undefined
 }
 
 export const CollapsiblePanel = ({
   id,
-  title,
-  icon,
   children,
   collapsed,
   onToggle,
   dragHandleProps,
+  title,
+  icon,
   rightSlot,
+  subtitle,
+  headerContent,
+  showChevron = true,
 }: CollapsiblePanelProps) => {
-  return (
-    <section className="collapsible-panel" data-panel-id={id} data-collapsed={collapsed || undefined}>
-      <header
-        className="collapsible-panel__header"
-        onClick={onToggle}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
-        aria-expanded={!collapsed}
-        aria-controls={`panel-content-${id}`}
-      >
+  const defaultHeader = (
+    <>
+      <div className="collapsible-panel__row1">
         <span
           className="collapsible-panel__drag"
           onClick={(e) => e.stopPropagation()}
@@ -47,11 +45,34 @@ export const CollapsiblePanel = ({
           <GripVertical size={12} aria-hidden />
         </span>
         {icon ? <span className="collapsible-panel__icon">{icon}</span> : null}
-        <span className="collapsible-panel__title">{title}</span>
+        {title ? <span className="collapsible-panel__title">{title}</span> : null}
         {rightSlot ? <span className="collapsible-panel__summary">{rightSlot}</span> : null}
-        <span className="collapsible-panel__toggle" aria-hidden>
-          {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-        </span>
+        {showChevron ? (
+          <span className="collapsible-panel__toggle" aria-hidden>
+            {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+          </span>
+        ) : null}
+      </div>
+      {subtitle ? (
+        <div className="collapsible-panel__row2">
+          {subtitle}
+        </div>
+      ) : null}
+    </>
+  )
+
+  return (
+    <section className="collapsible-panel" data-panel-id={id} data-collapsed={collapsed || undefined}>
+      <header
+        className={`collapsible-panel__header${subtitle ? ' collapsible-panel__header--two-line' : ''}`}
+        onClick={onToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
+        aria-expanded={!collapsed}
+        aria-controls={`panel-content-${id}`}
+      >
+        {headerContent ?? defaultHeader}
       </header>
       <div
         id={`panel-content-${id}`}

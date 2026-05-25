@@ -110,45 +110,6 @@ export const WorkersPane = ({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col" style={{ background: 'var(--bg-2)' }}>
-      <div
-        className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-2.5"
-        style={{
-          boxShadow: 'inset 0 -1px 0 var(--border)',
-        }}
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="text-lg font-semibold text-pri">{t('worker.teamMembers')}</span>
-          <span className="mono inline-flex min-w-7 items-center justify-center rounded bg-3 px-2.5 py-1 text-base leading-none text-sec">
-            {workers.length}
-          </span>
-          <div className="flex-1" />
-          <button
-            type="button"
-            onClick={onAddWorkerClick}
-            className="icon-btn icon-btn--primary"
-            data-testid="add-worker-trigger"
-          >
-            <UserPlus size={14} aria-hidden /> {t('addWorker.create')}
-          </button>
-        </div>
-        {workers.length > 0 ? (
-          <div className="flex items-center gap-3 text-xs text-ter">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="status-dot status-dot--working" aria-hidden />
-              <span className="text-sec">{summary.working}</span> {t('common.running')}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="status-dot status-dot--idle" aria-hidden />
-              <span className="text-sec">{summary.idle}</span> {t('common.idle')}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="status-dot status-dot--stopped" aria-hidden />
-              <span className="text-sec">{summary.stopped}</span> {t('common.stopped')}
-            </span>
-          </div>
-        ) : null}
-      </div>
-
       <div className="workers-pane-body scroll-y flex-1 px-2 py-2">
         {workers.length === 0 ? (
           <EmptyState

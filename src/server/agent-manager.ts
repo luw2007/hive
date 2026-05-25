@@ -118,7 +118,7 @@ export const createAgentManager = ({
       runs.set(runId, run)
 
       try {
-        if (input.persistent !== false && input.workspaceId && input.agentName && hasTmux()) {
+        if (input.persistent === true && input.workspaceId && input.agentName && hasTmux()) {
           const sessionName = buildSessionName(input.workspaceId, input.agentId, input.agentName)
           createSession(sessionName, spawnCommand.command, spawnCommand.args, {
             cwd: input.cwd,
