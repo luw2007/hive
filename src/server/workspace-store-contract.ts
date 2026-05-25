@@ -9,6 +9,7 @@ export interface WorkerInput {
   description?: string
   name: string
   role: WorkerRole
+  roleTemplateName?: string
 }
 
 export interface WorkspaceStore {

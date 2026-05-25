@@ -515,7 +515,7 @@ const AddTaskInline = ({
 }: {
   onSubmit: (text: string) => void
   disabled?: boolean
-  forceOpen?: number
+  forceOpen?: number | undefined
 }) => {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)

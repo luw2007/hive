@@ -16,6 +16,7 @@ export interface AgentSummary {
   name: string
   description: string
   role: WorkerRole | 'orchestrator'
+  roleTemplateName?: string
   status: AgentStatus
   pendingTaskCount: number
 }
@@ -39,6 +40,7 @@ export interface TeamListItem {
    * the role-letter avatar.
    */
   commandPresetId?: string
+  roleTemplateName?: string
 }
 
 /**
@@ -54,4 +56,5 @@ export interface TeamListItemPayload {
   pending_task_count: number
   last_pty_line: string | null
   command_preset_id: string | null
+  role_template_name: string | null
 }

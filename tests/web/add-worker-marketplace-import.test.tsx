@@ -56,9 +56,11 @@ const Harness = ({ onSubmitCapture }: { onSubmitCapture?: (snapshot: unknown) =>
         commandPresets={composer.commandPresets}
         commandPresetId={composer.commandPresetId}
         creating={composer.creating}
+        customRoleName={composer.customRoleName}
         customTemplates={composer.customTemplates}
         onApplyMarketplaceImport={composer.applyMarketplaceImport}
         onClose={() => {}}
+        onCustomRoleNameChange={composer.setCustomRoleName}
         onDeleteTemplate={composer.deleteTemplate}
         onNameChange={composer.setWorkerName}
         onPresetChange={composer.setCommandPresetId}
@@ -191,7 +193,7 @@ describe('AddWorkerDialog marketplace integration', () => {
     await waitFor(() => {
       expect(submitCapture).toHaveBeenCalled()
     })
-    const snapshot = submitCapture.mock.calls[0][0] as {
+    const snapshot = submitCapture.mock.calls[0]![0] as {
       workerName: string
       workerRole: string
       roleDescription: string

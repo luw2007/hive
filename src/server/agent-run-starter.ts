@@ -168,6 +168,7 @@ export const createAgentRunStarter =
         }
         if (injectedRestartMessage && !startConfig.resumedSessionId && discussionRecoveryInjector) {
           setTimeout(() => {
+            if (!registry.get(run.runId)) return
             try {
               discussionRecoveryInjector.inject(workspace.id, agentId, run.runId)
             } catch {
