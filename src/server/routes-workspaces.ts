@@ -314,6 +314,20 @@ export const workspaceRoutes: RouteDefinition[] = [
     if (!Array.isArray(body.order) || body.order.length === 0) {
       throw new BadRequestError('Missing or empty order array')
     }
+    const existingIds = new Set(store.listWorkspaces().map((w) => w.id))
+    if (body.order.length !== existingIds.size) {
+      throw new BadRequestError(`order length ${body.order.length} does not match workspace count ${existingIds.size}`)
+    }
+    const seen = new Set<string>()
+    for (const id of body.order) {
+      if (typeof id !== 'string' || !existingIds.has(id)) {
+        throw new BadRequestError(`Invalid workspace id: ${id}`)
+      }
+      if (seen.has(id)) {
+        throw new BadRequestError(`Duplicate workspace id: ${id}`)
+      }
+      seen.add(id)
+    }
     store.reorderWorkspaces(body.order)
     sendJson(response, 200, { ok: true })
   }),

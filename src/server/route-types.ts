@@ -58,6 +58,7 @@ export interface CreateWorkerBody {
   description?: string
   name: string
   role: WorkerRole
+  role_template_name?: string | null
   /** Optional full startup command. When set, it overrides the executable only. */
   startup_command?: string | null
 }

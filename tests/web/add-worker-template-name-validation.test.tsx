@@ -16,6 +16,7 @@ const baseProps = {
   customTemplates: [],
   onClose: vi.fn(),
   onCustomRoleNameChange: vi.fn(),
+  onApplyMarketplaceImport: vi.fn(),
   onDeleteTemplate: vi.fn(),
   onNameChange: vi.fn(),
   onPresetChange: vi.fn(),

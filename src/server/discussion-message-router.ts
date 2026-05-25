@@ -6,9 +6,18 @@ import type {
 
 // --- Per-agent write queue (ensures ordered stdin injection) ---
 
+const WRITE_TIMEOUT_MS = 30_000
 const writeQueues = new Map<string, Promise<void>>()
 
 type WriteFn = (workspaceId: string, agentId: string, text: string) => void
+
+const withTimeout = <T>(promise: Promise<T>, ms: number, key: string): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Write timeout after ${ms}ms for ${key}`)), ms)
+    ),
+  ])
 
 const enqueueWrite = (
   workspaceId: string,
@@ -18,9 +27,13 @@ const enqueueWrite = (
 ): Promise<void> => {
   const key = `${workspaceId}:${agentId}`
   const prev = writeQueues.get(key) ?? Promise.resolve()
-  const next = prev.then(() => {
-    writeFn(workspaceId, agentId, text)
-  }).finally(() => {
+  const next = withTimeout(
+    prev.then(() => {
+      writeFn(workspaceId, agentId, text)
+    }),
+    WRITE_TIMEOUT_MS,
+    key
+  ).finally(() => {
     if (writeQueues.get(key) === next) writeQueues.delete(key)
   })
   writeQueues.set(key, next)

@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { BookmarkPlus, Dices, Store } from 'lucide-react'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import type { WorkerRole } from '../../../src/shared/types.js'
 import type { CommandPreset, RoleTemplate } from '../api.js'

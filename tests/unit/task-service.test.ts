@@ -203,4 +203,43 @@ describe('task-service', () => {
       expect(service.recordSuggestion('fake-id', 'dispatch-x', null)).toBe(false)
     })
   })
+
+  describe('getTaskBySeq', () => {
+    it('returns task by workspace seq number', () => {
+      const task = service.createTask({ workspaceId, title: 'Seq lookup', source: 'orch' })
+      const found = service.getTaskBySeq(workspaceId, task.seq)
+      expect(found).not.toBeNull()
+      expect(found!.id).toBe(task.id)
+      expect(found!.title).toBe('Seq lookup')
+    })
+
+    it('returns null for non-existent seq', () => {
+      expect(service.getTaskBySeq(workspaceId, 9999)).toBeNull()
+    })
+
+    it('returns null when seq exists in different workspace', () => {
+      const task = service.createTask({ workspaceId, title: 'WS1 task', source: 'orch' })
+      expect(service.getTaskBySeq('other-ws', task.seq)).toBeNull()
+    })
+  })
+
+  describe('seq auto-increment', () => {
+    it('assigns sequential seq numbers starting from 1', () => {
+      const t1 = service.createTask({ workspaceId, title: 'First', source: 'orch' })
+      const t2 = service.createTask({ workspaceId, title: 'Second', source: 'orch' })
+      const t3 = service.createTask({ workspaceId, title: 'Third', source: 'orch' })
+      expect(t1.seq).toBe(1)
+      expect(t2.seq).toBe(2)
+      expect(t3.seq).toBe(3)
+    })
+
+    it('increments independently per workspace', () => {
+      const a1 = service.createTask({ workspaceId: 'ws-a', title: 'A1', source: 'orch' })
+      const b1 = service.createTask({ workspaceId: 'ws-b', title: 'B1', source: 'orch' })
+      const a2 = service.createTask({ workspaceId: 'ws-a', title: 'A2', source: 'orch' })
+      expect(a1.seq).toBe(1)
+      expect(b1.seq).toBe(1)
+      expect(a2.seq).toBe(2)
+    })
+  })
 })

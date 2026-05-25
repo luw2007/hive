@@ -69,6 +69,8 @@ const CONDITION_KEYWORDS: Record<DiscussionTriggerCondition, string[]> = {
   manual: [],
 }
 
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 export const evaluateTrigger = (
   taskDescription: string,
   triggers: DiscussionTriggerRule[],
@@ -79,6 +81,6 @@ export const evaluateTrigger = (
     if (rule.condition === 'manual') return false
     if (rule.min_workers && availableWorkers !== undefined && availableWorkers < rule.min_workers) return false
     const keywords = CONDITION_KEYWORDS[rule.condition]
-    return keywords.some((kw) => new RegExp(`\\b${kw}\\b`).test(lower))
+    return keywords.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`).test(lower))
   })
 }
