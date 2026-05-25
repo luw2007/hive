@@ -1,3 +1,4 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   AtSign,
   Check,
@@ -9,6 +10,7 @@ import {
   CornerDownRight,
   FileCode,
   FileText,
+  MoreHorizontal,
   PanelRightClose,
   Pencil,
   Plus,
@@ -429,47 +431,56 @@ const TaskItem = ({
                 </button>
               </Tooltip>
             ) : null}
-            {canEdit ? (
-              <Tooltip label={t('tasks.action.edit')}>
-                <button
-                  type="button"
-                  className="task-row__action"
-                  onClick={() => setEditing(true)}
-                  data-testid={`task-edit-${task.line}`}
-                  aria-label={t('tasks.aria.editTask')}
-                >
-                  <Pencil size={12} />
-                </button>
-              </Tooltip>
-            ) : null}
-            {canAddSubtask ? (
-              <Tooltip label={t('tasks.action.addSubtask')}>
-                <button
-                  type="button"
-                  className="task-row__action"
-                  onClick={() => {
-                    setCollapsed(false)
-                    setAdding(true)
-                  }}
-                  data-testid={`task-add-subtask-${task.line}`}
-                  aria-label={t('tasks.aria.addSubtask')}
-                >
-                  <CornerDownRight size={12} />
-                </button>
-              </Tooltip>
-            ) : null}
-            {canDelete ? (
-              <Tooltip label={t('tasks.action.delete')}>
-                <button
-                  type="button"
-                  className="task-row__action task-row__action--danger"
-                  onClick={() => onDelete?.(task.line)}
-                  data-testid={`task-delete-${task.line}`}
-                  aria-label={t('tasks.aria.deleteTask')}
-                >
-                  <Trash2 size={12} />
-                </button>
-              </Tooltip>
+            {(canEdit || canAddSubtask || canDelete) ? (
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    type="button"
+                    className="task-row__action"
+                    data-testid={`task-more-${task.line}`}
+                    aria-label={t('common.moreActions')}
+                  >
+                    <MoreHorizontal size={12} />
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content className="dropdown-menu" sideOffset={4} align="end">
+                    {canEdit ? (
+                      <DropdownMenu.Item
+                        className="dropdown-menu__item"
+                        data-testid={`task-edit-${task.line}`}
+                        onSelect={() => setEditing(true)}
+                      >
+                        <Pencil size={12} aria-hidden />
+                        {t('tasks.action.edit')}
+                      </DropdownMenu.Item>
+                    ) : null}
+                    {canAddSubtask ? (
+                      <DropdownMenu.Item
+                        className="dropdown-menu__item"
+                        data-testid={`task-add-subtask-${task.line}`}
+                        onSelect={() => { setCollapsed(false); setAdding(true) }}
+                      >
+                        <CornerDownRight size={12} aria-hidden />
+                        {t('tasks.action.addSubtask')}
+                      </DropdownMenu.Item>
+                    ) : null}
+                    {canDelete ? (
+                      <>
+                        <DropdownMenu.Separator className="dropdown-menu__separator" />
+                        <DropdownMenu.Item
+                          className="dropdown-menu__item dropdown-menu__item--danger"
+                          data-testid={`task-delete-${task.line}`}
+                          onSelect={() => onDelete?.(task.line)}
+                        >
+                          <Trash2 size={12} aria-hidden />
+                          {t('tasks.action.delete')}
+                        </DropdownMenu.Item>
+                      </>
+                    ) : null}
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             ) : null}
           </div>
         ) : null}
