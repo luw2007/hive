@@ -18,6 +18,7 @@ import { settingsRoutes } from './routes-settings.js'
 import { taskRoutes } from './routes-tasks.js'
 import { taskApiRoutes } from './routes-tasks-api.js'
 import { teamRoutes } from './routes-team.js'
+import { teamSseRoutes } from './routes-team-sse.js'
 import { uiRoutes } from './routes-ui.js'
 import { versionRoutes } from './routes-version.js'
 import { workspaceRoutes } from './routes-workspaces.js'
@@ -33,6 +34,7 @@ const routes: RouteDefinition[] = [
   ...taskApiRoutes,
   ...runtimeRoutes,
   ...teamRoutes,
+  ...teamSseRoutes,
   ...discussRoutes,
   ...fsRoutes,
   ...marketplaceRoutes,

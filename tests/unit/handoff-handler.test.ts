@@ -69,7 +69,7 @@ describe('handoff-handler', () => {
       expect(deleteWorker).toHaveBeenCalledWith(ctx.workspaceId, ctx.agentId)
       const rows = db.prepare('SELECT * FROM handoff_reports').all() as { mode: string }[]
       expect(rows).toHaveLength(1)
-      expect(rows[0].mode).toBe('passive')
+      expect(rows[0]!.mode).toBe('passive')
     })
   })
 
@@ -84,8 +84,8 @@ describe('handoff-handler', () => {
 
       const rows = db.prepare('SELECT * FROM handoff_reports').all() as { mode: string; report_text: string }[]
       expect(rows).toHaveLength(1)
-      expect(rows[0].mode).toBe('active')
-      expect(rows[0].report_text).toBe('进度50%，剩余TODO列表')
+      expect(rows[0]!.mode).toBe('active')
+      expect(rows[0]!.report_text).toBe('进度50%，剩余TODO列表')
     })
 
     test('returns false if no pending handoff exists', () => {
@@ -100,7 +100,7 @@ describe('handoff-handler', () => {
       handler.receiveHandover(ctx.workspaceId, ctx.agentId, '交接内容')
 
       const orchCall = writeAgentStdin.mock.calls.find(
-        ([wsId, agentId]: [string, string]) => agentId === `${ctx.workspaceId}:orchestrator`
+        ([wsId, agentId]) => agentId === `${ctx.workspaceId}:orchestrator`
       )
       expect(orchCall).toBeDefined()
       expect(orchCall![2]).toContain('米芾')
@@ -121,8 +121,8 @@ describe('handoff-handler', () => {
 
       const rows = db.prepare('SELECT * FROM handoff_reports').all() as { mode: string; report_text: string }[]
       expect(rows).toHaveLength(1)
-      expect(rows[0].mode).toBe('passive')
-      expect(rows[0].report_text).toBe('checkpoint: 完成了文件A的修改')
+      expect(rows[0]!.mode).toBe('passive')
+      expect(rows[0]!.report_text).toBe('checkpoint: 完成了文件A的修改')
     })
 
     test('uses fallback text when no checkpoint available', async () => {
@@ -133,7 +133,7 @@ describe('handoff-handler', () => {
       await promise
 
       const rows = db.prepare('SELECT * FROM handoff_reports').all() as { report_text: string }[]
-      expect(rows[0].report_text).toBe('(无主动交接，自动回收)')
+      expect(rows[0]!.report_text).toBe('(无主动交接，自动回收)')
     })
   })
 
@@ -146,7 +146,7 @@ describe('handoff-handler', () => {
       handler.receiveHandover(ctx.workspaceId, ctx.agentId, longReport)
 
       const orchCall = writeAgentStdin.mock.calls.find(
-        ([, agentId]: [string, string]) => agentId === `${ctx.workspaceId}:orchestrator`
+        ([, agentId]) => agentId === `${ctx.workspaceId}:orchestrator`
       )
       expect(orchCall).toBeDefined()
       const notification: string = orchCall![2]
@@ -163,7 +163,7 @@ describe('handoff-handler', () => {
       handler.receiveHandover(ctx.workspaceId, ctx.agentId, '报告', '派单A, 派单B')
 
       const orchCall = writeAgentStdin.mock.calls.find(
-        ([, agentId]: [string, string]) => agentId === `${ctx.workspaceId}:orchestrator`
+        ([, agentId]) => agentId === `${ctx.workspaceId}:orchestrator`
       )
       expect(orchCall![2]).toContain('未完成派单')
       expect(orchCall![2]).toContain('派单A, 派单B')

@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import type { TeamListItem } from '../../src/shared/types.js'
-import { listWorkers } from './api.js'
+import type { TeamListItem, TeamListItemPayload } from '../../src/shared/types.js'
+import { initializeUiSession } from './api.js'
 
-const REFRESH_INTERVAL_MS = 500
-const MAX_REFRESH_INTERVAL_MS = 5000
-
-const getRefreshDelay = (failureCount: number) =>
-  Math.min(REFRESH_INTERVAL_MS * 2 ** failureCount, MAX_REFRESH_INTERVAL_MS)
+const fromPayload = (payload: TeamListItemPayload): TeamListItem => ({
+  id: payload.id,
+  name: payload.name,
+  role: payload.role,
+  status: payload.status,
+  pendingTaskCount: payload.pending_task_count,
+  ...(payload.role_template_name ? { roleTemplateName: payload.role_template_name } : {}),
+  ...(payload.last_pty_line ? { lastPtyLine: payload.last_pty_line } : {}),
+  ...(payload.command_preset_id ? { commandPresetId: payload.command_preset_id } : {}),
+})
 
 const areWorkersEqual = (a: TeamListItem[], b: TeamListItem[]): boolean => {
   if (a.length !== b.length) return false
@@ -25,69 +30,89 @@ const areWorkersEqual = (a: TeamListItem[], b: TeamListItem[]): boolean => {
   })
 }
 
-const areWorkerMapsEqual = (
-  a: Record<string, TeamListItem[]>,
-  b: Record<string, TeamListItem[]>
-): boolean => {
-  const aKeys = Object.keys(a)
-  const bKeys = Object.keys(b)
-  if (aKeys.length !== bKeys.length) return false
-  return bKeys.every((workspaceId) => areWorkersEqual(a[workspaceId] ?? [], b[workspaceId] ?? []))
-}
+/** 最大重连延迟 */
+const MAX_RECONNECT_MS = 10_000
+const getReconnectDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, MAX_RECONNECT_MS)
 
+/**
+ * 通过 SSE 订阅所有 workspace 的团队状态变更。
+ * 每个 workspaceId 建立一条 EventSource 连接。
+ */
 export const useWorkspaceWorkers = (workspaceIds: readonly string[]) => {
   const workspaceKey = workspaceIds.join('\0')
   const [workersByWorkspaceId, setWorkersByWorkspaceId] = useState<Record<string, TeamListItem[]>>(
     {}
   )
+  // 用 ref 追踪 session refresh 是否正在进行，避免多条 SSE 同时触发
+  const refreshingRef = useRef(false)
 
   useEffect(() => {
     if (!workspaceKey) {
       setWorkersByWorkspaceId({})
       return
     }
-    let cancelled = false
-    let inFlight = false
-    let failureCount = 0
-    let timeout: number | undefined
+
     const ids = workspaceKey.split('\0')
-    const scheduleNextLoad = () => {
-      if (!cancelled) timeout = window.setTimeout(loadWorkers, getRefreshDelay(failureCount))
-    }
-    const loadWorkers = () => {
-      if (inFlight) return
-      inFlight = true
-      void Promise.all(
-        ids.map(async (workspaceId) => {
-          try {
-            return [workspaceId, await listWorkers(workspaceId)] as const
-          } catch (error) {
-            console.error('[hive] swallowed:workspaceWorkers.list', error)
-            return null
-          }
-        })
-      )
-        .then((results) => {
-          if (cancelled) return
-          failureCount = results.some(Boolean) ? 0 : Math.min(failureCount + 1, 4)
+    const sources: EventSource[] = []
+    const reconnectTimers: number[] = []
+    let cancelled = false
+
+    const connectWorkspace = (workspaceId: string, attempt = 0) => {
+      if (cancelled) return
+
+      const url = `/api/ui/workspaces/${encodeURIComponent(workspaceId)}/team/events`
+      const es = new EventSource(url)
+      sources.push(es)
+
+      es.onmessage = (event) => {
+        if (cancelled) return
+        try {
+          const payload = JSON.parse(event.data) as TeamListItemPayload[]
+          const workers = payload.map(fromPayload)
           setWorkersByWorkspaceId((current) => {
-            const next: Record<string, TeamListItem[]> = {}
-            for (const workspaceId of ids) next[workspaceId] = current[workspaceId] ?? []
-            for (const result of results) {
-              if (result) next[result[0]] = result[1]
-            }
-            return areWorkerMapsEqual(current, next) ? current : next
+            const existing = current[workspaceId] ?? []
+            if (areWorkersEqual(existing, workers)) return current
+            return { ...current, [workspaceId]: workers }
           })
-        })
-        .finally(() => {
-          inFlight = false
-          scheduleNextLoad()
-        })
+        } catch (error) {
+          console.error('[hive] SSE parse error', workspaceId, error)
+        }
+      }
+
+      es.onerror = () => {
+        if (cancelled) return
+        es.close()
+        // 从 sources 中移除已关闭的
+        const idx = sources.indexOf(es)
+        if (idx >= 0) sources.splice(idx, 1)
+
+        // 可能是 token 过期导致 403，尝试 refresh session 再重连
+        if (!refreshingRef.current) {
+          refreshingRef.current = true
+          void initializeUiSession()
+            .catch(() => {})
+            .finally(() => {
+              refreshingRef.current = false
+            })
+        }
+
+        const delay = getReconnectDelay(attempt)
+        const timer = window.setTimeout(
+          () => connectWorkspace(workspaceId, Math.min(attempt + 1, 5)),
+          delay
+        )
+        reconnectTimers.push(timer)
+      }
     }
-    loadWorkers()
+
+    for (const id of ids) connectWorkspace(id)
+
     return () => {
       cancelled = true
-      if (timeout !== undefined) window.clearTimeout(timeout)
+      for (const es of sources) es.close()
+      for (const timer of reconnectTimers) window.clearTimeout(timer)
+      sources.length = 0
+      reconnectTimers.length = 0
     }
   }, [workspaceKey])
 

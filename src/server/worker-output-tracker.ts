@@ -22,7 +22,10 @@ const trackerKey = (workspaceId: string, agentId: string) => `${workspaceId}:${a
  * connected UI viewer. Created on run start (via `attach`) and torn down on
  * run exit (via `detach`).
  */
-export const createWorkerOutputTracker = (outputBus: PtyOutputBus): WorkerOutputTracker => {
+export const createWorkerOutputTracker = (
+  outputBus: PtyOutputBus,
+  onOutput?: (workspaceId: string, agentId: string) => void
+): WorkerOutputTracker => {
   const tracked = new Map<string, TrackedRun>()
 
   const disposeEntry = (entry: TrackedRun) => {
@@ -42,6 +45,7 @@ export const createWorkerOutputTracker = (outputBus: PtyOutputBus): WorkerOutput
       if (initialOutput.length > 0) mirror.write(initialOutput)
       const unsubscribe = outputBus.subscribe(runId, (chunk) => {
         mirror.write(chunk)
+        onOutput?.(workspaceId, agentId)
       })
       tracked.set(key, { mirror, runId, unsubscribe })
     },

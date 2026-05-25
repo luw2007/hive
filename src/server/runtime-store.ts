@@ -9,6 +9,7 @@ import type { RecoveryMessage } from './message-log-store.js'
 import type { PtyOutputBus } from './pty-output-bus.js'
 import { createRuntimeStoreLifecycle, createRuntimeStoreServices } from './runtime-store-helpers.js'
 import type { SettingsStore } from './settings-store.js'
+import type { createTaskService } from './task-service.js'
 import type {
   CancelTaskInput,
   DispatchTaskInput,
@@ -17,7 +18,6 @@ import type {
   StatusTaskInput,
 } from './team-operations.js'
 import type { TerminalRunSummary } from './terminal-input-profile.js'
-import type { createTaskService } from './task-service.js'
 import type { WorkerInput, WorkspaceRecord } from './workspace-store.js'
 
 interface RuntimeStore {
@@ -100,11 +100,24 @@ interface RuntimeStore {
   validateAgentToken: (agentId: string, token: string | undefined) => boolean
   validateUiToken: (token: string | undefined) => boolean
   getDb: () => import('better-sqlite3').Database
-  handoffHandler?: {
-    activeHandoff: (ctx: { agentId: string; agentName: string; workspaceId: string }) => Promise<void>
-    receiveHandover: (workspaceId: string, agentId: string, reportText: string, pendingDispatches?: string | null, sessionId?: string | null) => boolean
-    isPendingHandoff: (workspaceId: string, agentId: string) => boolean
-  } | undefined
+  handoffHandler?:
+    | {
+        activeHandoff: (ctx: {
+          agentId: string
+          agentName: string
+          workspaceId: string
+        }) => Promise<void>
+        receiveHandover: (
+          workspaceId: string,
+          agentId: string,
+          reportText: string,
+          pendingDispatches?: string | null,
+          sessionId?: string | null
+        ) => boolean
+        isPendingHandoff: (workspaceId: string, agentId: string) => boolean
+      }
+    | undefined
+  registerTeamListener: (workspaceId: string, listener: () => void) => () => void
 }
 
 interface RuntimeStoreOptions {
@@ -130,23 +143,28 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     }
     services.db.transaction(mutation)()
   }
-  const handoffHandler = services.db ? createHandoffHandler({
-    db: services.db,
-    writeAgentStdin: (workspaceId, agentId, text) =>
-      services.agentRuntime.writeAgentStdin(workspaceId, agentId, text),
-    deleteWorker: (workspaceId, workerId) => {
-      const activeRun = services.agentRuntime.getActiveRunByAgentId(workspaceId, workerId)
-      if (activeRun) services.agentRuntime.stopAgentRun(activeRun.runId)
-      services.agentRuntime.deleteAgentLaunchConfig(workspaceId, workerId)
-      runDataMutation(() => {
-        services.dispatchLedgerStore.deleteWorkerDispatches(workspaceId, workerId)
-        services.workspaceStore.deleteWorker(workspaceId, workerId)
+  const handoffHandler = services.db
+    ? createHandoffHandler({
+        db: services.db,
+        writeAgentStdin: (workspaceId, agentId, text) =>
+          services.agentRuntime.writeAgentStdin(workspaceId, agentId, text),
+        deleteWorker: (workspaceId, workerId) => {
+          const activeRun = services.agentRuntime.getActiveRunByAgentId(workspaceId, workerId)
+          if (activeRun) services.agentRuntime.stopAgentRun(activeRun.runId)
+          services.agentRuntime.deleteAgentLaunchConfig(workspaceId, workerId)
+          runDataMutation(() => {
+            services.dispatchLedgerStore.deleteWorkerDispatches(workspaceId, workerId)
+            services.workspaceStore.deleteWorker(workspaceId, workerId)
+          })
+        },
+        getCheckpoint: (agentId) => services.agentRunStore.getCheckpoint(agentId),
       })
-    },
-    getCheckpoint: (agentId) => services.agentRunStore.getCheckpoint(agentId),
-  }) : undefined
+    : undefined
   return {
-    close: lifecycle.close,
+    close: async () => {
+      services.teamChangeBus.dispose()
+      await lifecycle.close()
+    },
     createWorkspace: (path, name) => {
       const workspace = services.workspaceStore.createWorkspace(path, name)
       void lifecycle.startWorkspaceWatch(workspace.id)
@@ -171,9 +189,16 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
         services.settings.setAppState('active_workspace_id', null)
       }
     },
-    addWorker: (workspaceId, input) => services.workspaceStore.addWorker(workspaceId, input),
-    renameWorker: (workspaceId, workerId, name) =>
-      services.workspaceStore.renameWorker(workspaceId, workerId, name),
+    addWorker: (workspaceId, input) => {
+      const result = services.workspaceStore.addWorker(workspaceId, input)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
+    renameWorker: (workspaceId, workerId, name) => {
+      const result = services.workspaceStore.renameWorker(workspaceId, workerId, name)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
     deleteWorker: (workspaceId, workerId) => {
       const activeRun = services.agentRuntime.getActiveRunByAgentId(workspaceId, workerId)
       if (activeRun) services.agentRuntime.stopAgentRun(activeRun.runId)
@@ -182,19 +207,49 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
         services.dispatchLedgerStore.deleteWorkerDispatches(workspaceId, workerId)
         services.workspaceStore.deleteWorker(workspaceId, workerId)
       })
+      services.teamChangeBus.notifyImmediate(workspaceId)
     },
     recordUserInput: services.teamOps.recordUserInput,
-    cancelTask: services.teamOps.cancelTask,
-    dispatchTask: services.teamOps.dispatchTask,
-    dispatchTaskByWorkerName: services.teamOps.dispatchTaskByWorkerName,
-    reportTask: services.teamOps.reportTask,
-    statusTask: services.teamOps.statusTask,
+    cancelTask: (workspaceId, dispatchId, input) => {
+      const result = services.teamOps.cancelTask(workspaceId, dispatchId, input)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
+    dispatchTask: async (workspaceId, workerId, text, input) => {
+      const result = await services.teamOps.dispatchTask(workspaceId, workerId, text, input)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
+    dispatchTaskByWorkerName: async (workspaceId, workerName, text, input) => {
+      const result = await services.teamOps.dispatchTaskByWorkerName(
+        workspaceId,
+        workerName,
+        text,
+        input
+      )
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
+    reportTask: (workspaceId, workerId, input) => {
+      const result = services.teamOps.reportTask(workspaceId, workerId, input)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
+    statusTask: (workspaceId, workerId, input) => {
+      const result = services.teamOps.statusTask(workspaceId, workerId, input)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return result
+    },
     listDispatches: services.dispatchLedgerStore.listWorkspaceDispatches,
     listWorkers: (workspaceId) => services.workspaceStore.listWorkers(workspaceId),
-    markDiscussionJoined: (workspaceId, agentId) =>
-      services.workspaceStore.markDiscussionJoined(workspaceId, agentId),
-    markDiscussionLeft: (workspaceId, agentId) =>
-      services.workspaceStore.markDiscussionLeft(workspaceId, agentId),
+    markDiscussionJoined: (workspaceId, agentId) => {
+      services.workspaceStore.markDiscussionJoined(workspaceId, agentId)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+    },
+    markDiscussionLeft: (workspaceId, agentId) => {
+      services.workspaceStore.markDiscussionLeft(workspaceId, agentId)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+    },
     getLastPtyLineForAgent: (workspaceId, agentId) =>
       services.workerOutputTracker?.getLastPtyLine(workspaceId, agentId) ?? null,
     getWorkspaceSnapshot: (workspaceId) =>
@@ -206,8 +261,22 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     closeWorkspaceShell: lifecycle.closeWorkspaceShell,
     configureAgentLaunch: lifecycle.configureAgentLaunch,
     peekAgentLaunchConfig: lifecycle.peekAgentLaunchConfig,
-    startAgent: lifecycle.startAgent,
-    autostartConfiguredAgents: lifecycle.autostartConfiguredAgents,
+    startAgent: async (workspaceId, agentId, input) => {
+      const run = await lifecycle.startAgent(workspaceId, agentId, input)
+      services.teamChangeBus.notifyImmediate(workspaceId)
+      return run
+    },
+    autostartConfiguredAgents: async (input) => {
+      const results = await lifecycle.autostartConfiguredAgents(input)
+      const notified = new Set<string>()
+      for (const r of results) {
+        if (!notified.has(r.workspace_id)) {
+          services.teamChangeBus.notifyImmediate(r.workspace_id)
+          notified.add(r.workspace_id)
+        }
+      }
+      return results
+    },
     startWorkspaceWatch: lifecycle.startWorkspaceWatch,
     startWorkspaceShell: lifecycle.startWorkspaceShell,
     getLiveRun: lifecycle.getLiveRun,
@@ -234,5 +303,7 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     validateUiToken: (token) => services.uiAuth.validate(token),
     getDb: () => services.db,
     handoffHandler,
+    registerTeamListener: (workspaceId, listener) =>
+      services.teamChangeBus.subscribe(workspaceId, listener),
   }
 }
