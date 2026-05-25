@@ -28,6 +28,28 @@ if (typeof window !== 'undefined' && typeof window.localStorage?.setItem !== 'fu
   })
 }
 
+// jsdom 不提供 EventSource，统一 mock 为无操作实现
+if (typeof window !== 'undefined' && typeof window.EventSource === 'undefined') {
+  class MockEventSource {
+    static CONNECTING = 0
+    static OPEN = 1
+    static CLOSED = 2
+    readyState = 1
+    onmessage: ((event: MessageEvent) => void) | null = null
+    onerror: (() => void) | null = null
+    onopen: (() => void) | null = null
+    close() {
+      this.readyState = 2
+    }
+    addEventListener() {}
+    removeEventListener() {}
+    dispatchEvent() {
+      return false
+    }
+  }
+  Object.defineProperty(window, 'EventSource', { writable: true, value: MockEventSource })
+}
+
 if (typeof window !== 'undefined' && !window.matchMedia) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,

@@ -10,6 +10,7 @@ import type {
 } from './route-types.js'
 import { discussRoutes } from './routes-discuss.js'
 import { dispatchRoutes } from './routes-dispatches.js'
+import { dispatchSseRoutes } from './routes-dispatches-sse.js'
 import { fsRoutes } from './routes-fs.js'
 import { marketplaceRoutes } from './routes-marketplace.js'
 import { openWorkspaceRoutes } from './routes-open-workspace.js'
@@ -27,6 +28,7 @@ const routes: RouteDefinition[] = [
   ...workspaceRoutes,
   ...openWorkspaceRoutes,
   ...dispatchRoutes,
+  ...dispatchSseRoutes,
   ...versionRoutes,
   ...uiRoutes,
   ...settingsRoutes,
