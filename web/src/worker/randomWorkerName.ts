@@ -568,12 +568,14 @@ const ZH_CUSTOM: readonly string[] = [...ZH_CODER, ...ZH_REVIEWER, ...ZH_TESTER,
 const POOLS: Record<UiLanguage, Record<WorkerRole, readonly string[]>> = {
   en: {
     coder: EN_CODER,
+    hr: EN_CUSTOM,
     reviewer: EN_REVIEWER,
     tester: EN_TESTER,
     custom: EN_CUSTOM,
   },
   zh: {
     coder: ZH_CODER,
+    hr: ZH_CUSTOM,
     reviewer: ZH_REVIEWER,
     tester: ZH_TESTER,
     custom: ZH_CUSTOM,

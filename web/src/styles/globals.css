@@ -156,9 +156,9 @@
      earns its keep (dialog/drawer/toast keyframes) and standardize everything
      else on `ease`. Durations dropped 120→100 / 180→150 to land on Twenty's
      `instant 75 / fast 150 / normal 300` ladder. */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);          /* dialog/drawer enter only */
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);              /* dialog/drawer exit only */
-  --ease-modal: cubic-bezier(0.32, 0.72, 0, 1);       /* drawer slide */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* dialog/drawer enter only */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* dialog/drawer exit only */
+  --ease-modal: cubic-bezier(0.32, 0.72, 0, 1); /* drawer slide */
   --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1); /* toast spring */
   --dur-fast: 100ms;
   --dur-base: 150ms;
@@ -181,15 +181,14 @@
      so the card still separates from its container, and dropped the inset
      rim highlight (Twenty has zero inset shadows anywhere). The hover step
      gets the accent-tinted ring but no ambient elevation. */
-  --shadow-card:
-    0 0 0 1px rgba(var(--shadow-tint), 0.12);
-  --shadow-card-hover:
-    0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent);
+  --shadow-card: 0 0 0 1px rgba(var(--shadow-tint), 0.12);
+  --shadow-card-hover: 0 0 0 1px
+    color-mix(in oklab, var(--accent) 35%, transparent);
 
   color-scheme: dark;
 }
 
-[data-theme='light'] {
+[data-theme="light"] {
   --bg-0: #ffffff;
   --bg-1: #f8f8f8;
   --bg-2: #f3f3f3;
@@ -241,14 +240,15 @@
   color: var(--text-primary);
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
   background: var(--bg-0);
   color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 13px;
   line-height: 1.5;
   -moz-osx-font-smoothing: grayscale;
@@ -260,51 +260,93 @@ html, body {
      -0.011em tracking) were the loudest "AI-polished" tell in the file. */
 }
 
-#root { height: 100%; }
+#root {
+  height: 100%;
+}
 
 /* DM Mono — Twenty's monospace. */
 .mono {
-  font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* Linear dark palette helpers (class sugar) */
-.bg-0 { background: var(--bg-0); }
-.bg-1 { background: var(--bg-1); }
-.bg-2 { background: var(--bg-2); }
-.bg-3 { background: var(--bg-3); }
-.bg-crust { background: var(--bg-crust); }
-.text-pri { color: var(--text-primary); }
-.text-sec { color: var(--text-secondary); }
-.text-ter { color: var(--text-tertiary); }
-.border-d  { border-color: var(--border); }
-.border-b1 { border-color: var(--border-bright); }
-.accent { color: var(--accent); }
-.bg-accent { background: var(--accent); }
+.bg-0 {
+  background: var(--bg-0);
+}
+.bg-1 {
+  background: var(--bg-1);
+}
+.bg-2 {
+  background: var(--bg-2);
+}
+.bg-3 {
+  background: var(--bg-3);
+}
+.bg-crust {
+  background: var(--bg-crust);
+}
+.text-pri {
+  color: var(--text-primary);
+}
+.text-sec {
+  color: var(--text-secondary);
+}
+.text-ter {
+  color: var(--text-tertiary);
+}
+.border-d {
+  border-color: var(--border);
+}
+.border-b1 {
+  border-color: var(--border-bright);
+}
+.accent {
+  color: var(--accent);
+}
+.bg-accent {
+  background: var(--accent);
+}
 
 /* Scrollbar */
-.scroll-y { overflow-y: auto; }
+.scroll-y {
+  overflow-y: auto;
+}
 .scroll-y::-webkit-scrollbar,
 .input::-webkit-scrollbar,
-.xterm-viewport::-webkit-scrollbar { width: 8px; height: 8px; }
+.xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 .scroll-y::-webkit-scrollbar-thumb,
 .input::-webkit-scrollbar-thumb,
-.xterm-viewport::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 4px; }
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: var(--bg-3);
+  border-radius: 4px;
+}
 .scroll-y::-webkit-scrollbar-thumb:hover,
 .input::-webkit-scrollbar-thumb:hover,
-.xterm-viewport::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+.xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright);
+}
 .scroll-y::-webkit-scrollbar-track,
 .input::-webkit-scrollbar-track,
-.xterm-viewport::-webkit-scrollbar-track { background: transparent; }
+.xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
 /* Firefox fallback — applies to anything that scrolls inside the app. */
 .scroll-y,
 .input,
-.xterm-viewport { scrollbar-width: thin; scrollbar-color: var(--bg-3) transparent; }
+.xterm-viewport {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-3) transparent;
+}
 
 /* xterm focus affordance — when the PTY container has focus, give the user
    a 1px accent inset so they know keystrokes will be captured. xterm sets
    .focus on its outermost div whenever the underlying textarea is focused. */
 .xterm.focus {
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--accent) 35%, transparent);
 }
 
 /* Workspace row — Twenty's NavigationDrawerItem pattern. The interactive
@@ -318,11 +360,15 @@ html, body {
 .ws-row {
   margin: 0 6px;
   border-radius: 4px;
-  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+  transition:
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease;
   cursor: pointer;
   position: relative;
 }
-.ws-row:hover { background: color-mix(in oklab, #ffffff 5%, transparent); }
+.ws-row:hover {
+  background: color-mix(in oklab, #ffffff 5%, transparent);
+}
 .ws-row.active {
   background: color-mix(in oklab, #ffffff 7%, transparent);
 }
@@ -332,7 +378,8 @@ html, body {
    hover:text-status-red class on the button. */
 .ws-row-delete:hover {
   background: color-mix(in oklab, var(--status-red) 18%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--status-red) 50%, var(--border-bright));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--status-red) 50%, var(--border-bright));
 }
 
 /* Sidebar add-workspace dashed CTA — gets accent on hover. */
@@ -357,8 +404,17 @@ html, body {
   container-name: ws-sidebar;
 }
 @container ws-sidebar (max-width: 140px) {
-  .ws-add__label { display: none; }
-  .ws-add { padding-left: 8px; padding-right: 8px; }
+  .ws-add__label {
+    display: none;
+  }
+  .ws-add {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .ws-drag-handle,
+  .ws-row-clone {
+    display: none;
+  }
 }
 
 /* Compact mode (≤96px) — Discord-style avatar column. Hide the row layout +
@@ -366,11 +422,21 @@ html, body {
    avatar cell instead. The inline "New workspace" CTA collapses to an icon-
    only square so it sits neatly under the avatars instead of stretching. */
 @container ws-sidebar (max-width: 96px) {
-  .ws-row { display: none; }
-  .ws-avatar-cell { display: flex; }
-  .ws-sidebar-title__text { display: none; }
-  .ws-sidebar-count { display: none; }
-  .ws-row-delete { display: none; }
+  .ws-row {
+    display: none;
+  }
+  .ws-avatar-cell {
+    display: flex;
+  }
+  .ws-sidebar-title__text {
+    display: none;
+  }
+  .ws-sidebar-count {
+    display: none;
+  }
+  .ws-row-delete {
+    display: none;
+  }
   .ws-add--inline {
     margin-left: auto;
     margin-right: auto;
@@ -388,7 +454,9 @@ html, body {
   margin-top: auto;
 }
 @container ws-sidebar (max-width: 140px) {
-  .ws-sidebar-footer__label { display: none; }
+  .ws-sidebar-footer__label {
+    display: none;
+  }
 }
 @container ws-sidebar (max-width: 96px) {
   /* The `<a>` is the flex container, not the wrapping `<div>`. Centering must
@@ -445,11 +513,22 @@ html, body {
   border-radius: 50%;
   vertical-align: middle;
 }
-.pulse-green { background: var(--status-green); animation: hive-pulse 1.6s ease-in-out infinite; }
-.pulse-orange { background: var(--status-orange); animation: hive-pulse 1.6s ease-in-out infinite; }
+.pulse-green {
+  background: var(--status-green);
+  animation: hive-pulse 1.6s ease-in-out infinite;
+}
+.pulse-orange {
+  background: var(--status-orange);
+  animation: hive-pulse 1.6s ease-in-out infinite;
+}
 @keyframes hive-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 /* Status dot — typed (spec §3.6 + §3.6.4). One token per kind so colors stay
@@ -470,7 +549,8 @@ html, body {
 }
 .status-dot--idle {
   background: var(--text-tertiary);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--text-tertiary) 18%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in oklab, var(--text-tertiary) 18%, transparent);
 }
 .status-dot--queued {
   background: var(--status-orange);
@@ -482,16 +562,32 @@ html, body {
   opacity: 0.85;
 }
 @keyframes hive-ripple-green {
-  0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--status-green) 22%, transparent); }
-  50%      { box-shadow: 0 0 0 7px color-mix(in oklab, var(--status-green) 6%, transparent); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--status-green) 22%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 7px
+      color-mix(in oklab, var(--status-green) 6%, transparent);
+  }
 }
 @keyframes hive-ripple-orange {
-  0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--status-orange) 22%, transparent); }
-  50%      { box-shadow: 0 0 0 7px color-mix(in oklab, var(--status-orange) 6%, transparent); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--status-orange) 22%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 7px
+      color-mix(in oklab, var(--status-orange) 6%, transparent);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .status-dot--working,
-  .status-dot--queued { animation: none; }
+  .status-dot--queued {
+    animation: none;
+  }
 }
 
 /* Pill — unified inline-status surface. Used by worker card status,
@@ -553,15 +649,15 @@ html, body {
   font-weight: 500;
   white-space: nowrap;
 }
-.dispatch-badge[data-tone='green'] {
+.dispatch-badge[data-tone="green"] {
   color: var(--green-text, #166534);
   background: var(--green-bg, #dcfce7);
 }
-.dispatch-badge[data-tone='orange'] {
+.dispatch-badge[data-tone="orange"] {
   color: var(--orange-text, #9a3412);
   background: var(--orange-bg, #ffedd5);
 }
-.dispatch-badge[data-tone='red'] {
+.dispatch-badge[data-tone="red"] {
   color: var(--red-text, #991b1b);
   background: var(--red-bg, #fee2e2);
 }
@@ -588,13 +684,18 @@ html, body {
   border: 1px solid var(--border-bright);
   background: var(--bg-2);
   cursor: pointer;
-  transition: background 100ms ease, border-color 100ms ease, color 100ms ease;
+  transition:
+    background 100ms ease,
+    border-color 100ms ease,
+    color 100ms ease;
 }
 .icon-btn:hover {
   background: var(--bg-3);
   color: var(--text-primary);
 }
-.icon-btn:active { background: var(--bg-3); }
+.icon-btn:active {
+  background: var(--bg-3);
+}
 .icon-btn:focus-visible {
   outline: none;
   /* Single 3px solid halo at low alpha — Twenty's focus pattern. The
@@ -602,7 +703,10 @@ html, body {
      read as fussy; one band is enough on a flat button. */
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
 }
-.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* Primary — the blue-CTA variant. Saturated brand color, white text. */
 .icon-btn--primary {
@@ -618,7 +722,11 @@ html, body {
 
 .icon-btn--danger {
   color: var(--status-red);
-  border-color: color-mix(in oklab, var(--status-red) 30%, var(--border-bright));
+  border-color: color-mix(
+    in oklab,
+    var(--status-red) 30%,
+    var(--border-bright)
+  );
 }
 .icon-btn--danger:hover {
   background: color-mix(in oklab, var(--status-red) 14%, transparent);
@@ -707,7 +815,9 @@ html, body {
     border-color 100ms ease,
     background 100ms ease;
 }
-.card--interactive { cursor: pointer; }
+.card--interactive {
+  cursor: pointer;
+}
 .card--interactive:hover {
   border-color: var(--border-bright);
 }
@@ -730,7 +840,10 @@ html, body {
     background var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease;
 }
-.selectable-card--dashed { border-style: dashed; border-color: var(--border-bright); }
+.selectable-card--dashed {
+  border-style: dashed;
+  border-color: var(--border-bright);
+}
 .selectable-card:hover:not([aria-pressed="true"]) {
   border-color: var(--border-bright);
   background: color-mix(in oklab, var(--accent) 3%, var(--bg-2));
@@ -769,8 +882,14 @@ html, body {
   background: color-mix(in oklab, var(--status-purple) 22%, var(--bg-2));
   color: var(--status-purple);
 }
-.role-badge--orch { background: var(--bg-3); color: var(--text-secondary); }
-.role-badge--custom { background: var(--bg-3); color: var(--text-secondary); }
+.role-badge--orch {
+  background: var(--bg-3);
+  color: var(--text-secondary);
+}
+.role-badge--custom {
+  background: var(--bg-3);
+  color: var(--text-secondary);
+}
 
 /* line-clamp utilities */
 .line-clamp-1 {
@@ -794,7 +913,9 @@ html, body {
   transform: translateX(100%);
   transition: transform 0.25s ease-out;
 }
-.drawer.open { transform: translateX(0); }
+.drawer.open {
+  transform: translateX(0);
+}
 
 /* Inline task panel: override drawer's absolute overlay sizing when embedded
    inside the workspace tab panel. */
@@ -954,7 +1075,9 @@ html, body {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
 }
 .task-row__action:hover {
   background: var(--bg-3);
@@ -1009,11 +1132,16 @@ html, body {
   height: 20px;
   padding: 0 8px;
   border-radius: 999px;
-  font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   color: color-mix(in oklab, var(--owner-tone, var(--status-blue)) 35%, white);
-  background: color-mix(in oklab, var(--owner-tone, var(--status-blue)) 16%, transparent);
-  border: 1px solid color-mix(in oklab, var(--owner-tone, var(--status-blue)) 30%, transparent);
+  background: color-mix(
+    in oklab,
+    var(--owner-tone, var(--status-blue)) 16%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(in oklab, var(--owner-tone, var(--status-blue)) 30%, transparent);
 }
 
 /* Legacy alias kept so any external consumer of `.task-mention` doesn't
@@ -1027,7 +1155,7 @@ html, body {
   padding: 0 8px;
   color: color-mix(in oklab, var(--status-blue) 30%, white);
   background: color-mix(in oklab, var(--status-blue) 14%, transparent);
-  font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
 }
 
@@ -1056,7 +1184,9 @@ html, body {
   font-size: 13px;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
 }
 .task-add-toggle:hover {
   background: var(--bg-2);
@@ -1109,20 +1239,24 @@ html, body {
   display: flex;
   width: 100%;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 4px;
+  padding: 6px 12px;
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-tertiary);
+  color: var(--text-ter);
   cursor: pointer;
-  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
 }
 .task-completed-toggle:hover {
-  background: var(--bg-2);
-  color: var(--text-secondary);
+  background: var(--bg-3);
+  color: var(--text-sec);
 }
 
 /* §6.6.1 — depth-cap marker. Drawn at level ≥3 instead of yet another indent
@@ -1162,7 +1296,9 @@ html, body {
   color: var(--text-tertiary);
   border: none;
   cursor: pointer;
-  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
 }
 .task-row__collapse:hover {
   background: var(--bg-3);
@@ -1176,7 +1312,7 @@ html, body {
 .task-owner--clickable {
   cursor: pointer;
   font: inherit;
-  font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
 }
 .task-owner--clickable:hover {
@@ -1192,10 +1328,14 @@ html, body {
    if your design tokens don't have a glow var, fall back to the accent ring. */
 @keyframes worker-card-highlight {
   0% {
-    box-shadow: 0 0 0 2px var(--accent), 0 0 18px 4px color-mix(in oklab, var(--accent) 40%, transparent);
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 0 18px 4px color-mix(in oklab, var(--accent) 40%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent;
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 0 transparent;
   }
 }
 .worker-card-shell--highlight {
@@ -1214,7 +1354,6 @@ html, body {
 .drawer--stale .task-status-open {
   filter: saturate(1.6) brightness(1.15);
 }
-
 
 /* Deprecated — kept only for compat; prefer `.app-overlay` on a
    <Dialog.Overlay> element. M6-A migrated all known callers; remove this
@@ -1255,12 +1394,19 @@ html, body {
      `--border-bright` at rest, which made every input look "active". */
   border: 1px solid var(--border);
   outline: none;
-  transition: border-color 100ms ease, box-shadow 100ms ease;
+  transition:
+    border-color 100ms ease,
+    box-shadow 100ms ease;
 }
 /* Placeholder weight matches Twenty's input recipe: 500-weight ghost text
    reads as a "label-ish prompt" rather than soft body. */
-.input::placeholder { color: var(--text-tertiary); font-weight: 500; }
-.input:hover:not(:focus) { border-color: var(--border-bright); }
+.input::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.input:hover:not(:focus) {
+  border-color: var(--border-bright);
+}
 /* Twenty's input focus is just a border-color shift — no halo. The caret
    already announces "you are typing here", and dropping the ring keeps the
    field as quiet as the rest of the chrome. The ring stays on buttons and
@@ -1269,16 +1415,28 @@ html, body {
   border-color: var(--accent);
   box-shadow: none;
 }
-.input--readonly { background: var(--bg-0); color: var(--text-secondary); cursor: default; }
+.input--readonly {
+  background: var(--bg-0);
+  color: var(--text-secondary);
+  cursor: default;
+}
 
 /* Error state — used by inputs flagged with an active validation error.
    Border firms up to red at rest *and* focus (matches Twenty: error
    state never swaps to the accent on focus). */
 .input--error {
-  border-color: color-mix(in oklab, var(--status-red) 50%, var(--border-bright));
+  border-color: color-mix(
+    in oklab,
+    var(--status-red) 50%,
+    var(--border-bright)
+  );
 }
 .input--error:hover:not(:focus) {
-  border-color: color-mix(in oklab, var(--status-red) 65%, var(--border-bright));
+  border-color: color-mix(
+    in oklab,
+    var(--status-red) 65%,
+    var(--border-bright)
+  );
 }
 .input--error:focus-visible {
   border-color: var(--status-red);
@@ -1296,40 +1454,102 @@ html, body {
    "designed" tell. Translate keyframes keep `dialog-pop` (centered via
    transform) anchored; `dialog-scale-pop` (centered by an outer grid)
    doesn't need transforms at all. */
-@keyframes dialog-overlay-in  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes dialog-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dialog-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 @keyframes dialog-pop-in {
-  from { opacity: 0; transform: translate(-50%, -50%); }
-  to   { opacity: 1; transform: translate(-50%, -50%); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 @keyframes dialog-pop-out {
-  from { opacity: 1; transform: translate(-50%, -50%); }
-  to   { opacity: 0; transform: translate(-50%, -50%); }
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
 }
 @keyframes dialog-scale-pop-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes dialog-scale-pop-out {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes drawer-pop-in {
-  from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 @keyframes drawer-pop-out {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(24px); }
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
 }
-.app-overlay[data-state="open"]  { animation: dialog-overlay-in 180ms var(--ease-out); }
-.app-overlay[data-state="closed"] { animation: dialog-overlay-out 140ms var(--ease-in); }
-.dialog-pop[data-state="open"]   { animation: dialog-pop-in 300ms var(--ease-out) both; }
-.dialog-pop[data-state="closed"] { animation: dialog-pop-out 140ms var(--ease-in) both; }
-.dialog-scale-pop[data-state="open"]   { animation: dialog-scale-pop-in 300ms var(--ease-out) both; }
-.dialog-scale-pop[data-state="closed"] { animation: dialog-scale-pop-out 140ms var(--ease-in) both; }
-.drawer-pop[data-state="open"]   { animation: drawer-pop-in 220ms var(--ease-modal) both; }
-.drawer-pop[data-state="closed"] { animation: drawer-pop-out 160ms var(--ease-in) both; }
+.app-overlay[data-state="open"] {
+  animation: dialog-overlay-in 180ms var(--ease-out);
+}
+.app-overlay[data-state="closed"] {
+  animation: dialog-overlay-out 140ms var(--ease-in);
+}
+.dialog-pop[data-state="open"] {
+  animation: dialog-pop-in 300ms var(--ease-out) both;
+}
+.dialog-pop[data-state="closed"] {
+  animation: dialog-pop-out 140ms var(--ease-in) both;
+}
+.dialog-scale-pop[data-state="open"] {
+  animation: dialog-scale-pop-in 300ms var(--ease-out) both;
+}
+.dialog-scale-pop[data-state="closed"] {
+  animation: dialog-scale-pop-out 140ms var(--ease-in) both;
+}
+.drawer-pop[data-state="open"] {
+  animation: drawer-pop-in 220ms var(--ease-modal) both;
+}
+.drawer-pop[data-state="closed"] {
+  animation: drawer-pop-out 160ms var(--ease-in) both;
+}
 @media (prefers-reduced-motion: reduce) {
   .app-overlay[data-state="open"],
   .app-overlay[data-state="closed"],
@@ -1338,7 +1558,9 @@ html, body {
   .dialog-scale-pop[data-state="open"],
   .dialog-scale-pop[data-state="closed"],
   .drawer-pop[data-state="open"],
-  .drawer-pop[data-state="closed"] { animation: none; }
+  .drawer-pop[data-state="closed"] {
+    animation: none;
+  }
 }
 
 /* Tooltip — Twenty's recipe. Dark elevated surface, hairline border, 11px
@@ -1378,21 +1600,38 @@ html, body {
   animation-play-state: paused;
 }
 @keyframes toast-progress {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .toast-progress-bar { animation: none; opacity: 0; }
+  .toast-progress-bar {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* Toast spring entrance — overshoot once on open, fast slide on close. */
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(16px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-.toast-pop { animation: toast-in 320ms var(--ease-overshoot); }
+.toast-pop {
+  animation: toast-in 320ms var(--ease-overshoot);
+}
 @media (prefers-reduced-motion: reduce) {
-  .toast-pop { animation: none; }
+  .toast-pop {
+    animation: none;
+  }
 }
 
 .float-action {
@@ -1424,7 +1663,10 @@ html, body {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
 }
-.float-action:disabled { opacity: 0.5; cursor: not-allowed; }
+.float-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .float-action[data-variant="primary"] {
   background: var(--accent);
   color: #ffffff;
@@ -1438,7 +1680,11 @@ html, body {
 }
 .float-action[data-variant="danger"]:hover {
   background: color-mix(in oklab, var(--status-red) 18%, transparent);
-  border-color: color-mix(in oklab, var(--status-red) 50%, var(--border-bright));
+  border-color: color-mix(
+    in oklab,
+    var(--status-red) 50%,
+    var(--border-bright)
+  );
   color: var(--status-red);
 }
 .float-action-divider {
@@ -1467,15 +1713,15 @@ html, body {
    and stopped agents reads at a glance. Reduced opacity + slight desat
    on the card body. Hover restores full saturation so the user can still
    inspect / restart the agent without the chrome fighting them. */
-.worker-card-shell[data-status='stopped'] .worker-card {
+.worker-card-shell[data-status="stopped"] .worker-card {
   opacity: 0.65;
   filter: saturate(0.6);
   transition:
     opacity var(--dur-fast) ease,
     filter var(--dur-fast) ease;
 }
-.worker-card-shell[data-status='stopped']:hover .worker-card,
-.worker-card-shell[data-status='stopped']:focus-within .worker-card {
+.worker-card-shell[data-status="stopped"]:hover .worker-card,
+.worker-card-shell[data-status="stopped"]:focus-within .worker-card {
   opacity: 1;
   filter: none;
 }
@@ -1531,8 +1777,13 @@ html, body {
   color: var(--text-primary);
 }
 /* Press affordance — background-darken alone (no scale transform). */
-.worker-card__action:active { background: var(--charcoal-700); }
-.worker-card__action:disabled { opacity: 0.5; cursor: not-allowed; }
+.worker-card__action:active {
+  background: var(--charcoal-700);
+}
+.worker-card__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .worker-card__action[data-variant="primary"] {
   background: var(--accent);
   border-color: var(--accent);
@@ -1544,7 +1795,11 @@ html, body {
 }
 .worker-card__action[data-variant="danger"]:hover {
   background: color-mix(in oklab, var(--status-red) 14%, transparent);
-  border-color: color-mix(in oklab, var(--status-red) 40%, var(--border-bright));
+  border-color: color-mix(
+    in oklab,
+    var(--status-red) 40%,
+    var(--border-bright)
+  );
   color: var(--status-red);
 }
 
@@ -1560,8 +1815,14 @@ html, body {
   z-index: 50;
 }
 @keyframes dropdown-in {
-  from { opacity: 0; transform: scale(0.95) translateY(-2px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 .dropdown-menu__item {
   display: flex;
@@ -1632,88 +1893,110 @@ html, body {
   animation: accordion-expand 200ms ease;
 }
 @keyframes accordion-expand {
-  from { height: 0; opacity: 0; }
-  to { height: var(--radix-accordion-content-height); opacity: 1; }
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
 }
 @keyframes accordion-collapse {
-  from { height: var(--radix-accordion-content-height); opacity: 1; }
-  to { height: 0; opacity: 0; }
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
 }
 
 /* Collapsible Panel */
 .collapsible-panel {
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
   overflow: hidden;
 }
 .collapsible-panel__header {
   display: flex;
-  flex-direction: column;
-  padding: 6px 8px;
   flex-shrink: 0;
-  background: var(--bg-2);
-  border-bottom: 1px solid var(--border);
   cursor: pointer;
   user-select: none;
-}
-.collapsible-panel__header--two-line {
-  padding: 6px 8px 5px;
-}
-.collapsible-panel__row1 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 24px;
-}
-.collapsible-panel__row2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 22px;
-  font-size: 11px;
-  color: var(--text-ter);
-  min-height: 20px;
 }
 .collapsible-panel__header:hover {
   background: var(--bg-3);
 }
-.collapsible-panel__drag {
+.collapsible-panel__content {
+  max-height: 9999px;
+  overflow: hidden;
+  transition:
+    max-height 300ms ease,
+    opacity 200ms ease;
+  opacity: 1;
+}
+.collapsible-panel[data-collapsed] .collapsible-panel__content {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Module Header — 原生模块标题栏（可折叠） */
+.module-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+}
+.collapsible-panel[data-collapsed] .module-header {
+  border-bottom-color: transparent;
+}
+.module-header__row1 {
   display: flex;
   align-items: center;
-  cursor: grab;
-  color: var(--text-ter);
-  padding: 2px;
-  border-radius: 3px;
+  gap: 8px;
 }
-.collapsible-panel__drag:hover {
-  background: var(--bg-3);
-  color: var(--text-sec);
-}
-.collapsible-panel__drag:active {
-  cursor: grabbing;
-}
-.collapsible-panel__icon {
+.module-header__row2 {
   display: flex;
   align-items: center;
-  color: var(--text-ter);
-}
-.collapsible-panel__title {
-  flex: 1;
+  gap: 12px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--text-pri);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  color: var(--text-ter);
 }
-.collapsible-panel__summary {
-  margin-left: auto;
+.module-header__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-pri);
+  line-height: 1.3;
+}
+.module-header__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-3);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-sec);
+  line-height: 1.3;
+}
+.module-header__spacer {
+  flex: 1;
+}
+.module-header__icon {
+  color: var(--text-ter);
+  flex-shrink: 0;
+}
+.module-header__chevron {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
   color: var(--text-ter);
-  white-space: nowrap;
+  margin-left: 4px;
+  flex-shrink: 0;
 }
 .panel-header-btn {
   display: inline-flex;
@@ -1731,28 +2014,6 @@ html, body {
   background: var(--bg-3);
   color: var(--text-pri);
 }
-.collapsible-panel__toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  color: var(--text-ter);
-  flex-shrink: 0;
-}
-.collapsible-panel__content {
-  max-height: 9999px;
-  overflow: hidden;
-  transition: max-height 300ms ease, opacity 200ms ease;
-  opacity: 1;
-}
-.collapsible-panel[data-collapsed] .collapsible-panel__content {
-  max-height: 0;
-  opacity: 0;
-}
-.collapsible-panel[data-collapsed] .collapsible-panel__header {
-  border-bottom-color: transparent;
-}
 
 .modal-resize-handle {
   position: absolute;
@@ -1765,8 +2026,12 @@ html, body {
   user-select: none;
   touch-action: none;
 }
-.modal-resize-handle--left  { left: -4px; }
-.modal-resize-handle--right { right: -4px; }
+.modal-resize-handle--left {
+  left: -4px;
+}
+.modal-resize-handle--right {
+  right: -4px;
+}
 .modal-resize-handle::before {
   content: "";
   position: absolute;
@@ -1778,8 +2043,12 @@ html, body {
     background var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease;
 }
-.modal-resize-handle--left::before  { left: 4px; }
-.modal-resize-handle--right::before { right: 4px; }
+.modal-resize-handle--left::before {
+  left: 4px;
+}
+.modal-resize-handle--right::before {
+  right: 4px;
+}
 .modal-resize-handle:hover::before,
 .modal-resize-handle[data-resizing]::before {
   background: color-mix(in oklab, var(--accent) 68%, var(--border-bright));
@@ -1835,7 +2104,9 @@ html, body {
     border-color 100ms ease,
     box-shadow 100ms ease;
 }
-.cli-select:hover { border-color: var(--border-bright); }
+.cli-select:hover {
+  border-color: var(--border-bright);
+}
 .cli-select:focus-within {
   border-color: var(--accent);
   box-shadow: none;
@@ -1853,7 +2124,9 @@ html, body {
   pointer-events: none;
   transition: transform var(--dur-fast) ease;
 }
-.cli-select:focus-within .cli-select__trailing { transform: translateY(1px); }
+.cli-select:focus-within .cli-select__trailing {
+  transform: translateY(1px);
+}
 .cli-select__field {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -1869,7 +2142,10 @@ html, body {
   font-weight: 500;
   cursor: pointer;
 }
-.cli-select__field:disabled { color: var(--text-tertiary); cursor: not-allowed; }
+.cli-select__field:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
 .cli-select__field option {
   background: var(--bg-elevated);
   color: var(--text-primary);
@@ -1943,14 +2219,14 @@ html, body {
    plain `hover:bg-3` is a no-op on the drawer container; cards need
    explicit accent-mix washes to look interactive. Selected cards skip the
    hover wash (they already have an accent border + accent-mix fill). */
-.marketplace-card[data-selected='true'] {
+.marketplace-card[data-selected="true"] {
   border-color: var(--accent);
 }
-.marketplace-card:not([data-selected='true']):hover {
+.marketplace-card:not([data-selected="true"]):hover {
   background: color-mix(in oklab, var(--accent) 6%, var(--bg-2));
   border-color: color-mix(in oklab, var(--accent) 35%, var(--border-bright));
 }
-.marketplace-card:not([data-selected='true']):active {
+.marketplace-card:not([data-selected="true"]):active {
   background: color-mix(in oklab, var(--accent) 10%, var(--bg-2));
 }
 
@@ -1962,7 +2238,9 @@ html, body {
   font-size: 12px;
   line-height: 1.6;
 }
-.marketplace-prose > * + * { margin-top: 8px; }
+.marketplace-prose > * + * {
+  margin-top: 8px;
+}
 .marketplace-prose h1,
 .marketplace-prose h2,
 .marketplace-prose h3,
@@ -1971,21 +2249,55 @@ html, body {
   color: var(--text-primary);
   line-height: 1.3;
 }
-.marketplace-prose h1 { font-size: 15px; margin-top: 12px; }
-.marketplace-prose h2 { font-size: 13px; margin-top: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
-.marketplace-prose h3 { font-size: 12px; margin-top: 10px; color: var(--text-secondary); }
-.marketplace-prose h4 { font-size: 12px; color: var(--text-secondary); }
-.marketplace-prose p { color: var(--text-primary); }
+.marketplace-prose h1 {
+  font-size: 15px;
+  margin-top: 12px;
+}
+.marketplace-prose h2 {
+  font-size: 13px;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.marketplace-prose h3 {
+  font-size: 12px;
+  margin-top: 10px;
+  color: var(--text-secondary);
+}
+.marketplace-prose h4 {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.marketplace-prose p {
+  color: var(--text-primary);
+}
 .marketplace-prose ul,
-.marketplace-prose ol { padding-left: 18px; }
-.marketplace-prose ul { list-style: disc; }
-.marketplace-prose ol { list-style: decimal; }
-.marketplace-prose li + li { margin-top: 2px; }
-.marketplace-prose li { color: var(--text-primary); }
-.marketplace-prose strong { color: var(--text-primary); font-weight: 600; }
-.marketplace-prose em { color: var(--text-secondary); font-style: italic; }
+.marketplace-prose ol {
+  padding-left: 18px;
+}
+.marketplace-prose ul {
+  list-style: disc;
+}
+.marketplace-prose ol {
+  list-style: decimal;
+}
+.marketplace-prose li + li {
+  margin-top: 2px;
+}
+.marketplace-prose li {
+  color: var(--text-primary);
+}
+.marketplace-prose strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.marketplace-prose em {
+  color: var(--text-secondary);
+  font-style: italic;
+}
 .marketplace-prose code {
-  font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   padding: 1px 4px;
   border-radius: 3px;
@@ -1993,7 +2305,7 @@ html, body {
   color: var(--text-secondary);
 }
 .marketplace-prose pre {
-  font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   background: var(--bg-1);
   border: 1px solid var(--border);
@@ -2001,7 +2313,11 @@ html, body {
   padding: 8px 10px;
   overflow-x: auto;
 }
-.marketplace-prose pre code { background: transparent; padding: 0; color: var(--text-primary); }
+.marketplace-prose pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--text-primary);
+}
 .marketplace-prose blockquote {
   margin: 8px 0;
   padding-left: 10px;
@@ -2013,7 +2329,9 @@ html, body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.marketplace-prose a:hover { color: var(--accent-hover); }
+.marketplace-prose a:hover {
+  color: var(--accent-hover);
+}
 .marketplace-prose hr {
   border: none;
   border-top: 1px solid var(--border);
@@ -2028,4 +2346,7 @@ html, body {
   border: 1px solid var(--border);
   padding: 4px 8px;
 }
-.marketplace-prose th { background: var(--bg-2); color: var(--text-secondary); }
+.marketplace-prose th {
+  background: var(--bg-2);
+  color: var(--text-secondary);
+}

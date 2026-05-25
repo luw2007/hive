@@ -44,16 +44,18 @@ export const DispatchHistorySection = ({ workspaceId }: { workspaceId: string | 
   const { items, loading, hasMore, loadMore } = useDispatchHistory(open ? workspaceId : null)
 
   return (
-    <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+    <div className="mt-1">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         data-testid="dispatch-history-toggle"
-        className="flex w-full items-center gap-1.5 text-xs font-medium text-ter hover:text-sec"
+        className="task-completed-toggle"
       >
-        {open ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
-        <span>{t('tasks.dispatchHistory.title')}</span>
+        <span className="inline-flex items-center gap-1.5">
+          {open ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
+          <span>{t('tasks.dispatchHistory.title')}</span>
+        </span>
       </button>
       {open ? (
         <div className="mt-2">

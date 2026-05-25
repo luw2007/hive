@@ -200,7 +200,7 @@ export const workspaceRoutes: RouteDefinition[] = [
   route(
     'DELETE',
     '/api/workspaces/:workspaceId/workers/:workerId',
-    ({ params, request, response, store }) => {
+    async ({ params, request, response, store }) => {
       const workspaceId = getRequiredParam(
         response,
         params,
@@ -218,6 +218,19 @@ export const workspaceRoutes: RouteDefinition[] = [
       }
 
       requireUiTokenFromRequest(request, store.validateUiToken)
+      const url = new URL(request.url ?? '', 'http://localhost')
+      const handover = url.searchParams.get('handover') === 'true'
+      if (handover && store.handoffHandler) {
+        const worker = store.getWorker(workspaceId, workerId)
+        await store.handoffHandler.activeHandoff({
+          agentId: workerId,
+          agentName: worker.name,
+          workspaceId,
+        })
+        response.statusCode = 202
+        response.end()
+        return
+      }
       store.deleteWorker(workspaceId, workerId)
       response.statusCode = 204
       response.end()

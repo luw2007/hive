@@ -12,17 +12,19 @@ export const ActiveDispatchesSection = ({ dispatches }: { dispatches: DispatchIt
   if (active.length === 0) return null
 
   return (
-    <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+    <div className="mt-1">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
         data-testid="active-dispatches-toggle"
-        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ter"
+        className="task-completed-toggle"
       >
-        {expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
-        <CornerDownRight size={12} aria-hidden />
-        <span>{t('tasks.dispatches.active', { count: active.length })}</span>
+        <span className="inline-flex items-center gap-1.5">
+          {expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
+          <CornerDownRight size={12} aria-hidden />
+          <span>{t('tasks.dispatches.active', { count: active.length })}</span>
+        </span>
       </button>
       {expanded ? (
         <ul className="flex flex-col gap-1 pl-4 text-xs text-sec" data-testid="active-dispatches-list">

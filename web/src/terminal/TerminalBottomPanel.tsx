@@ -54,21 +54,8 @@ export const TerminalBottomPanel = ({
           borderTop: '1px solid var(--border)',
         }}
       >
-        <TerminalIcon size={16} aria-hidden />
-        <button
-          type="button"
-          onClick={onNewShell}
-          disabled={newShellPending}
-          className="icon-btn icon-btn--primary"
-          data-testid="terminal-empty-new-shell"
-        >
-          {newShellPending ? (
-            <LoaderCircle size={12} className="animate-spin" aria-hidden />
-          ) : (
-            <Plus size={12} aria-hidden />
-          )}
-          {t('terminalPanel.newShell')}
-        </button>
+        <TerminalIcon size={14} aria-hidden />
+        <span>{t('terminalPanel.noSessions')}</span>
       </div>
     )
   }

@@ -46,6 +46,18 @@ export const CUSTOM_ROLE_DESCRIPTION = [
   '- 完成标准：交付时需要说明哪些结果、风险和阻塞。',
 ].join('\n')
 
+export const HR_ROLE_DESCRIPTION = [
+  '你是团队效能观察员（HR），负责观察 worker 表现并生成评估建议。',
+  '工作方式：',
+  '- 观察各 worker 的派单完成率、响应时长、失败率和协作质量。',
+  '- 识别瓶颈成员、超负荷成员和闲置成员。',
+  '- 生成文本评估报告，包含数据支撑的调整建议。',
+  '边界：',
+  '- 不直接执行代码变更、不参与派单、不替代 Orchestrator 决策。',
+  '- 仅通过 team report 提交观察结果和建议。',
+  '交付说明要包含：观察周期、关键指标、问题成员、建议操作。',
+].join('\n')
+
 export const getDefaultRoleDescription = (role: WorkerRole | 'orchestrator') => {
   switch (role) {
     case 'orchestrator':
@@ -56,6 +68,8 @@ export const getDefaultRoleDescription = (role: WorkerRole | 'orchestrator') => 
       return REVIEWER_ROLE_DESCRIPTION
     case 'tester':
       return TESTER_ROLE_DESCRIPTION
+    case 'hr':
+      return HR_ROLE_DESCRIPTION
     case 'custom':
       return CUSTOM_ROLE_DESCRIPTION
   }

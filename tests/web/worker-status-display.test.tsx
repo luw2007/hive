@@ -64,6 +64,7 @@ describe('worker status presentation', () => {
         startingWorkerId={null}
         terminalRuns={[terminalRun(idleWorker.id), terminalRun(activeWorker.id)]}
         workers={[idleWorker, activeWorker, stoppedWorker]}
+        workspaceId="test-workspace"
       />
     )
 
