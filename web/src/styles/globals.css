@@ -1639,6 +1639,160 @@ html, body {
   color: var(--accent);
 }
 
+/* Topbar "Open with" launcher. Kept as a small bespoke control instead of a
+   generic listbox so the app icons have a consistent safe-zone and the menu
+   reads like a native launcher rather than a raw dropdown. */
+.open-workspace {
+  --open-workspace-radius: 7px;
+}
+.open-workspace__main,
+.open-workspace__chevron {
+  height: 28px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, white 3%, transparent), transparent),
+    var(--bg-1);
+  color: var(--text-secondary);
+  transition:
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) ease;
+}
+.open-workspace__main {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 82px;
+  border-right: 0;
+  border-radius: var(--open-workspace-radius) 0 0 var(--open-workspace-radius);
+  padding: 0 9px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.open-workspace__chevron {
+  display: flex;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 var(--open-workspace-radius) var(--open-workspace-radius) 0;
+  padding: 0;
+  box-shadow: inset 1px 0 0 var(--border);
+}
+.open-workspace__main:hover:not(:disabled),
+.open-workspace__chevron:hover:not(:disabled),
+.open-workspace__main[aria-expanded='true'],
+.open-workspace__chevron[aria-expanded='true'] {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, white 5%, transparent), transparent),
+    color-mix(in oklab, var(--accent) 8%, var(--bg-1));
+  border-color: color-mix(in oklab, var(--accent) 38%, var(--border));
+  color: var(--text-primary);
+}
+.open-workspace__main:active:not(:disabled),
+.open-workspace__chevron:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.open-workspace__main:focus-visible,
+.open-workspace__chevron:focus-visible {
+  z-index: 1;
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+.open-workspace__main:disabled,
+.open-workspace__chevron:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+.open-workspace__trigger-icon {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  place-items: center;
+}
+.open-workspace__trigger-img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  transform-origin: center;
+}
+.open-workspace__menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 50;
+  width: 244px;
+  max-height: min(360px, calc(100vh - 72px));
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--border-bright);
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, white 3%, transparent), transparent 48px),
+    var(--bg-elevated);
+  transform-origin: top right;
+  animation: dialog-scale-pop-in 120ms var(--ease-out) both;
+}
+.open-workspace__option {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  cursor: pointer;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  padding: 6px 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: left;
+  transition:
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+.open-workspace__option:hover,
+.open-workspace__option:focus-visible {
+  background: color-mix(in oklab, var(--accent) 8%, var(--bg-2));
+  border-color: color-mix(in oklab, var(--accent) 26%, transparent);
+  outline: none;
+}
+.open-workspace__option[data-selected='true'] {
+  background: color-mix(in oklab, var(--accent) 12%, var(--bg-2));
+  border-color: color-mix(in oklab, var(--accent) 48%, var(--border-bright));
+  color: var(--text-primary);
+}
+.open-workspace__option-icon {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, white 5%, transparent), transparent),
+    color-mix(in oklab, var(--bg-0) 60%, var(--bg-2));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--border) 70%, transparent);
+}
+.open-workspace__option-img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  transform-origin: center;
+}
+.open-workspace__check {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  place-items: center;
+  color: var(--accent);
+}
+
 /* "Browse marketplace" entry button in AddWorker — same bg-3 invisibility
    issue as the cards; give it an explicit accent-mix hover. */
 .marketplace-browse-btn:hover {
