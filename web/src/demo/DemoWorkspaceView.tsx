@@ -62,6 +62,7 @@ export const DemoWorkspaceView = ({ onExit }: DemoWorkspaceViewProps) => {
           startingWorkerId={null}
           terminalRuns={[]}
           workers={DEMO_WORKERS}
+          workspaceId="demo"
         />
       </div>
     </div>

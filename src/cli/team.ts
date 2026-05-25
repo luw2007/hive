@@ -147,6 +147,7 @@ export interface ParsedReportArgs {
   artifacts: string[]
   checkpoint: string | undefined
   dispatchId: string | undefined
+  handover: boolean
   priority: ReportPriority | undefined
   result: string | null
   useStdin: boolean
@@ -157,6 +158,7 @@ export const parseReportArgs = (args: string[], command = 'report'): ParsedRepor
   const artifacts: string[] = []
   let checkpoint: string | undefined
   let dispatchId: string | undefined
+  let handover = false
   let priority: ReportPriority | undefined
   let useStdin = false
 
@@ -205,6 +207,14 @@ export const parseReportArgs = (args: string[], command = 'report'): ParsedRepor
       }
       checkpoint = next
       index += 1
+      continue
+    }
+
+    if (arg === '--handover') {
+      if (command === 'status') {
+        throw new Error(withUsage('team status does not accept --handover', command))
+      }
+      handover = true
       continue
     }
 
@@ -258,7 +268,7 @@ export const parseReportArgs = (args: string[], command = 'report'): ParsedRepor
     )
   }
 
-  return { result: useStdin ? null : (positionals[0] ?? null), artifacts, checkpoint, dispatchId, priority, useStdin }
+  return { result: useStdin ? null : (positionals[0] ?? null), artifacts, checkpoint, dispatchId, handover, priority, useStdin }
 }
 
 const SEQ_PATTERN = /^#(\d+)$/
@@ -454,6 +464,7 @@ export const runTeamCommand = async (argv: string[]) => {
       ...(report.dispatchId ? { dispatch_id: report.dispatchId } : {}),
       ...(report.priority ? { priority: report.priority } : {}),
       ...(report.checkpoint ? { checkpoint: report.checkpoint } : {}),
+      ...(report.handover ? { handover: true } : {}),
       project_id: env.HIVE_PROJECT_ID,
       from_agent_id: env.HIVE_AGENT_ID,
       token: env.HIVE_AGENT_TOKEN,

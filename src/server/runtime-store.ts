@@ -4,6 +4,7 @@ import type { AgentLaunchConfigInput, PersistedAgentRun } from './agent-run-stor
 import type { LiveAgentRun } from './agent-runtime-types.js'
 import { createDiscussionOperations, type DiscussionOperations } from './discussion-operations.js'
 import type { DispatchRecord, ListDispatchesOptions } from './dispatch-ledger-store.js'
+import { createHandoffHandler } from './handoff-handler.js'
 import type { RecoveryMessage } from './message-log-store.js'
 import type { PtyOutputBus } from './pty-output-bus.js'
 import { createRuntimeStoreLifecycle, createRuntimeStoreServices } from './runtime-store-helpers.js'
@@ -99,6 +100,11 @@ interface RuntimeStore {
   validateAgentToken: (agentId: string, token: string | undefined) => boolean
   validateUiToken: (token: string | undefined) => boolean
   getDb: () => import('better-sqlite3').Database
+  handoffHandler?: {
+    activeHandoff: (ctx: { agentId: string; agentName: string; workspaceId: string }) => Promise<void>
+    receiveHandover: (workspaceId: string, agentId: string, reportText: string, pendingDispatches?: string | null, sessionId?: string | null) => boolean
+    isPendingHandoff: (workspaceId: string, agentId: string) => boolean
+  } | undefined
 }
 
 interface RuntimeStoreOptions {
@@ -124,6 +130,21 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     }
     services.db.transaction(mutation)()
   }
+  const handoffHandler = services.db ? createHandoffHandler({
+    db: services.db,
+    writeAgentStdin: (workspaceId, agentId, text) =>
+      services.agentRuntime.writeAgentStdin(workspaceId, agentId, text),
+    deleteWorker: (workspaceId, workerId) => {
+      const activeRun = services.agentRuntime.getActiveRunByAgentId(workspaceId, workerId)
+      if (activeRun) services.agentRuntime.stopAgentRun(activeRun.runId)
+      services.agentRuntime.deleteAgentLaunchConfig(workspaceId, workerId)
+      runDataMutation(() => {
+        services.dispatchLedgerStore.deleteWorkerDispatches(workspaceId, workerId)
+        services.workspaceStore.deleteWorker(workspaceId, workerId)
+      })
+    },
+    getCheckpoint: (agentId) => services.agentRunStore.getCheckpoint(agentId),
+  }) : undefined
   return {
     close: lifecycle.close,
     createWorkspace: (path, name) => {
@@ -212,5 +233,6 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
       services.agentRuntime.validateAgentToken(agentId, token),
     validateUiToken: (token) => services.uiAuth.validate(token),
     getDb: () => services.db,
+    handoffHandler,
   }
 }

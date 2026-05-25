@@ -24,6 +24,7 @@ export interface SendTaskBody {
 export interface ReportTaskBody {
   checkpoint?: string
   dispatch_id?: string
+  handover?: boolean
   priority?: string
   project_id: string
   from_agent_id: string

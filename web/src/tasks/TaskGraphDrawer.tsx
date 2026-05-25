@@ -74,6 +74,8 @@ type TaskGraphDrawerProps = {
    */
   connectionStale?: boolean | undefined
   requestAddTask?: number | undefined
+  rawMode?: boolean | undefined
+  onRawModeChange?: ((raw: boolean) => void) | undefined
 }
 
 type OwnerChipHandlers = {
@@ -621,7 +623,7 @@ const OrphanDispatchesSection = ({
   )
   if (openDispatches.length === 0 && !nullSummary) return null
   return (
-    <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+    <div className="mt-1 px-2">
       <div className="mb-1.5 flex items-center gap-2 text-xs font-medium text-ter">
         <CornerDownRight size={12} aria-hidden />
         <span>{t('tasks.dispatches.orphan')}</span>
@@ -663,9 +665,17 @@ export const TaskGraphDrawer = ({
   onSelectOwner,
   connectionStale = false,
   requestAddTask,
+  rawMode: rawModeProp,
+  onRawModeChange,
 }: TaskGraphDrawerProps) => {
   const { t } = useI18n()
-  const [rawMode, setRawMode] = useState(false)
+  const [rawModeLocal, setRawModeLocal] = useState(false)
+  const rawMode = rawModeProp ?? rawModeLocal
+  const setRawMode = (v: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof v === 'function' ? v(rawMode) : v
+    if (onRawModeChange) onRawModeChange(next)
+    else setRawModeLocal(next)
+  }
   const { dispatches } = useDispatchesForWorkspace(open ? workspaceId : null)
   const dispatchByTaskId = useMemo(() => groupDispatchesByTaskId(dispatches), [dispatches])
   const orphanDispatches = useMemo(
@@ -741,42 +751,44 @@ export const TaskGraphDrawer = ({
         borderColor: 'var(--border)',
       }}
     >
-      <header className="task-drawer__header">
-        <div className="flex min-w-0 flex-1 items-baseline gap-2">
-          <Tooltip label={<span className="mono text-ter">{filePath}</span>}>
-            <span className="cursor-default font-semibold text-pri">{t('tasks.title.todo')}</span>
+      {!onRawModeChange ? (
+        <header className="task-drawer__header">
+          <div className="flex min-w-0 flex-1 items-baseline gap-2">
+            <Tooltip label={<span className="mono text-ter">{filePath}</span>}>
+              <span className="cursor-default font-semibold text-pri">{t('tasks.title.todo')}</span>
+            </Tooltip>
+            {totalTasks > 0 ? (
+              <span className="text-xs text-ter tabular-nums" data-testid="task-graph-summary">
+                <span data-testid="task-progress-text">
+                  {completedTasks} / {totalTasks}
+                </span>{' '}
+                · {completionPercent}%
+              </span>
+            ) : null}
+          </div>
+          <Tooltip label={rawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')}>
+            <button
+              type="button"
+              onClick={() => setRawMode((v) => !v)}
+              data-testid="task-raw-toggle"
+              className="icon-btn"
+              aria-label={rawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')}
+            >
+              <FileCode size={14} />
+            </button>
           </Tooltip>
-          {totalTasks > 0 ? (
-            <span className="text-xs text-ter tabular-nums" data-testid="task-graph-summary">
-              <span data-testid="task-progress-text">
-                {completedTasks} / {totalTasks}
-              </span>{' '}
-              · {completionPercent}%
-            </span>
-          ) : null}
-        </div>
-        <Tooltip label={rawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')}>
-          <button
-            type="button"
-            onClick={() => setRawMode((v) => !v)}
-            data-testid="task-raw-toggle"
-            className="icon-btn"
-            aria-label={rawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')}
-          >
-            <FileCode size={14} />
-          </button>
-        </Tooltip>
-        <Tooltip label={t('tasks.action.closeTodo')}>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('tasks.action.closeTodo')}
-            className="icon-btn"
-          >
-            <PanelRightClose size={14} />
-          </button>
-        </Tooltip>
-      </header>
+          <Tooltip label={t('tasks.action.closeTodo')}>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t('tasks.action.closeTodo')}
+              className="icon-btn"
+            >
+              <PanelRightClose size={14} />
+            </button>
+          </Tooltip>
+        </header>
+      ) : null}
       {!rawMode && totalTasks > 0 ? (
         <div
           aria-label={t('tasks.aria.progress')}
@@ -790,7 +802,7 @@ export const TaskGraphDrawer = ({
           <span style={{ width: `${completionPercent}%` }} />
         </div>
       ) : null}
-      <div className="flex-1 scroll-y px-3 py-3 text-sm">
+      <div className="flex-1 scroll-y px-2 py-2 text-sm">
         {!rawMode && dispatches.length > 0 ? (
           <ActiveDispatchesSection dispatches={dispatches} />
         ) : null}
@@ -837,12 +849,14 @@ export const TaskGraphDrawer = ({
                   data-testid="task-completed-toggle"
                   className="task-completed-toggle"
                 >
-                  {completedOpen ? (
-                    <ChevronDown size={12} aria-hidden />
-                  ) : (
-                    <ChevronRight size={12} aria-hidden />
-                  )}
-                  <span>{t('tasks.completed.toggle', { count: doneRoots.length })}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    {completedOpen ? (
+                      <ChevronDown size={12} aria-hidden />
+                    ) : (
+                      <ChevronRight size={12} aria-hidden />
+                    )}
+                    <span>{t('tasks.completed.toggle', { count: doneRoots.length })}</span>
+                  </span>
                 </button>
                 {completedOpen ? (
                   <ul className="task-list" data-testid="task-completed-list">

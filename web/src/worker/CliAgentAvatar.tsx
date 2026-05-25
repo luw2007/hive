@@ -89,6 +89,7 @@ export const CliAgentLogo = ({
 const initialsByRole: Record<WorkerRole, string> = {
   coder: 'Co',
   custom: 'Cu',
+  hr: 'HR',
   reviewer: 'Re',
   tester: 'Te',
 }
@@ -96,6 +97,7 @@ const initialsByRole: Record<WorkerRole, string> = {
 const colorByRole: Record<WorkerRole, string> = {
   coder: 'var(--status-blue)',
   custom: 'var(--text-secondary)',
+  hr: 'var(--status-green)',
   reviewer: 'var(--status-purple)',
   tester: 'var(--status-orange)',
 }

@@ -17,6 +17,7 @@ const initialsByRole: Record<FullRole, string> = {
   coder: 'Co',
   reviewer: 'Re',
   tester: 'Te',
+  hr: 'HR',
   custom: 'Cu',
 }
 
@@ -25,6 +26,7 @@ const colorByRole: Record<FullRole, string> = {
   coder: 'var(--status-blue)',
   reviewer: 'var(--status-purple)',
   tester: 'var(--status-orange)',
+  hr: 'var(--status-green)',
   custom: 'var(--text-secondary)',
 }
 

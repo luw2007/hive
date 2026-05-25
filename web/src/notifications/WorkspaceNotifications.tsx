@@ -9,6 +9,7 @@ import { useNotifications } from './NotificationProvider.js'
 const ROLE_LABEL_KEYS: Record<WorkerRole, TranslationKey> = {
   coder: 'role.coder',
   custom: 'role.custom',
+  hr: 'role.hr',
   reviewer: 'role.reviewer',
   tester: 'role.tester',
 }

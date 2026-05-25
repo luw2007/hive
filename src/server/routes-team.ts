@@ -101,6 +101,11 @@ export const teamRoutes: RouteDefinition[] = [
       workspaceId: projectId,
     })
     requireCommandForRole(agent, 'report')
+    if (body.handover === true && store.handoffHandler?.isPendingHandoff(projectId, fromAgentId)) {
+      store.handoffHandler.receiveHandover(projectId, fromAgentId, rawText)
+      sendJson(response, 202, { ok: true, handover: true })
+      return
+    }
     if (typeof body.checkpoint === 'string' && body.checkpoint.trim()) {
       const db = store.getDb()
       const activeRun = store.getActiveRunByAgentId(projectId, fromAgentId)

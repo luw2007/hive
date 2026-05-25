@@ -1,8 +1,5 @@
-import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core'
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, ClipboardList, FileCode, Plus, Terminal, UserPlus, Users } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronDown, ChevronRight, FileCode, Plus, Terminal, UserPlus } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { TeamListItem, WorkspaceSummary } from '../../src/shared/types.js'
 import {
@@ -14,7 +11,7 @@ import {
 } from './api.js'
 import { useI18n } from './i18n.js'
 import { CollapsiblePanel } from './layout/CollapsiblePanel.js'
-import { type PanelId, usePanelLayout } from './layout/usePanelLayout.js'
+import { usePanelLayout } from './layout/usePanelLayout.js'
 import { logSwallowed } from './lib/log-swallowed.js'
 import { WorkspaceNotifications } from './notifications/WorkspaceNotifications.js'
 import { TaskGraphDrawer } from './tasks/TaskGraphDrawer.js'
@@ -40,59 +37,6 @@ const WorkerModal = lazy(() =>
 )
 
 type TasksFileApi = ReturnType<typeof useTasksFile>
-
-const PANEL_ICONS: Record<PanelId, typeof Users> = {
-  tasks: ClipboardList,
-  workers: Users,
-  terminal: Terminal,
-}
-
-const SortablePanel = ({
-  id,
-  title,
-  icon,
-  collapsed,
-  onToggle,
-  children,
-  rightSlot,
-  subtitle,
-  headerContent,
-  showChevron,
-}: {
-  id: string
-  title?: string
-  icon?: React.ReactNode
-  collapsed: boolean
-  onToggle: () => void
-  children: React.ReactNode
-  rightSlot?: React.ReactNode
-  subtitle?: React.ReactNode
-  headerContent?: React.ReactNode
-  showChevron?: boolean
-}) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-  return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <CollapsiblePanel
-        id={id}
-        title={title}
-        icon={icon}
-        collapsed={collapsed}
-        onToggle={onToggle}
-        rightSlot={rightSlot}
-        headerContent={headerContent}
-        showChevron={showChevron}
-        dragHandleProps={listeners ? { onPointerDown: listeners.onPointerDown as (e: React.PointerEvent) => void, 'data-drag-handle': true } : undefined}
-      >
-        {children}
-      </CollapsiblePanel>
-    </div>
-  )
-}
 
 type WorkspaceDetailProps = {
   onCreateWorker: WorkerActions['createWorker']
@@ -135,10 +79,11 @@ export const WorkspaceDetail = ({
   const [activeWorkerId, setActiveWorkerId] = useState<string | null>(null)
   const [composerOpen, setComposerOpen] = useState(false)
   const [addTaskCounter, setAddTaskCounter] = useState(0)
+  const [taskRawMode, setTaskRawMode] = useState(false)
   const [deleteWorkerError, setDeleteWorkerError] = useState<string | null>(null)
   const [startWorkerError, setStartWorkerError] = useState<string | null>(null)
   const [startingWorkerId, setStartingWorkerId] = useState<string | null>(null)
-  const { layout, toggleCollapsed, reorder } = usePanelLayout()
+  const { layout, toggleCollapsed } = usePanelLayout()
   const toast = useToast()
   const composer = useWorkerComposer({
     createWorker: onCreateWorker,
@@ -172,7 +117,7 @@ export const WorkspaceDetail = ({
   const shellRuns = workspace
     ? terminalRuns.filter((run) => isWorkspaceShellRun(run, workspace.id))
     : []
-  const { closeShellTab, openShell, shellError, shellStarting, startNewShell } =
+  const { closeShellTab, shellError, shellStarting, startNewShell } =
     useWorkspaceShellLauncher({
       onCloseFailed: (message) =>
         toast.show({ kind: 'error', message: t('shellTerminal.closeFailed', { message }) }),
@@ -218,6 +163,27 @@ export const WorkspaceDetail = ({
     () => (workers.length ? workers.map((w) => w.name) : undefined),
     [workers]
   )
+
+  // 计算 tasks 进度（必须在 early return 之前，因为下面的 useEffect 依赖 taskTotal）
+  const taskLines = tasksFile.content.split('\n')
+  const taskTotal = taskLines.filter((l) => /^\s*-\s+\[[ xX]\]/.test(l)).length
+  const taskDone = taskLines.filter((l) => /^\s*-\s+\[[xX]\]/.test(l)).length
+  const taskPct = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0
+
+  // 计算 workers 状态
+  const workersWorking = workers.filter((w) => w.status === 'working').length
+  const workersStopped = workers.filter((w) => w.status === 'stopped').length
+  const workersIdle = workers.length - workersWorking - workersStopped
+
+  // 空面板默认折叠
+  const autoCollapsedRef = useRef(false)
+  useEffect(() => {
+    if (autoCollapsedRef.current) return
+    autoCollapsedRef.current = true
+    if (taskTotal === 0) toggleCollapsed('tasks', true)
+    if (workers.length === 0) toggleCollapsed('workers', true)
+    if (shellPanelTabs.length === 0) toggleCollapsed('terminal', true)
+  }, [taskTotal, workers.length, shellPanelTabs.length, toggleCollapsed])
 
   if (!workspace) {
     const welcomeProps: {
@@ -273,189 +239,15 @@ export const WorkspaceDetail = ({
   }
 
   const orchWidth = `${(split.orchPct * 100).toFixed(2)}%`
-  const openShellTerminal = () => {
-    if (layout.collapsed.terminal) toggleCollapsed('terminal')
-    openShell()
-  }
   const startNewShellFromPanel = () => {
     startNewShell()
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = layout.order.indexOf(active.id as PanelId)
-    const newIndex = layout.order.indexOf(over.id as PanelId)
-    if (oldIndex === -1 || newIndex === -1) return
-    reorder(arrayMove(layout.order, oldIndex, newIndex))
-  }
-
-  const panelSummary = (panelId: PanelId): React.ReactNode => {
-    if (panelId === 'workers') {
-      return (
-        <>
-          <span className="mono text-xs text-sec">{workers.length}</span>
-          <button
-            type="button"
-            className="panel-header-btn"
-            onClick={(e) => { e.stopPropagation(); toggleCollapsed('workers', false); setComposerOpen(true) }}
-            data-testid="panel-add-worker"
-          >
-            <UserPlus size={12} aria-hidden />
-          </button>
-        </>
-      )
+  const togglePanel = (id: 'tasks' | 'workers' | 'terminal') => {
+    toggleCollapsed(id)
+    if (layout.collapsed[id]) {
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 300)
     }
-    if (panelId === 'tasks') {
-      const lines = tasksFile.content.split('\n')
-      const total = lines.filter((l) => /^\s*-\s+\[[ xX]\]/.test(l)).length
-      const done = lines.filter((l) => /^\s*-\s+\[[xX]\]/.test(l)).length
-      return (
-        <>
-          {total > 0 ? <span className="mono text-xs text-sec">{done}/{total}</span> : null}
-          <button
-            type="button"
-            className="panel-header-btn"
-            onClick={(e) => { e.stopPropagation(); toggleCollapsed('tasks', false); setAddTaskCounter((c) => c + 1) }}
-            data-testid="panel-add-task"
-          >
-            <Plus size={12} aria-hidden />
-          </button>
-        </>
-      )
-    }
-    if (panelId === 'terminal') {
-      return (
-        <>
-          {shellPanelTabs.length > 0 ? <span className="mono text-xs text-sec">{shellPanelTabs.length} tabs</span> : null}
-          <button
-            type="button"
-            className="panel-header-btn"
-            onClick={(e) => { e.stopPropagation(); toggleCollapsed('terminal', false); startNewShellFromPanel() }}
-            data-testid="panel-new-shell"
-          >
-            <Plus size={12} aria-hidden />
-          </button>
-        </>
-      )
-    }
-    return null
-  }
-
-  const panelSubtitle = (panelId: PanelId): React.ReactNode => {
-    if (panelId === 'workers') {
-      if (workers.length === 0) return null
-      const working = workers.filter((w) => w.status === 'working').length
-      const stopped = workers.filter((w) => w.status === 'stopped').length
-      const idle = workers.length - working - stopped
-      return (
-        <>
-          <span className="inline-flex items-center gap-1">
-            <span className="status-dot status-dot--working" aria-hidden />
-            <span className="text-sec">{working}</span> {t('common.running')}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="status-dot status-dot--idle" aria-hidden />
-            <span className="text-sec">{idle}</span> {t('common.idle')}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="status-dot status-dot--stopped" aria-hidden />
-            <span className="text-sec">{stopped}</span> {t('common.stopped')}
-          </span>
-        </>
-      )
-    }
-    if (panelId === 'tasks') {
-      const lines = tasksFile.content.split('\n')
-      const total = lines.filter((l) => /^\s*-\s+\[[ xX]\]/.test(l)).length
-      const done = lines.filter((l) => /^\s*-\s+\[[xX]\]/.test(l)).length
-      if (total === 0) return null
-      const pct = Math.round((done / total) * 100)
-      return (
-        <span className="inline-flex flex-1 items-center gap-2">
-          <span className="panel-progress-bar" style={{ '--progress': `${pct}%` } as React.CSSProperties} />
-          <span className="text-sec">{pct}%</span>
-        </span>
-      )
-    }
-    return null
-  }
-
-  const panelContent = (panelId: PanelId) => {
-    if (panelId === 'workers') {
-      return (
-        <WorkersPane
-          onAddWorkerClick={() => setComposerOpen(true)}
-          onDeleteWorker={handleDeleteWorker}
-          onOpenWorker={(worker) => setActiveWorkerId(worker.id)}
-          onRenameWorker={handleRenameWorker}
-          onStartWorker={handleStartWorker}
-          onStopWorkerRun={(runId) => void stopAgentRun(runId)}
-          startingWorkerId={startingWorkerId}
-          terminalRuns={terminalRuns}
-          workers={workers}
-        />
-      )
-    }
-    if (panelId === 'tasks') {
-      return (
-        <div className="relative min-h-0 flex-1 overflow-hidden" data-inline-task-panel>
-          <TaskGraphDrawer
-            content={tasksFile.content}
-            hasConflict={tasksFile.hasConflict}
-            onClose={() => toggleCollapsed('tasks')}
-            onContentChange={tasksFile.onChange}
-            onKeepLocal={tasksFile.onKeepLocal}
-            onReload={tasksFile.onReload}
-            onSave={tasksFile.onSave}
-            onToggleTaskLine={(line) => {
-              void tasksFile.toggleTaskAtLine(line).catch(logSwallowed('tasks.toggleTaskAtLine'))
-            }}
-            onAppendTask={(text) => {
-              void tasksFile.appendTask(text).catch(logSwallowed('tasks.appendTask'))
-            }}
-            onAppendSubtask={(parentLine, text) => {
-              void tasksFile.appendSubtask(parentLine, text).catch(logSwallowed('tasks.appendSubtask'))
-            }}
-            onUpdateTaskText={(line, nextText) => {
-              void tasksFile.updateTaskText(line, nextText).catch(logSwallowed('tasks.updateTaskText'))
-            }}
-            onDeleteTask={(line) => {
-              void tasksFile.deleteTask(line).catch(logSwallowed('tasks.deleteTask'))
-            }}
-            open={true}
-            workspaceId={workspace.id}
-            workspacePath={workspace.path}
-            knownWorkerNames={knownWorkerNames}
-            requestAddTask={addTaskCounter}
-          />
-        </div>
-      )
-    }
-    return (
-      <div className="min-h-0 flex-1">
-        <TerminalBottomPanel
-          tabs={shellPanelTabs}
-          activeId={panelTabs.activeId}
-          scopeKey={workspace.id}
-          onSelect={panelTabs.setActive}
-          onClose={(tabId) => {
-            if (tabId.startsWith('shell:')) {
-              closeShellTab(tabId.slice('shell:'.length))
-            }
-            panelTabs.closeTab(tabId)
-          }}
-          onClosePanel={() => toggleCollapsed('terminal')}
-          onNewShell={startNewShellFromPanel}
-          newShellPending={shellStarting}
-          onStartWorker={(workerId) => {
-            const worker = workers.find((w) => w.id === workerId)
-            if (worker) handleStartWorker(worker)
-          }}
-          startingWorkerId={startingWorkerId}
-        />
-      </div>
-    )
   }
 
   return (
@@ -497,32 +289,190 @@ export const WorkspaceDetail = ({
           onKeyDown={split.onKeyDown}
         />
         <div className="relative flex min-w-0 flex-1 flex-col overflow-y-auto">
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={layout.order} strategy={verticalListSortingStrategy}>
-              {layout.order.map((panelId) => {
-                const Icon = PANEL_ICONS[panelId]
-                return (
-                  <SortablePanel
-                    key={panelId}
-                    id={panelId}
-                    title={t(`workspace.panel.${panelId}`)}
-                    icon={<Icon size={14} />}
-                    collapsed={layout.collapsed[panelId]}
-                    onToggle={() => {
-                      toggleCollapsed(panelId)
-                      if (layout.collapsed[panelId]) {
-                        setTimeout(() => window.dispatchEvent(new Event('resize')), 300)
-                      }
-                    }}
-                    rightSlot={panelSummary(panelId)}
-                    subtitle={panelSubtitle(panelId)}
+          {/* Tasks 面板 */}
+          <CollapsiblePanel
+            id="tasks"
+            collapsed={layout.collapsed.tasks}
+            onToggle={() => togglePanel('tasks')}
+            headerContent={
+              <div className="module-header">
+                <div className="module-header__row1">
+                  <span className="module-header__chevron" aria-hidden>
+                    {layout.collapsed.tasks ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </span>
+                  <span className="module-header__title">{t('workspace.panel.tasks')}</span>
+                  {taskTotal > 0 ? (
+                    <span className="module-header__badge">{taskDone}/{taskTotal} · {taskPct}%</span>
+                  ) : null}
+                  <div className="module-header__spacer" />
+                  <button
+                    type="button"
+                    className="icon-btn icon-btn--sm"
+                    onClick={(e) => { e.stopPropagation(); toggleCollapsed('tasks', false); setAddTaskCounter((c) => c + 1) }}
+                    data-testid="panel-add-task"
                   >
-                    {panelContent(panelId)}
-                  </SortablePanel>
-                )
-              })}
-            </SortableContext>
-          </DndContext>
+                    <Plus size={14} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn icon-btn--sm"
+                    onClick={(e) => { e.stopPropagation(); setTaskRawMode((v) => !v) }}
+                    data-testid="panel-task-raw-toggle"
+                    aria-label={taskRawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')}
+                  >
+                    <FileCode size={14} aria-hidden />
+                  </button>
+                </div>
+                {taskTotal > 0 ? (
+                  <div className="module-header__row2">
+                    <span className="panel-progress-bar" style={{ '--progress': `${taskPct}%` } as React.CSSProperties} />
+                  </div>
+                ) : null}
+              </div>
+            }
+          >
+            <div className="relative min-h-0 flex-1 overflow-hidden" data-inline-task-panel>
+              <TaskGraphDrawer
+                content={tasksFile.content}
+                hasConflict={tasksFile.hasConflict}
+                onClose={() => toggleCollapsed('tasks')}
+                onContentChange={tasksFile.onChange}
+                onKeepLocal={tasksFile.onKeepLocal}
+                onReload={tasksFile.onReload}
+                onSave={tasksFile.onSave}
+                onToggleTaskLine={(line) => {
+                  void tasksFile.toggleTaskAtLine(line).catch(logSwallowed('tasks.toggleTaskAtLine'))
+                }}
+                onAppendTask={(text) => {
+                  void tasksFile.appendTask(text).catch(logSwallowed('tasks.appendTask'))
+                }}
+                onAppendSubtask={(parentLine, text) => {
+                  void tasksFile.appendSubtask(parentLine, text).catch(logSwallowed('tasks.appendSubtask'))
+                }}
+                onUpdateTaskText={(line, nextText) => {
+                  void tasksFile.updateTaskText(line, nextText).catch(logSwallowed('tasks.updateTaskText'))
+                }}
+                onDeleteTask={(line) => {
+                  void tasksFile.deleteTask(line).catch(logSwallowed('tasks.deleteTask'))
+                }}
+                open={true}
+                workspaceId={workspace.id}
+                workspacePath={workspace.path}
+                knownWorkerNames={knownWorkerNames}
+                requestAddTask={addTaskCounter}
+                rawMode={taskRawMode}
+                onRawModeChange={setTaskRawMode}
+              />
+            </div>
+          </CollapsiblePanel>
+
+          {/* Workers 面板 */}
+          <CollapsiblePanel
+            id="workers"
+            collapsed={layout.collapsed.workers}
+            onToggle={() => togglePanel('workers')}
+            headerContent={
+              <div className="module-header">
+                <div className="module-header__row1">
+                  <span className="module-header__chevron" aria-hidden>
+                    {layout.collapsed.workers ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </span>
+                  <span className="module-header__title">{t('worker.teamMembers')}</span>
+                  <span className="module-header__badge">{workers.length}</span>
+                  <div className="module-header__spacer" />
+                  <button
+                    type="button"
+                    className="icon-btn icon-btn--sm"
+                    onClick={(e) => { e.stopPropagation(); toggleCollapsed('workers', false); setComposerOpen(true) }}
+                    data-testid="panel-add-worker"
+                  >
+                    <UserPlus size={14} aria-hidden /> {t('addWorker.create')}
+                  </button>
+                </div>
+                {workers.length > 0 ? (
+                  <div className="module-header__row2">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="status-dot status-dot--working" aria-hidden />
+                      <span className="text-sec">{workersWorking}</span> {t('common.running')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="status-dot status-dot--idle" aria-hidden />
+                      <span className="text-sec">{workersIdle}</span> {t('common.idle')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="status-dot status-dot--stopped" aria-hidden />
+                      <span className="text-sec">{workersStopped}</span> {t('common.stopped')}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            }
+          >
+            <WorkersPane
+              onAddWorkerClick={() => setComposerOpen(true)}
+              onDeleteWorker={handleDeleteWorker}
+              onOpenWorker={(worker) => setActiveWorkerId(worker.id)}
+              onRenameWorker={handleRenameWorker}
+              onStartWorker={handleStartWorker}
+              onStopWorkerRun={(runId) => void stopAgentRun(runId)}
+              startingWorkerId={startingWorkerId}
+              terminalRuns={terminalRuns}
+              workers={workers}
+              workspaceId={workspace.id}
+            />
+          </CollapsiblePanel>
+
+          {/* Terminal 面板 */}
+          <CollapsiblePanel
+            id="terminal"
+            collapsed={layout.collapsed.terminal}
+            onToggle={() => togglePanel('terminal')}
+            headerContent={
+              <div className="module-header">
+                <div className="module-header__row1">
+                  <span className="module-header__chevron" aria-hidden>
+                    {layout.collapsed.terminal ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </span>
+                  <span className="module-header__title">{t('workspace.panel.terminal')}</span>
+                  {shellPanelTabs.length > 0 ? (
+                    <span className="module-header__badge">{shellPanelTabs.length}</span>
+                  ) : null}
+                  <div className="module-header__spacer" />
+                  <button
+                    type="button"
+                    className="icon-btn icon-btn--sm"
+                    onClick={(e) => { e.stopPropagation(); toggleCollapsed('terminal', false); startNewShellFromPanel() }}
+                    data-testid="panel-new-shell"
+                  >
+                    <Terminal size={14} aria-hidden /> {t('workspace.panel.terminal')}
+                  </button>
+                </div>
+              </div>
+            }
+          >
+            <div className="min-h-0 flex-1">
+              <TerminalBottomPanel
+                tabs={shellPanelTabs}
+                activeId={panelTabs.activeId}
+                scopeKey={workspace.id}
+                onSelect={panelTabs.setActive}
+                onClose={(tabId) => {
+                  if (tabId.startsWith('shell:')) {
+                    closeShellTab(tabId.slice('shell:'.length))
+                  }
+                  panelTabs.closeTab(tabId)
+                }}
+                onClosePanel={() => toggleCollapsed('terminal')}
+                onNewShell={startNewShellFromPanel}
+                newShellPending={shellStarting}
+                onStartWorker={(workerId) => {
+                  const worker = workers.find((w) => w.id === workerId)
+                  if (worker) handleStartWorker(worker)
+                }}
+                startingWorkerId={startingWorkerId}
+              />
+            </div>
+          </CollapsiblePanel>
         </div>
       </div>
       {activeWorker ? (

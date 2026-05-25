@@ -5,7 +5,8 @@ import { useCallback, useMemo, useState } from 'react'
 import type { TeamListItem } from '../../../src/shared/types.js'
 import type { TerminalRunSummary } from '../api.js'
 import { useI18n } from '../i18n.js'
-import { Confirm } from '../ui/Confirm.js'
+import { DeleteWorkerDialog } from './DeleteWorkerDialog.js'
+import { StopWorkerDialog } from './StopWorkerDialog.js'
 import { EmptyState } from '../ui/EmptyState.js'
 import { RenameWorkerDialog } from './RenameWorkerDialog.js'
 import { WorkerCard, type WorkerCardActionKind } from './WorkerCard.js'
@@ -21,6 +22,7 @@ type WorkersPaneProps = {
   startingWorkerId: string | null
   terminalRuns: TerminalRunSummary[]
   workers: TeamListItem[]
+  workspaceId: string
 }
 
 const SECTION_ORDER: WorkerStatusKind[] = ['working', 'idle', 'stopped']
@@ -60,6 +62,7 @@ export const WorkersPane = ({
   startingWorkerId,
   terminalRuns,
   workers,
+  workspaceId,
 }: WorkersPaneProps) => {
   const { t } = useI18n()
   const { sections, summary } = useMemo(() => summarizeWorkers(workers), [workers])
@@ -68,6 +71,7 @@ export const WorkersPane = ({
     [terminalRuns]
   )
   const [pendingDelete, setPendingDelete] = useState<TeamListItem | null>(null)
+  const [pendingStop, setPendingStop] = useState<{ worker: TeamListItem; runId: string } | null>(null)
   const [renameTarget, setRenameTarget] = useState<TeamListItem | null>(null)
   const [renameBusy, setRenameBusy] = useState(false)
 
@@ -82,7 +86,7 @@ export const WorkersPane = ({
     }
     if (kind === 'stop') {
       const runId = runIdsByAgentId.get(worker.id)
-      if (runId) onStopWorkerRun(runId)
+      if (runId) setPendingStop({ worker, runId })
       return
     }
     if (kind === 'rename') {
@@ -174,18 +178,32 @@ export const WorkersPane = ({
         )}
       </div>
 
-      <Confirm
+      <StopWorkerDialog
+        open={pendingStop !== null}
+        onOpenChange={(open) => { if (!open) setPendingStop(null) }}
+        workerName={pendingStop?.worker.name ?? ''}
+        onConfirm={() => {
+          if (pendingStop) onStopWorkerRun(pendingStop.runId)
+          setPendingStop(null)
+        }}
+      />
+      <DeleteWorkerDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => {
           if (!open) setPendingDelete(null)
         }}
-        title={pendingDelete ? t('worker.deleteConfirm', { name: pendingDelete.name }) : ''}
-        description={
-          pendingDelete ? t('worker.deleteDescription', { name: pendingDelete.name }) : ''
-        }
-        confirmLabel={t('worker.deleteMember')}
-        confirmKind="danger"
-        onConfirm={confirmDelete}
+        workerName={pendingDelete?.name ?? ''}
+        workerStatus={pendingDelete?.status ?? 'stopped'}
+        onHandoff={async () => {
+          if (!pendingDelete) return
+          const res = await fetch(`/api/workspaces/${workspaceId}/workers/${pendingDelete.id}?handover=true`, { method: 'DELETE' })
+          if (!res.ok) {
+            const body = await res.text().catch(() => 'Handoff failed')
+            throw new Error(body)
+          }
+          onDeleteWorker(pendingDelete)
+        }}
+        onForceDelete={confirmDelete}
       />
       <RenameWorkerDialog
         worker={renameTarget}

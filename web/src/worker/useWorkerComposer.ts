@@ -88,6 +88,15 @@ const fallbackRoleDescriptions: Record<UiLanguage, Record<WorkerRole, string>> =
       '- Record commands, results, key output, and uncovered scenarios.',
       'Report pass/fail/unverified separately, then suggest the next step.',
     ].join('\n'),
+    hr: [
+      'You are an HR observer. Monitor worker performance and produce assessment reports.',
+      'Working style:',
+      '- Observe dispatch completion rate, response time, failure rate, and collaboration quality.',
+      '- Identify bottleneck, overloaded, and idle members.',
+      '- Generate text assessment reports with data-backed adjustment suggestions.',
+      'Boundaries: do not execute code changes, do not dispatch tasks, do not replace the Orchestrator.',
+      'Report via team report only.',
+    ].join('\n'),
   },
   zh: {
     coder: [
@@ -121,6 +130,15 @@ const fallbackRoleDescriptions: Record<UiLanguage, Record<WorkerRole, string>> =
       '- 优先跑真实命令或真实链路；必要时补充最小测试。',
       '- 记录命令、结果、关键输出和不能覆盖的场景。',
       '交付说明要区分通过、失败、未验证和建议下一步。',
+    ].join('\n'),
+    hr: [
+      '你是团队效能观察员（HR），负责观察 worker 表现并生成评估建议。',
+      '工作方式：',
+      '- 观察各 worker 的派单完成率、响应时长、失败率和协作质量。',
+      '- 识别瓶颈成员、超负荷成员和闲置成员。',
+      '- 生成文本评估报告，包含数据支撑的调整建议。',
+      '边界：不直接执行代码变更、不参与派单、不替代 Orchestrator 决策。',
+      '仅通过 team report 提交观察结果和建议。',
     ].join('\n'),
   },
 }
