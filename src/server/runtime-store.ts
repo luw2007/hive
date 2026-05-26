@@ -128,6 +128,7 @@ interface RuntimeStore {
     | undefined
   reattachTmuxSessions: () => number
   registerTeamListener: (workspaceId: string, listener: () => void) => () => void
+  registerGlobalTeamListener: (listener: (workspaceId: string) => void) => () => void
 }
 
 interface RuntimeStoreOptions {
@@ -327,5 +328,7 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     reattachTmuxSessions: lifecycle.reattachTmuxSessions,
     registerTeamListener: (workspaceId, listener) =>
       services.teamChangeBus.subscribe(workspaceId, listener),
+    registerGlobalTeamListener: (listener) =>
+      services.teamChangeBus.subscribeAll(listener),
   }
 }

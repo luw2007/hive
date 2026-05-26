@@ -24,6 +24,7 @@ export interface WorkerRow {
 export interface WorkspaceSummaryRow extends WorkspaceRow {}
 
 export const getOrchestratorId = (workspaceId: string) => `${workspaceId}:orchestrator`
+export const getSecretaryId = (workspaceId: string) => `${workspaceId}:secretary`
 
 export const createOrchestrator = (workspaceId: string): AgentSummary => ({
   id: getOrchestratorId(workspaceId),
@@ -35,10 +36,20 @@ export const createOrchestrator = (workspaceId: string): AgentSummary => ({
   pendingTaskCount: 0,
 })
 
+export const createSecretary = (workspaceId: string): AgentSummary => ({
+  id: getSecretaryId(workspaceId),
+  workspaceId,
+  name: 'Secretary',
+  description: getDefaultRoleDescription('secretary'),
+  role: 'secretary',
+  status: 'stopped',
+  pendingTaskCount: 0,
+})
+
 export const isWorkerAgent = (
   agent: AgentSummary
 ): agent is AgentSummary & { role: WorkerRole } => {
-  return agent.role !== 'orchestrator'
+  return agent.role !== 'orchestrator' && agent.role !== 'secretary'
 }
 
 export const getStatusFromPendingCount = (pendingTaskCount: number): AgentStatus => {
