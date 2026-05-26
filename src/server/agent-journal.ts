@@ -2,11 +2,12 @@ import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises
 import { join } from 'node:path'
 
 export type JournalEntryType =
-  | 'checkpoint'
+  | 'checkpoint_saved'
   | 'dispatch_received'
   | 'report_sent'
   | 'session_rotated'
   | 'status_sent'
+  | 'user_input_received'
 
 export interface JournalEntryInput {
   type: JournalEntryType
@@ -14,16 +15,19 @@ export interface JournalEntryInput {
   body: string
   dispatch_id?: string
   duration_ms?: number
+  artifacts?: string[]
   metadata?: Record<string, string>
 }
 
 export interface ManifestEntry {
+  seq: number
   ts: string
   type: JournalEntryType
   summary: string
   file: string
   dispatch_id?: string
   duration_ms?: number
+  artifacts?: string[]
 }
 
 const HIVE_DIR = '.hive'
@@ -48,7 +52,6 @@ const getManifestPath = (workspacePath: string, agentName: string) =>
 const getEntriesDir = (workspacePath: string, agentName: string) =>
   join(getJournalDir(workspacePath, agentName), ENTRIES_DIR)
 
-const formatTimestampForFilename = (ts: string) => ts.replace(/:/g, '-')
 
 const buildFrontmatter = (entry: JournalEntryInput, ts: string): string => {
   const lines: string[] = ['---']
@@ -65,6 +68,28 @@ const buildFrontmatter = (entry: JournalEntryInput, ts: string): string => {
   return lines.join('\n')
 }
 
+async function getNextSeq(workspacePath: string, agentName: string): Promise<number> {
+  const manifestPath = getManifestPath(workspacePath, agentName)
+  let raw: string
+  try {
+    raw = await readFile(manifestPath, 'utf8')
+  } catch {
+    return 1
+  }
+  const lines = raw.trimEnd().split('\n')
+  let maxSeq = 0
+  for (const line of lines) {
+    if (!line) continue
+    try {
+      const entry = JSON.parse(line) as ManifestEntry
+      if (entry.seq > maxSeq) maxSeq = entry.seq
+    } catch {
+      // skip corrupted lines
+    }
+  }
+  return maxSeq + 1
+}
+
 export async function appendEntry(
   workspacePath: string,
   agentName: string,
@@ -74,8 +99,10 @@ export async function appendEntry(
   const entriesDir = getEntriesDir(workspacePath, agentName)
   await mkdir(entriesDir, { recursive: true })
 
+  const seq = await getNextSeq(workspacePath, agentName)
   const ts = new Date().toISOString()
-  const filename = `${formatTimestampForFilename(ts)}_${entry.type}.md`
+  const idHash = ts.replace(/\W/g, '').slice(-6)
+  const filename = `${String(seq).padStart(4, '0')}-${entry.type}-${idHash}.md`
   const filePath = join(entriesDir, filename)
   const tmpPath = filePath + '.tmp'
 
@@ -85,16 +112,18 @@ export async function appendEntry(
   await writeFile(tmpPath, content, 'utf8')
   await rename(tmpPath, filePath)
 
-  const summary = entry.summary.slice(0, 120)
+  const summary = entry.summary.slice(0, 200)
   const relativeFile = `${ENTRIES_DIR}/${filename}`
 
   const manifestEntry: ManifestEntry = {
+    seq,
     ts,
     type: entry.type,
     summary,
     file: relativeFile,
     ...(entry.dispatch_id && { dispatch_id: entry.dispatch_id }),
     ...(entry.duration_ms !== undefined && { duration_ms: entry.duration_ms }),
+    ...(entry.artifacts && entry.artifacts.length > 0 && { artifacts: entry.artifacts }),
   }
 
   const manifestPath = getManifestPath(workspacePath, agentName)

@@ -31,6 +31,7 @@ export interface AgentRunStorePort {
   getCheckpoint?: (agentId: string) => string | null
   updateCheckpoint?: (runId: string, checkpointJson: string) => void
   updateTmuxSession?: (runId: string, sessionName: string | null) => void
+  incrementInjectCount?: (agentId: string) => void
 }
 
 export interface AgentSessionStorePort {

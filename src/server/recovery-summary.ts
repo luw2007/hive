@@ -1,11 +1,33 @@
 import type { AgentSummary, WorkspaceSummary } from '../shared/types.js'
 
+import type { Decision } from './decision-ledger.js'
 import { getHiveTeamRules } from './hive-team-guidance.js'
 import type { RecoveryMessage } from './message-log-store.js'
 import { wrapSystemMessage } from './system-message.js'
 import { TASKS_RELATIVE_PATH } from './tasks-file.js'
 
 const TASKS_HEAD_LIMIT = 1536
+
+const CODER_CATEGORIES = new Set(['tech', 'constraint'])
+const TESTER_CATEGORIES = new Set(['tech', 'constraint', 'scope'])
+
+const filterDecisionsForRole = (decisions: Decision[], agent: AgentSummary): Decision[] => {
+  if (agent.role === 'orchestrator') return decisions
+  if (agent.role === 'coder') return decisions.filter((d) => CODER_CATEGORIES.has(d.category))
+  if (agent.role === 'tester') return decisions.filter((d) => TESTER_CATEGORIES.has(d.category))
+  return decisions
+}
+
+const formatDecisions = (decisions: Decision[], agent: AgentSummary): string[] => {
+  const filtered = filterDecisionsForRole(decisions, agent)
+  if (filtered.length === 0) return []
+  return [
+    '',
+    '## Active Decisions（董秘账本）',
+    '以下是用户在本 workspace 中做出的所有有效决策，你必须遵守：',
+    ...filtered.map((d, i) => `${i + 1}. [${d.category}] ${d.content} — 理由：${d.reason}`),
+  ]
+}
 
 export interface ActiveDispatchInfo {
   status: string
@@ -122,6 +144,7 @@ export const buildRecoverySummary = ({
   agent,
   allTaskMessages,
   checkpoint,
+  decisions,
   messages,
   tasksContent,
   workers,
@@ -132,6 +155,7 @@ export const buildRecoverySummary = ({
   agent: AgentSummary
   allTaskMessages?: RecoveryMessage[]
   checkpoint?: string | null
+  decisions?: Decision[]
   messages: RecoveryMessage[]
   tasksContent: string
   workers: AgentSummary[]
@@ -164,6 +188,10 @@ export const buildRecoverySummary = ({
 
   if (activeDiscussions && activeDiscussions.length > 0) {
     sections.push('', '## 进行中讨论', ...formatActiveDiscussions(activeDiscussions))
+  }
+
+  if (decisions && decisions.length > 0) {
+    sections.push(...formatDecisions(decisions, agent))
   }
 
   sections.push(

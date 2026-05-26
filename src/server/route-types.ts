@@ -49,7 +49,17 @@ export interface DecideBody {
   content: string
   category: string
   reason: string
+  source?: string
+  confirmed_by?: string
   supersede_id?: string
+}
+
+export interface CheckpointBody {
+  project_id: string
+  from_agent_id: string
+  token?: string
+  text: string
+  artifacts?: string[]
 }
 
 export interface CreateWorkspaceBody {

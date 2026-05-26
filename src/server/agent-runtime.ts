@@ -13,6 +13,7 @@ import { stopLiveRun } from './agent-runtime-stop-run.js'
 import type { LiveAgentRun } from './agent-runtime-types.js'
 import { createAgentStdinDispatcher } from './agent-stdin-dispatcher.js'
 import { createAgentTokenRegistry } from './agent-tokens.js'
+import { attachCompactDetector } from './rotation-manager.js'
 import type { CommandPresetRecord } from './command-preset-store.js'
 import { createLiveRunRegistry } from './live-run-registry.js'
 import { createNoopRestartPolicy, type RestartPolicy } from './restart-policy.js'
@@ -128,7 +129,10 @@ export const createAgentRuntime = (
         agentId,
         launchCache.get(workspace.id, agentId),
         input.hivePort
-      ).finally(() => {
+      ).then((run) => {
+        attachCompactDetector(flowAdapter.getOutputBus(), run.runId, workspace.id, agentId)
+        return run
+      }).finally(() => {
         if (startPromises.get(key) === startPromise) {
           startPromises.delete(key)
         }
@@ -142,6 +146,7 @@ export const createAgentRuntime = (
     validateAgentToken: tokenRegistry.validate,
     writeReportPrompt(workspaceId, workerName, _workerId, text, artifacts, input = {}) {
       stdinDispatcher.writeReportPrompt(workspaceId, workerName, _workerId, text, artifacts, input)
+      agentRunStore.incrementInjectCount?.(_workerId)
     },
     writeStatusPrompt(workspaceId, workerName, _workerId, text, artifacts, input = {}) {
       stdinDispatcher.writeStatusPrompt(workspaceId, workerName, _workerId, text, artifacts, input)
@@ -155,6 +160,7 @@ export const createAgentRuntime = (
         workerDescription,
         text
       )
+      agentRunStore.incrementInjectCount?.(workerId)
     },
     writeCancelPrompt(workspaceId, workerId, dispatchId, reason, input = {}) {
       stdinDispatcher.writeCancelPrompt(workspaceId, workerId, dispatchId, reason, input)
@@ -164,6 +170,7 @@ export const createAgentRuntime = (
     },
     writeAgentStdin(workspaceId, agentId, text) {
       stdinDispatcher.writeToAgent(workspaceId, agentId, text)
+      agentRunStore.incrementInjectCount?.(agentId)
     },
   }
 }

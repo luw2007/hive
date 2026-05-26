@@ -270,10 +270,22 @@ export const createAgentRunStore = (db: Database) => {
     return row?.checkpoint_json ?? null
   }
 
+  const incrementInjectCount = (agentId: string): void => {
+    if (closed) return
+    db.prepare(
+      `UPDATE agent_runs SET inject_count = inject_count + 1, updated_at = ?
+       WHERE run_id = (
+         SELECT run_id FROM agent_runs WHERE agent_id = ? AND status IN ('starting', 'running')
+         ORDER BY started_at DESC LIMIT 1
+       )`
+    ).run(Date.now(), agentId)
+  }
+
   return {
     close,
     findRunByTmuxSession,
     getCheckpoint,
+    incrementInjectCount,
     insertAgentRun,
     deleteLaunchConfig,
     listAgentRuns,

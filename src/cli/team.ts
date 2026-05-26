@@ -41,6 +41,7 @@ const TEAM_USAGE = [
   '  team discuss --extend [N]',
   '  team decide "<content>" --category <category> --reason "<reason>" [--supersede <id>]',
   '  team decisions [--category <category>]',
+  '  team checkpoint "<text>" [--artifacts file1 file2]',
   '',
   'Flags can appear in any order. Use --stdin to pipe long bodies and avoid shell-escaping issues.',
   "Use a quoted heredoc (<<'EOF') so $vars, backticks, and command substitutions stay literal:",
@@ -706,18 +707,20 @@ export const runTeamCommand = async (argv: string[]) => {
   if (command === 'decide') {
     const content = args[0]
     if (!content) {
-      throw new Error('Usage: team decide "<content>" --category <category> --reason "<reason>" [--supersede <id>]')
+      throw new Error('Usage: team decide "<content>" --category <category> --reason "<reason>" [--source <source>] [--supersede <id>]')
     }
     let category: string | undefined
     let reason: string | undefined
     let supersedeId: string | undefined
+    let source: string | undefined
     for (let i = 1; i < args.length; i++) {
       const arg = args[i]
       if (arg === '--category' && args[i + 1]) { category = args[++i]; continue }
       if (arg === '--reason' && args[i + 1]) { reason = args[++i]; continue }
       if (arg === '--supersede' && args[i + 1]) { supersedeId = args[++i]; continue }
+      if (arg === '--source' && args[i + 1]) { source = args[++i]; continue }
     }
-    if (!category) throw new Error('--category is required (tech, scope, constraint, preference, process)')
+    if (!category) throw new Error('--category is required (tech, scope, priority, constraint, preference, process)')
     if (!reason) throw new Error('--reason is required')
 
     const env = getHiveEnv()
@@ -729,6 +732,7 @@ export const runTeamCommand = async (argv: string[]) => {
       content,
       category,
       reason,
+      ...(source ? { source } : {}),
       ...(supersedeId ? { supersede_id: supersedeId } : {}),
     })
     console.log(JSON.stringify(await response.json()))
@@ -756,6 +760,42 @@ export const runTeamCommand = async (argv: string[]) => {
       },
     })
     if (!response.ok) await throwHttpError(response)
+    console.log(JSON.stringify(await response.json()))
+    return
+  }
+
+  if (command === 'checkpoint') {
+    const positionals: string[] = []
+    const artifacts: string[] = []
+
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i]
+      if (arg === '--artifacts' || arg === '--artifact') {
+        for (let j = i + 1; j < args.length; j++) {
+          if (args[j]!.startsWith('--')) break
+          artifacts.push(args[j]!)
+          i = j
+        }
+        continue
+      }
+      if (arg!.startsWith('--')) continue
+      positionals.push(arg!)
+    }
+
+    const text = positionals.join(' ').trim()
+    if (!text) {
+      throw new Error('Usage: team checkpoint "<text>" [--artifacts file1 file2]')
+    }
+
+    const env = getHiveEnv()
+    const baseUrl = getBaseUrl(env)
+    const response = await postJson(baseUrl, '/api/team/checkpoint', {
+      project_id: env.HIVE_PROJECT_ID,
+      from_agent_id: env.HIVE_AGENT_ID,
+      token: env.HIVE_AGENT_TOKEN,
+      text,
+      ...(artifacts.length > 0 ? { artifacts } : {}),
+    })
     console.log(JSON.stringify(await response.json()))
     return
   }
