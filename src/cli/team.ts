@@ -39,6 +39,8 @@ const TEAM_USAGE = [
   '  team discuss --skip <worker-name>',
   '  team discuss --steer "<direction>"',
   '  team discuss --extend [N]',
+  '  team decide "<content>" --category <category> --reason "<reason>" [--supersede <id>]',
+  '  team decisions [--category <category>]',
   '',
   'Flags can appear in any order. Use --stdin to pipe long bodies and avoid shell-escaping issues.',
   "Use a quoted heredoc (<<'EOF') so $vars, backticks, and command substitutions stay literal:",
@@ -697,6 +699,63 @@ export const runTeamCommand = async (argv: string[]) => {
       token: env.HIVE_AGENT_TOKEN,
       text,
     })
+    console.log(JSON.stringify(await response.json()))
+    return
+  }
+
+  if (command === 'decide') {
+    const content = args[0]
+    if (!content) {
+      throw new Error('Usage: team decide "<content>" --category <category> --reason "<reason>" [--supersede <id>]')
+    }
+    let category: string | undefined
+    let reason: string | undefined
+    let supersedeId: string | undefined
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i]
+      if (arg === '--category' && args[i + 1]) { category = args[++i]; continue }
+      if (arg === '--reason' && args[i + 1]) { reason = args[++i]; continue }
+      if (arg === '--supersede' && args[i + 1]) { supersedeId = args[++i]; continue }
+    }
+    if (!category) throw new Error('--category is required (tech, scope, constraint, preference, process)')
+    if (!reason) throw new Error('--reason is required')
+
+    const env = getHiveEnv()
+    const baseUrl = getBaseUrl(env)
+    const response = await postJson(baseUrl, '/api/team/decide', {
+      project_id: env.HIVE_PROJECT_ID,
+      from_agent_id: env.HIVE_AGENT_ID,
+      token: env.HIVE_AGENT_TOKEN,
+      content,
+      category,
+      reason,
+      ...(supersedeId ? { supersede_id: supersedeId } : {}),
+    })
+    console.log(JSON.stringify(await response.json()))
+    return
+  }
+
+  if (command === 'decisions') {
+    const env = getHiveEnv()
+    const baseUrl = getBaseUrl(env)
+    const qs = new URLSearchParams({
+      project_id: env.HIVE_PROJECT_ID,
+      from_agent_id: env.HIVE_AGENT_ID,
+      token: env.HIVE_AGENT_TOKEN,
+    })
+    let category: string | undefined
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--category' && args[i + 1]) { category = args[++i]; continue }
+    }
+    if (category) qs.set('category', category)
+    const response = await fetchRuntime(baseUrl, `/api/team/decisions?${qs.toString()}`, {
+      method: 'GET',
+      headers: {
+        'x-hive-agent-id': env.HIVE_AGENT_ID,
+        'x-hive-agent-token': env.HIVE_AGENT_TOKEN,
+      },
+    })
+    if (!response.ok) await throwHttpError(response)
     console.log(JSON.stringify(await response.json()))
     return
   }
