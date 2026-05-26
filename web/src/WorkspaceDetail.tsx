@@ -14,6 +14,8 @@ import { CollapsiblePanel } from './layout/CollapsiblePanel.js'
 import { usePanelLayout } from './layout/usePanelLayout.js'
 import { logSwallowed } from './lib/log-swallowed.js'
 import { WorkspaceNotifications } from './notifications/WorkspaceNotifications.js'
+import { QuickTaskFab } from './tasks/QuickTaskFab.js'
+import { SecretaryChatBubble } from './secretary/SecretaryChatBubble.js'
 import { TaskGraphDrawer } from './tasks/TaskGraphDrawer.js'
 import type { useTasksFile } from './tasks/useTasksFile.js'
 import { TerminalBottomPanel } from './terminal/TerminalBottomPanel.js'
@@ -270,6 +272,7 @@ export const WorkspaceDetail = ({
             }}
             onStart={orchestrator.start}
             onRestart={orchestrator.restart}
+            onResetContext={orchestrator.resetContext}
           />
         </div>
         {/* biome-ignore lint/a11y/useSemanticElements: <hr> can't host pointer/keyboard handlers and the visible accent line; aria role="separator" is the canonical resize-handle role */}
@@ -521,6 +524,8 @@ export const WorkspaceDetail = ({
           />
         </Suspense>
       ) : null}
+      {workspace ? <QuickTaskFab workspaceId={workspace.id} workers={workers} /> : null}
+      {workspace ? <SecretaryChatBubble workspaceId={workspace.id} /> : null}
     </div>
   )
 }
