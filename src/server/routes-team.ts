@@ -1,7 +1,10 @@
+import { appendEntry } from './agent-journal.js'
+import { appendDecision, getActiveDecisions, supersede, type DecisionCategory } from './decision-ledger.js'
 import { BadRequestError } from './http-errors.js'
 import { readJsonBody, route, sendJson } from './route-helpers.js'
 import type {
   CancelTaskBody,
+  DecideBody,
   ReportTaskBody,
   RouteDefinition,
   SendTaskBody,
@@ -63,6 +66,16 @@ export const teamRoutes: RouteDefinition[] = [
       store.taskService.linkDispatchToTask(dispatch.id, task.id, fromAgentId)
       taskId = task.id
     }
+
+    const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+    const targetAgent = store.getAgent(projectId, dispatch.toAgentId)
+    appendEntry(workspacePath, targetAgent.name, {
+      type: 'dispatch_received',
+      summary: text.slice(0, 120),
+      body: text,
+      dispatch_id: dispatch.id,
+      metadata: { from: agent.name },
+    }).catch(() => {})
 
     sendJson(response, 202, { dispatch_id: dispatch.id, ok: true, task_id: taskId })
   }),
@@ -138,6 +151,13 @@ export const teamRoutes: RouteDefinition[] = [
           fromAgentId
         )
       }
+      const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+      appendEntry(workspacePath, agent.name, {
+        type: 'report_sent',
+        summary: resultText.slice(0, 120),
+        body: resultText,
+        ...(result.dispatch?.id ? { dispatch_id: result.dispatch.id } : {}),
+      }).catch(() => {})
       sendJson(response, 202, {
         dispatch_id: result.dispatch?.id ?? null,
         forward_error: result.forwardError,
@@ -155,6 +175,13 @@ export const teamRoutes: RouteDefinition[] = [
           fromAgentId
         )
       }
+      const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+      appendEntry(workspacePath, agent.name, {
+        type: 'report_sent',
+        summary: resultText.slice(0, 120),
+        body: resultText,
+        ...(result.dispatch?.id ? { dispatch_id: result.dispatch.id } : {}),
+      }).catch(() => {})
       sendJson(response, 202, {
         dispatch_id: result.dispatch?.id ?? null,
         forward_error: result.forwardError,
@@ -182,6 +209,12 @@ export const teamRoutes: RouteDefinition[] = [
       requireActiveRun: true,
       text: resultText,
     })
+    const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+    appendEntry(workspacePath, agent.name, {
+      type: 'status_sent',
+      summary: resultText.slice(0, 120),
+      body: resultText,
+    }).catch(() => {})
     sendJson(response, 202, {
       dispatch_id: result.dispatch?.id ?? null,
       forward_error: result.forwardError,
@@ -189,5 +222,45 @@ export const teamRoutes: RouteDefinition[] = [
       ok: true,
     })
     return
+  }),
+  route('POST', '/api/team/decide', async ({ request, response, store }) => {
+    const body = await readJsonBody<DecideBody>(request)
+    const projectId = requireNonEmptyString(body.project_id, 'project_id')
+    const fromAgentId = requireNonEmptyString(body.from_agent_id, 'from_agent_id')
+    const content = requireNonEmptyString(body.content, 'content')
+    const category = requireNonEmptyString(body.category, 'category') as DecisionCategory
+    const reason = requireNonEmptyString(body.reason, 'reason')
+    const agent = authenticateCliAgent({
+      fromAgentId,
+      getAgent: store.getAgent,
+      token: body.token,
+      validateToken: store.validateAgentToken,
+      workspaceId: projectId,
+    })
+    requireCommandForRole(agent, 'send')
+    const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+    const decision = body.supersede_id
+      ? await supersede(workspacePath, body.supersede_id, { category, content, reason })
+      : await appendDecision(workspacePath, { category, content, reason })
+    sendJson(response, 201, { ok: true, decision })
+  }),
+  route('GET', '/api/team/decisions', async ({ request, response, store }) => {
+    const url = new URL(request.url ?? '', 'http://localhost')
+    const projectId = url.searchParams.get('project_id')
+    if (!projectId) throw new BadRequestError('Missing project_id')
+    const fromAgentId = url.searchParams.get('from_agent_id')
+    if (fromAgentId) {
+      authenticateCliAgent({
+        fromAgentId,
+        getAgent: store.getAgent,
+        token: url.searchParams.get('token') ?? undefined,
+        validateToken: store.validateAgentToken,
+        workspaceId: projectId,
+      })
+    }
+    const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+    const category = url.searchParams.get('category') as DecisionCategory | null
+    const decisions = await getActiveDecisions(workspacePath, category ?? undefined)
+    sendJson(response, 200, { ok: true, decisions })
   }),
 ]

@@ -42,6 +42,16 @@ export interface CancelTaskBody {
   reason?: string
 }
 
+export interface DecideBody {
+  project_id: string
+  from_agent_id: string
+  token?: string
+  content: string
+  category: string
+  reason: string
+  supersede_id?: string
+}
+
 export interface CreateWorkspaceBody {
   path: string
   name: string
