@@ -1,192 +1,86 @@
 // @vitest-environment jsdom
 
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { useWorkspaceWorkers } from '../../web/src/useWorkspaceWorkers.js'
 
-const json = (body: unknown): Response =>
-  ({
+beforeEach(() => {
+  // mock fetch 返回空 workers，避免初始 fetch 影响测试
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
     ok: true,
-    status: 200,
-    json: async () => body,
-  }) as Response
+    json: async () => [],
+  }))
+})
 
 afterEach(() => {
   vi.restoreAllMocks()
-  vi.useRealTimers()
 })
 
-const flushPromises = async () => {
-  await Promise.resolve()
-  await Promise.resolve()
-}
-
 describe('useWorkspaceWorkers', () => {
-  test('loads worker summaries for every local workspace id, not only the active workspace', async () => {
-    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input.toString()
-      if (url === '/api/ui/workspaces/a/team') {
-        return json([
-          { id: 'wa', name: 'Alice', role: 'coder', status: 'working', pending_task_count: 1 },
-        ])
-      }
-      if (url === '/api/ui/workspaces/b/team') {
-        return json([
-          { id: 'wb', name: 'Bob', role: 'tester', status: 'idle', pending_task_count: 0 },
-        ])
-      }
-      throw new Error(`Unexpected fetch ${url}`)
-    })
-
+  test('returns empty map initially and exposes handleTeamUpdate', () => {
     const { result } = renderHook(() => useWorkspaceWorkers(['a', 'b']))
 
-    await waitFor(() => {
-      expect(result.current[0]).toEqual({
-        a: [
-          {
-            id: 'wa',
-            lastPtyLine: undefined,
-            name: 'Alice',
-            pendingTaskCount: 1,
-            role: 'coder',
-            status: 'working',
-          },
-        ],
-        b: [
-          {
-            id: 'wb',
-            lastPtyLine: undefined,
-            name: 'Bob',
-            pendingTaskCount: 0,
-            role: 'tester',
-            status: 'idle',
-          },
-        ],
-      })
-    })
+    expect(result.current.workersByWorkspaceId).toEqual({})
+    expect(typeof result.current.handleTeamUpdate).toBe('function')
   })
 
-  test('prunes worker summaries when a workspace is removed from the local list', async () => {
-    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input.toString()
-      if (url === '/api/ui/workspaces/a/team') {
-        return json([
-          { id: 'wa', name: 'Alice', role: 'coder', status: 'working', pending_task_count: 1 },
-        ])
-      }
-      if (url === '/api/ui/workspaces/b/team') {
-        return json([
-          { id: 'wb', name: 'Bob', role: 'tester', status: 'idle', pending_task_count: 0 },
-        ])
-      }
-      throw new Error(`Unexpected fetch ${url}`)
-    })
-
-    const { rerender, result } = renderHook(
-      ({ workspaceIds }: { workspaceIds: string[] }) => useWorkspaceWorkers(workspaceIds),
-      {
-        initialProps: { workspaceIds: ['a', 'b'] },
-      }
-    )
-
-    await waitFor(() => {
-      expect(result.current[0]).toHaveProperty('a')
-      expect(result.current[0]).toHaveProperty('b')
-    })
-
-    rerender({ workspaceIds: ['b'] })
-
-    await waitFor(() => {
-      expect(result.current[0]).toEqual({
-        b: [
-          {
-            id: 'wb',
-            lastPtyLine: undefined,
-            name: 'Bob',
-            pendingTaskCount: 0,
-            role: 'tester',
-            status: 'idle',
-          },
-        ],
-      })
-    })
-  })
-
-  test('keeps the same workspace map reference when refreshed worker payloads are unchanged', async () => {
-    vi.useFakeTimers()
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        json([{ id: 'wa', name: 'Alice', role: 'coder', status: 'idle', pending_task_count: 0 }])
-      )
-    vi.stubGlobal('fetch', fetchMock)
-
+  test('handleTeamUpdate populates workers for a workspace', () => {
     const { result } = renderHook(() => useWorkspaceWorkers(['a']))
 
-    await act(async () => {
-      await flushPromises()
-    })
-    expect(result.current[0]).toHaveProperty('a')
-    const firstMap = result.current[0]
-
-    await act(async () => {
-      vi.advanceTimersByTime(500)
-      await flushPromises()
+    act(() => {
+      result.current.handleTeamUpdate('a', [
+        { id: 'wa', name: 'Alice', role: 'coder', status: 'working', pending_task_count: 1 },
+      ])
     })
 
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(result.current[0]).toBe(firstMap)
+    expect(result.current.workersByWorkspaceId).toEqual({
+      a: [{ id: 'wa', name: 'Alice', role: 'coder', status: 'working', pendingTaskCount: 1 }],
+    })
   })
 
-  test('backs off failed refreshes and does not overlap in-flight worker requests', async () => {
-    vi.useFakeTimers()
-    let resolveFirstFetch: ((response: Response) => void) | undefined
-    const fetchMock = vi
-      .fn()
-      .mockImplementationOnce(
-        () =>
-          new Promise<Response>((resolve) => {
-            resolveFirstFetch = resolve
-          })
-      )
-      .mockRejectedValueOnce(new Error('temporary failure'))
-      .mockResolvedValue(
-        json([{ id: 'wa', name: 'Alice', role: 'coder', status: 'idle', pending_task_count: 0 }])
-      )
-    vi.stubGlobal('fetch', fetchMock)
+  test('prunes worker data when a workspace is removed from the id list', () => {
+    const { rerender, result } = renderHook(
+      ({ ids }: { ids: string[] }) => useWorkspaceWorkers(ids),
+      { initialProps: { ids: ['a', 'b'] } }
+    )
 
-    renderHook(() => useWorkspaceWorkers(['a']))
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-
-    await act(async () => {
-      vi.advanceTimersByTime(5000)
-      await flushPromises()
-    })
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-
-    await act(async () => {
-      resolveFirstFetch?.(json([]))
-      await flushPromises()
+    act(() => {
+      result.current.handleTeamUpdate('a', [
+        { id: 'wa', name: 'Alice', role: 'coder', status: 'idle', pending_task_count: 0 },
+      ])
+      result.current.handleTeamUpdate('b', [
+        { id: 'wb', name: 'Bob', role: 'tester', status: 'idle', pending_task_count: 0 },
+      ])
     })
 
-    await act(async () => {
-      vi.advanceTimersByTime(500)
-      await flushPromises()
-    })
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(result.current.workersByWorkspaceId).toHaveProperty('a')
+    expect(result.current.workersByWorkspaceId).toHaveProperty('b')
 
-    await act(async () => {
-      await flushPromises()
-      vi.advanceTimersByTime(500)
-      await flushPromises()
-    })
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    rerender({ ids: ['b'] })
 
-    await act(async () => {
-      vi.advanceTimersByTime(500)
-      await flushPromises()
+    expect(result.current.workersByWorkspaceId).toEqual({
+      b: [{ id: 'wb', name: 'Bob', role: 'tester', status: 'idle', pendingTaskCount: 0 }],
     })
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  test('keeps same reference when updated workers are identical', () => {
+    const { result } = renderHook(() => useWorkspaceWorkers(['a']))
+
+    act(() => {
+      result.current.handleTeamUpdate('a', [
+        { id: 'wa', name: 'Alice', role: 'coder', status: 'idle', pending_task_count: 0 },
+      ])
+    })
+
+    const firstMap = result.current.workersByWorkspaceId
+
+    act(() => {
+      result.current.handleTeamUpdate('a', [
+        { id: 'wa', name: 'Alice', role: 'coder', status: 'idle', pending_task_count: 0 },
+      ])
+    })
+
+    expect(result.current.workersByWorkspaceId).toBe(firstMap)
   })
 })
