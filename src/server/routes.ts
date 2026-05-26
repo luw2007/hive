@@ -12,9 +12,11 @@ import { discussRoutes } from './routes-discuss.js'
 import { dispatchRoutes } from './routes-dispatches.js'
 import { dispatchSseRoutes } from './routes-dispatches-sse.js'
 import { fsRoutes } from './routes-fs.js'
+import { globalSseRoutes } from './routes-global-sse.js'
 import { marketplaceRoutes } from './routes-marketplace.js'
 import { openWorkspaceRoutes } from './routes-open-workspace.js'
 import { runtimeRoutes } from './routes-runtime.js'
+import { secretaryRoutes } from './routes-secretary.js'
 import { settingsRoutes } from './routes-settings.js'
 import { taskRoutes } from './routes-tasks.js'
 import { taskApiRoutes } from './routes-tasks-api.js'
@@ -29,6 +31,7 @@ const routes: RouteDefinition[] = [
   ...openWorkspaceRoutes,
   ...dispatchRoutes,
   ...dispatchSseRoutes,
+  ...globalSseRoutes,
   ...versionRoutes,
   ...uiRoutes,
   ...settingsRoutes,
@@ -40,6 +43,7 @@ const routes: RouteDefinition[] = [
   ...discussRoutes,
   ...fsRoutes,
   ...marketplaceRoutes,
+  ...secretaryRoutes,
 ]
 
 export const matchRoute = (method: string, pathname: string) => {
