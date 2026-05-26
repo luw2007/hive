@@ -161,6 +161,7 @@ export const createAgentRunStarter =
           !startConfig.resumedSessionId &&
           !injectedRestartMessage &&
           agent &&
+          agent.role !== 'secretary' &&
           isInteractiveAgentCommand(startConfig.interactiveCommand ?? startConfig.command)
         ) {
           postStartWriter(run.runId, buildAgentStartupInstructions({ agent, workspace }))

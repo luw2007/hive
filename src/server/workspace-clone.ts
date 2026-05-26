@@ -78,6 +78,7 @@ export const cloneWorkspaceWorkers = (
 
   for (const agent of snapshot.agents) {
     if (agent.role === 'orchestrator') continue
+    if (agent.role === 'secretary') continue
 
     const worker = store.addWorker(targetWorkspaceId, {
       name: agent.name,

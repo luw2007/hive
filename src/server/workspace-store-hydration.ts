@@ -5,6 +5,7 @@ import type { WorkspaceRecord } from './workspace-store-contract.js'
 import {
   applyPendingTaskCount,
   createOrchestrator,
+  createSecretary,
   isWorkerAgent,
   type MessageKindRecord,
   type WorkerRow,
@@ -65,7 +66,7 @@ export const hydrateWorkspaceFromDb = (
 
   workspaces.set(row.id, {
     summary: { id: row.id, name: row.name, path: row.path },
-    agents: [createOrchestrator(row.id)],
+    agents: [createOrchestrator(row.id), createSecretary(row.id)],
   })
 
   for (const workerRow of db
@@ -89,7 +90,7 @@ export const seedWorkspacesFromDb = (
     .all() as WorkspaceRow[]) {
     workspaces.set(row.id, {
       summary: { id: row.id, name: row.name, path: row.path },
-      agents: [createOrchestrator(row.id)],
+      agents: [createOrchestrator(row.id), createSecretary(row.id)],
     })
   }
 

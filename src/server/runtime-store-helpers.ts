@@ -18,6 +18,7 @@ import { createSettingsStore } from "./settings-store.js";
 import { createTaskService } from "./task-service.js";
 import { createTasksFileService } from "./tasks-file.js";
 import { createTasksFileWatcher } from "./tasks-file-watcher.js";
+import { createTasksMarkdownRegenerator } from "./tasks-markdown-generator.js";
 import { createTeamOperations } from "./team-operations.js";
 import { resolveTerminalInputProfile } from "./terminal-input-profile.js";
 import { createUiAuth } from "./ui-auth.js";
@@ -29,6 +30,7 @@ import {
 import { createWorkspaceShellRuntime } from "./workspace-shell-runtime.js";
 import { createWorkspaceStore } from "./workspace-store.js";
 import { reattachSurvivedSessions } from "./tmux-reattach.js";
+import { checkTaskBacklog } from "./routes-secretary.js";
 
 export interface RuntimeStoreServices {
   agentRunStore: ReturnType<typeof createAgentRunStore>;
@@ -75,7 +77,6 @@ export const createRuntimeStoreServices = (
   const db = openRuntimeDatabase(options.dataDir);
   const messageLogStore = createMessageLogStore(db);
   const dispatchLedgerStore = createDispatchLedgerStore(db);
-  const taskService = createTaskService(db);
   const agentRunStore = createAgentRunStore(db);
   const agentSessionStore = createAgentSessionStore(db);
   const settings = createSettingsStore(db);
@@ -88,6 +89,33 @@ export const createRuntimeStoreServices = (
       notifyTasksUpdated(tasksFileWatchCallbacks, workspaceId, content);
     },
   });
+
+  // 延迟引用 workspaceStore（在首次 task mutation 时已初始化）
+  let _workspaceStore: ReturnType<typeof createWorkspaceStore> | null = null;
+  const tasksRegenerator = createTasksMarkdownRegenerator(db, (workspaceId) => {
+    if (!_workspaceStore) throw new Error('workspaceStore not initialized yet');
+    return _workspaceStore.getWorkspaceSnapshot(workspaceId).summary.path;
+  });
+
+  const taskService = createTaskService(db, {
+    onChange: (workspaceId) => {
+      try {
+        const content = tasksRegenerator.regenerate(workspaceId);
+        notifyTasksUpdated(tasksFileWatchCallbacks, workspaceId, content);
+
+        // 积压检测
+        if (_workspaceStore) {
+          const openTasks = taskService.listTasks(workspaceId, { status: 'open' });
+          const proposedTasks = taskService.listTasks(workspaceId, { status: 'proposed' });
+          const workers = _workspaceStore.listWorkers(workspaceId);
+          checkTaskBacklog(workspaceId, openTasks.length, proposedTasks.length, workers);
+        }
+      } catch {
+        // workspace 可能尚未初始化（启动期间），静默跳过
+      }
+    },
+  });
+
   const uiAuth = createUiAuth();
   const shellRuntime = createWorkspaceShellRuntime(options.agentManager);
 
@@ -100,6 +128,7 @@ export const createRuntimeStoreServices = (
     (workspaceId, agentId) =>
       discussionOps.getActiveGroupForAgent(workspaceId, agentId) !== null,
   );
+  _workspaceStore = workspaceStore;
   const startExistingWorkspaceWatches = () => {
     for (const workspace of workspaceStore.listWorkspaces()) {
       void tasksFileWatcher.start(workspace.id, workspace.path);

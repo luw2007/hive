@@ -9,6 +9,7 @@
  */
 
 type TeamChangeListener = () => void
+type GlobalTeamChangeListener = (workspaceId: string) => void
 
 interface SubscriptionEntry {
   workspaceId: string
@@ -18,6 +19,8 @@ interface SubscriptionEntry {
 export interface TeamChangeBus {
   /** 订阅某 workspace 的团队变更，返回 unsubscribe 函数 */
   subscribe: (workspaceId: string, listener: TeamChangeListener) => () => void
+  /** 订阅所有 workspace 的团队变更，listener 收到触发变更的 workspaceId */
+  subscribeAll: (listener: GlobalTeamChangeListener) => () => void
   /** 结构性变更（status/pendingTaskCount/add/delete/rename），立即通知 */
   notifyImmediate: (workspaceId: string) => void
   /** PTY output 引起的 lastPtyLine 变更，防抖通知（同一 workspace 500ms 内合并） */
@@ -30,6 +33,7 @@ const PTY_DEBOUNCE_MS = 500
 
 export const createTeamChangeBus = (): TeamChangeBus => {
   const subscriptions = new Set<SubscriptionEntry>()
+  const globalSubscriptions = new Set<GlobalTeamChangeListener>()
   const ptyTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
   const fireListeners = (workspaceId: string) => {
@@ -37,6 +41,9 @@ export const createTeamChangeBus = (): TeamChangeBus => {
       if (entry.workspaceId === workspaceId) {
         entry.listener()
       }
+    }
+    for (const listener of globalSubscriptions) {
+      listener(workspaceId)
     }
   }
 
@@ -46,6 +53,13 @@ export const createTeamChangeBus = (): TeamChangeBus => {
       subscriptions.add(entry)
       return () => {
         subscriptions.delete(entry)
+      }
+    },
+
+    subscribeAll(listener) {
+      globalSubscriptions.add(listener)
+      return () => {
+        globalSubscriptions.delete(listener)
       }
     },
 
@@ -74,6 +88,7 @@ export const createTeamChangeBus = (): TeamChangeBus => {
       for (const timer of ptyTimers.values()) clearTimeout(timer)
       ptyTimers.clear()
       subscriptions.clear()
+      globalSubscriptions.clear()
     },
   }
 }
