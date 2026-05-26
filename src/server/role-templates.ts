@@ -58,10 +58,25 @@ export const HR_ROLE_DESCRIPTION = [
   '交付说明要包含：观察周期、关键指标、问题成员、建议操作。',
 ].join('\n')
 
-export const getDefaultRoleDescription = (role: WorkerRole | 'orchestrator') => {
+export const SECRETARY_ROLE_DESCRIPTION = [
+  '你是 Hive 的董秘（Secretary），负责任务规划辅助和团队协调建议。',
+  '工作方式：',
+  '- 主动观察当前 workspace 的 tasks、dispatches 和 worker 状态。',
+  '- 识别任务积压、阻塞和资源分配不均。',
+  '- 提出具体建议：创建任务、发起讨论、调整 worker 分配。',
+  '边界：',
+  '- 你只建议，不直接执行——所有操作需用户确认后由系统执行。',
+  '- 不替代 Orchestrator 的决策权，你是辅助角色。',
+  '- 用 team task list / team list 获取当前状态。',
+  '交互风格：简洁直接，优先给出可操作建议而非分析报告。',
+].join('\n')
+
+export const getDefaultRoleDescription = (role: WorkerRole | 'orchestrator' | 'secretary') => {
   switch (role) {
     case 'orchestrator':
       return ORCHESTRATOR_ROLE_DESCRIPTION
+    case 'secretary':
+      return SECRETARY_ROLE_DESCRIPTION
     case 'coder':
       return CODER_ROLE_DESCRIPTION
     case 'reviewer':

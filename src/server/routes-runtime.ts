@@ -1,3 +1,4 @@
+import { resetAgentContext } from './agent-context-reset.js'
 import { getRequiredParam, readJsonBody, route, sendJson } from './route-helpers.js'
 import type { ConfigureAgentLaunchBody, RouteDefinition } from './route-types.js'
 import { requireUiTokenFromRequest } from './ui-auth-helpers.js'
@@ -130,4 +131,30 @@ export const runtimeRoutes: RouteDefinition[] = [
 
     sendJson(response, 200, store.getLiveRun(runId))
   }),
+  route(
+    'POST',
+    '/api/workspaces/:workspaceId/agents/:agentId/reset-context',
+    async ({ params, request, response, store, tasksFileService }) => {
+      const workspaceId = getRequiredParam(
+        response,
+        params,
+        'workspaceId',
+        'Workspace id and agent id are required'
+      )
+      const agentId = getRequiredParam(
+        response,
+        params,
+        'agentId',
+        'Workspace id and agent id are required'
+      )
+      if (!workspaceId || !agentId) {
+        return
+      }
+
+      requireUiTokenFromRequest(request, store.validateUiToken)
+
+      await resetAgentContext(store, tasksFileService, workspaceId, agentId)
+      sendJson(response, 202, { ok: true })
+    }
+  ),
 ]

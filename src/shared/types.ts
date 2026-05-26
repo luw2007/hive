@@ -15,7 +15,7 @@ export interface AgentSummary {
   workspaceId: string
   name: string
   description: string
-  role: WorkerRole | 'orchestrator'
+  role: WorkerRole | 'orchestrator' | 'secretary'
   roleTemplateName?: string
   status: AgentStatus
   pendingTaskCount: number
