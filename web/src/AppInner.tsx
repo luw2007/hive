@@ -17,6 +17,7 @@ import { useTerminalRuns } from './terminal/useTerminalRuns.js'
 import { useToast } from './ui/useToast.js'
 import { useAppShortcuts } from './useAppShortcuts.js'
 import { useBeforeUnloadGuard } from './useBeforeUnloadGuard.js'
+import { useGlobalSSE } from './useGlobalSSE.js'
 import { useInitializeUiSession } from './useInitializeUiSession.js'
 import { useWorkerHighlight } from './useWorkerHighlight.js'
 import { useWorkspaceCreate } from './useWorkspaceCreate.js'
@@ -32,7 +33,8 @@ export const AppInner = () => {
   const { activeWorkspaceId, selectWorkspace, setActiveWorkspaceId } = useWorkspaceSelection()
   const { demoMode, enableDemo, exitDemo } = useDemoMode()
   const localPollIds = demoMode || !workspaces ? [] : workspaces.map(({ id }) => id)
-  const [workersByWorkspaceId, setWorkersByWorkspaceId] = useWorkspaceWorkers(localPollIds)
+  const { workersByWorkspaceId, setWorkersByWorkspaceId, handleTeamUpdate } = useWorkspaceWorkers(localPollIds)
+  useGlobalSSE(handleTeamUpdate)
   const [addDialogTrigger, setAddDialogTrigger] = useState(0)
   const [taskGraphOpen, setTaskGraphOpen] = useState(false)
   const toast = useToast()
