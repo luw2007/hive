@@ -39,10 +39,11 @@ export const taskRoutes: RouteDefinition[] = [
 
       requireUiTokenFromRequest(request, store.validateUiToken)
 
-      const body = await readJsonBody<{ content: string }>(request)
+      // 新模型：md 为 DB 只读投影，忽略写入请求，返回当前 DB 生成内容
+      await readJsonBody<{ content: string }>(request)
       const workspace = store.getWorkspaceSnapshot(workspaceId)
-      tasksFileService.writeTasks(workspace.summary.path, body.content)
-      sendJson(response, 200, { content: body.content })
+      const content = tasksFileService.readTasks(workspace.summary.path)
+      sendJson(response, 200, { content, readonly: true })
     }
   ),
 ]

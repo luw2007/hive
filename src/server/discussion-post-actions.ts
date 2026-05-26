@@ -1,7 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-import { injectAnchor } from './task-anchor.js'
 import { getTasksFilePath } from './tasks-file.js'
 
 const NEXT_ACTIONS_HEADING = /^##\s+\d+\.\s*Next Actions/i
@@ -39,6 +38,11 @@ export interface TaskService {
   }): { id: string; seq: number }
 }
 
+/**
+ * 将讨论产出的 action items 创建为 DB tasks。
+ * 文件生成由 task-service 的 onChange hook 自动触发，无需手动 append。
+ * 返回创建的 task 数量。
+ */
 export const appendActionsToTasks = (
   workspacePath: string,
   topic: string,
@@ -49,32 +53,25 @@ export const appendActionsToTasks = (
 ): number => {
   if (actions.length === 0) return 0
 
-  const tasksPath = getTasksFilePath(workspacePath)
-  const dir = dirname(tasksPath)
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
-
-  const header = `\n\n## 讨论产出：${topic}\n\n`
-  let items = actions.map((a) => `- [ ] ${a}`).join('\n')
-
   if (taskService && workspaceId) {
-    const lines = items.split('\n')
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line) continue
-      const title = line.replace(/^- \[[ x]\]\s*/, '').trim()
-      const task = taskService.createTask({
+    // 新模型：仅创建 DB 记录，md 由 regenerator 自动生成
+    for (const action of actions) {
+      taskService.createTask({
         workspaceId,
-        title,
+        title: action,
         source: 'discussion',
         ...(groupId ? { sourceRef: groupId } : {}),
       })
-      const taskId = task.id
-      lines[i] = `- [ ] #${task.seq} ${title}`
-      items = lines.join('\n')
-      items = injectAnchor(items, i, taskId)
     }
+  } else {
+    // 回退：无 taskService 时仍手动写文件（兼容测试 / 边界场景）
+    const tasksPath = getTasksFilePath(workspacePath)
+    const dir = dirname(tasksPath)
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    const header = `\n\n## 讨论产出：${topic}\n\n`
+    const items = actions.map((a) => `- [ ] ${a}`).join('\n')
+    appendFileSync(tasksPath, `${header}${items}\n`, 'utf8')
   }
 
-  appendFileSync(tasksPath, `${header}${items}\n`, 'utf8')
   return actions.length
 }

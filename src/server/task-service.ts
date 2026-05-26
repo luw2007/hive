@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import type { Database } from 'better-sqlite3'
 
 export type TaskStatus = 'proposed' | 'open' | 'in_progress' | 'done' | 'blocked' | 'cancelled'
-export type TaskSource = 'orch' | 'discussion' | 'user'
+export type TaskSource = 'orch' | 'discussion' | 'user' | 'secretary'
 export type TaskEventType =
   | 'created'
   | 'dispatched'
@@ -105,7 +105,12 @@ export interface TaskWithDetails {
   recentEvents: TaskEventRecord[]
 }
 
-export const createTaskService = (db: Database) => {
+export interface TaskServiceOptions {
+  onChange?: (workspaceId: string) => void
+}
+
+export const createTaskService = (db: Database, options?: TaskServiceOptions) => {
+  const emitChange = (workspaceId: string) => options?.onChange?.(workspaceId)
   const createTask = (input: CreateTaskInput): TaskRecord => {
     const id = randomUUID()
     const now = Date.now()
@@ -122,7 +127,7 @@ export const createTaskService = (db: Database) => {
        VALUES (?, ?, 'created', ?, ?, ?)`
     ).run(input.workspaceId, id, input.agentId ?? null, null, now)
 
-    return {
+    const record: TaskRecord = {
       id,
       workspaceId: input.workspaceId,
       title: input.title,
@@ -132,6 +137,8 @@ export const createTaskService = (db: Database) => {
       seq,
       createdAt: now,
     }
+    emitChange(input.workspaceId)
+    return record
   }
 
   const listTasks = (
@@ -216,7 +223,9 @@ export const createTaskService = (db: Database) => {
        VALUES (?, ?, ?, ?, ?, ?)`
     ).run(row.workspace_id, taskId, eventType, agentId ?? null, payload, now)
 
-    return { ...toTaskRecord(row), status }
+    const result = { ...toTaskRecord(row), status }
+    emitChange(row.workspace_id)
+    return result
   }
 
   const deleteTask = (taskId: string, agentId?: string): boolean => {
@@ -231,6 +240,7 @@ export const createTaskService = (db: Database) => {
        VALUES (?, ?, 'cancelled', ?, ?)`
     ).run(row.workspace_id, taskId, agentId ?? null, now)
 
+    emitChange(row.workspace_id)
     return true
   }
 
@@ -254,6 +264,7 @@ export const createTaskService = (db: Database) => {
       db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run('in_progress', taskId)
     }
 
+    emitChange(taskRow.workspace_id)
     return true
   }
 
