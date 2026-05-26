@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { initializeUiSession } from '../api.js'
+import { subscribeDispatches } from '../useGlobalSSE.js'
 
 export type DispatchStatus = 'queued' | 'submitted' | 'reported' | 'cancelled'
 
@@ -69,10 +69,6 @@ export const groupDispatchesByTaskId = (dispatches: DispatchItem[]): Map<string 
   return map
 }
 
-/** 最大重连延迟 */
-const MAX_RECONNECT_MS = 10_000
-const getReconnectDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, MAX_RECONNECT_MS)
-
 const areDispatchesEqual = (a: DispatchItem[], b: DispatchItem[]): boolean => {
   if (a.length !== b.length) return false
   return a.every((item, i) => {
@@ -81,10 +77,13 @@ const areDispatchesEqual = (a: DispatchItem[], b: DispatchItem[]): boolean => {
   })
 }
 
+/**
+ * 从全局 SSE 推送接收 dispatches 数据。
+ * 保底：初始化时做一次 fetch（SSE 可能还没连上或测试环境不发数据）。
+ */
 export const useDispatchesForWorkspace = (workspaceId: string | null) => {
   const [dispatches, setDispatches] = useState<DispatchItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const refreshingRef = useRef(false)
+  const [loading, setLoading] = useState(!!workspaceId)
 
   const refresh = useCallback(async () => {
     if (!workspaceId) return
@@ -96,70 +95,43 @@ export const useDispatchesForWorkspace = (workspaceId: string | null) => {
     }
   }, [workspaceId])
 
+  // 清理 + 初始 fetch
   useEffect(() => {
     if (!workspaceId) {
       setDispatches([])
+      setLoading(false)
       return
     }
-
     setLoading(true)
     let cancelled = false
-    const reconnectTimers: number[] = []
-    const sources: EventSource[] = []
-
-    const connect = (attempt = 0) => {
-      if (cancelled) return
-
-      const url = `/api/ui/workspaces/${encodeURIComponent(workspaceId)}/dispatches/events`
-      const es = new EventSource(url)
-      sources.push(es)
-
-      es.onmessage = (event) => {
-        if (cancelled) return
-        setLoading(false)
-        try {
-          const payload = JSON.parse(event.data) as DispatchItem[]
-          setDispatches((prev) => {
-            if (areDispatchesEqual(prev, payload)) return prev
-            return payload
-          })
-        } catch (error) {
-          console.error('[hive] dispatch SSE parse error', error)
+    void fetchDispatches(workspaceId)
+      .then((data) => {
+        if (!cancelled) {
+          setDispatches(data)
+          setLoading(false)
         }
-      }
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [workspaceId])
 
-      es.onerror = () => {
-        if (cancelled) return
-        es.close()
-        const idx = sources.indexOf(es)
-        if (idx >= 0) sources.splice(idx, 1)
+  // 订阅全局 SSE dispatches 事件（后续增量更新覆盖初始数据）
+  useEffect(() => {
+    if (!workspaceId) return
 
-        // token 可能过期，尝试 refresh session
-        if (!refreshingRef.current) {
-          refreshingRef.current = true
-          void initializeUiSession()
-            .catch(() => {})
-            .finally(() => { refreshingRef.current = false })
-        }
+    const unsubscribe = subscribeDispatches((eventWorkspaceId, rawDispatches) => {
+      if (eventWorkspaceId !== workspaceId) return
+      setLoading(false)
+      const payload = rawDispatches as DispatchItem[]
+      setDispatches((prev) => {
+        if (areDispatchesEqual(prev, payload)) return prev
+        return payload
+      })
+    })
 
-        const delay = getReconnectDelay(attempt)
-        const timer = window.setTimeout(
-          () => connect(Math.min(attempt + 1, 5)),
-          delay
-        )
-        reconnectTimers.push(timer)
-      }
-    }
-
-    connect()
-
-    return () => {
-      cancelled = true
-      for (const es of sources) es.close()
-      for (const timer of reconnectTimers) window.clearTimeout(timer)
-      sources.length = 0
-      reconnectTimers.length = 0
-    }
+    return unsubscribe
   }, [workspaceId])
 
   return { dispatches, loading, refresh }

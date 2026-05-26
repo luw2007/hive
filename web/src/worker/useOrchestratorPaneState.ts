@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { TerminalRunSummary } from '../api.js'
-import { type OrchestratorStartResult, startAgentRun, stopAgentRun } from '../api.js'
+import { type OrchestratorStartResult, resetAgentContext, startAgentRun, stopAgentRun } from '../api.js'
 import { findOrchestratorRun, orchestratorAgentId } from '../terminal/useTerminalRuns.js'
 import type { OrchestratorPaneState } from './OrchestratorPane.js'
 
@@ -25,6 +25,7 @@ interface UseOrchestratorPaneStateOutput {
   start: () => void
   stop: () => void
   restart: () => void
+  resetContext: () => void
 }
 
 /**
@@ -144,5 +145,12 @@ export const useOrchestratorPaneState = ({
     start()
   }, [agentId, onAfterStart, onClearAutostartError, orchestratorRun, start, workspaceId])
 
-  return { state, start, stop, restart }
+  const resetContext = useCallback(() => {
+    if (!workspaceId || !orchestratorRun) return
+    void resetAgentContext(workspaceId, agentId).catch((error: unknown) => {
+      console.error('[hive] swallowed:orchestrator.resetContext', error)
+    })
+  }, [agentId, orchestratorRun, workspaceId])
+
+  return { state, start, stop, restart, resetContext }
 }

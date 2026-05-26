@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import type { TeamListItem, TeamListItemPayload } from '../../src/shared/types.js'
-import { apiFetch, initializeUiSession } from './api.js'
+import { apiFetch } from './api.js'
 
 const fromPayload = (payload: TeamListItemPayload): TeamListItem => ({
   id: payload.id,
@@ -30,29 +30,16 @@ const areWorkersEqual = (a: TeamListItem[], b: TeamListItem[]): boolean => {
   })
 }
 
-/** 最大重连延迟 */
-const MAX_RECONNECT_MS = 10_000
-const getReconnectDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, MAX_RECONNECT_MS)
-
-/** 非活跃 workspace 轮询间隔 */
-const POLL_INTERVAL_MS = 5_000
-
 /**
- * 通过 SSE 订阅活跃 workspace 的团队状态变更，其他 workspace 用 fetch 轮询。
- * 这样避免 HTTP/1.1 浏览器 6 连接限制导致请求 pending。
- *
- * activeWorkspaceId: 当前活跃 workspace 使用 SSE 实时推送
- * 其他 workspace: 每 5 秒 fetch 轮询
+ * 维护 workers 状态。
+ * 主通道：全局 SSE 推送 team 数据（通过 handleTeamUpdate）。
+ * 保底：初始化时做一次 fetch 获取初始数据（SSE 可能还没连上或测试环境下 mock 不发数据）。
  */
-export const useWorkspaceWorkers = (
-  workspaceIds: readonly string[],
-  activeWorkspaceId: string | null
-) => {
+export const useWorkspaceWorkers = (workspaceIds: readonly string[]) => {
   const workspaceKey = workspaceIds.join('\0')
   const [workersByWorkspaceId, setWorkersByWorkspaceId] = useState<Record<string, TeamListItem[]>>(
     {}
   )
-  const refreshingRef = useRef(false)
 
   // 清理不再存在的 workspace 数据
   useEffect(() => {
@@ -71,84 +58,19 @@ export const useWorkspaceWorkers = (
     })
   }, [workspaceKey])
 
-  // SSE 连接：仅活跃 workspace
-  useEffect(() => {
-    if (!activeWorkspaceId || !workspaceIds.includes(activeWorkspaceId)) return
-
-    let cancelled = false
-    const reconnectTimers: number[] = []
-    let currentSource: EventSource | null = null
-
-    const connect = (attempt = 0) => {
-      if (cancelled) return
-
-      const url = `/api/ui/workspaces/${encodeURIComponent(activeWorkspaceId)}/team/events`
-      const es = new EventSource(url)
-      currentSource = es
-
-      es.onmessage = (event) => {
-        if (cancelled) return
-        try {
-          const payload = JSON.parse(event.data) as TeamListItemPayload[]
-          const workers = payload.map(fromPayload)
-          setWorkersByWorkspaceId((current) => {
-            const existing = current[activeWorkspaceId] ?? []
-            if (areWorkersEqual(existing, workers)) return current
-            return { ...current, [activeWorkspaceId]: workers }
-          })
-        } catch (error) {
-          console.error('[hive] SSE parse error', activeWorkspaceId, error)
-        }
-      }
-
-      es.onerror = () => {
-        if (cancelled) return
-        es.close()
-        currentSource = null
-
-        if (!refreshingRef.current) {
-          refreshingRef.current = true
-          void initializeUiSession()
-            .catch(() => {})
-            .finally(() => {
-              refreshingRef.current = false
-            })
-        }
-
-        const delay = getReconnectDelay(attempt)
-        const timer = window.setTimeout(
-          () => connect(Math.min(attempt + 1, 5)),
-          delay
-        )
-        reconnectTimers.push(timer)
-      }
-    }
-
-    connect()
-
-    return () => {
-      cancelled = true
-      currentSource?.close()
-      for (const timer of reconnectTimers) window.clearTimeout(timer)
-    }
-  }, [activeWorkspaceId, workspaceKey])
-
-  // Fetch 轮询：非活跃 workspace（串行避免 HTTP/1.1 连接耗尽）
+  // 初始 fetch：确保 SSE 还没推送前有数据
   useEffect(() => {
     if (!workspaceKey) return
-
-    const ids = workspaceKey.split('\0').filter((id) => id !== activeWorkspaceId)
-    if (ids.length === 0) return
-
     let cancelled = false
+    const ids = workspaceKey.split('\0')
 
-    const pollAll = async () => {
+    const fetchAll = async () => {
       for (const workspaceId of ids) {
         if (cancelled) return
         try {
           const url = `/api/ui/workspaces/${encodeURIComponent(workspaceId)}/team`
           const response = await apiFetch(url)
-          if (!response.ok || cancelled) return
+          if (!response.ok || cancelled) continue
           const payload = (await response.json()) as TeamListItemPayload[]
           const workers = payload.map(fromPayload)
           setWorkersByWorkspaceId((current) => {
@@ -157,19 +79,24 @@ export const useWorkspaceWorkers = (
             return { ...current, [workspaceId]: workers }
           })
         } catch {
-          // 轮询失败静默忽略，下次重试
+          // 初始 fetch 失败静默忽略，等 SSE 推送
         }
       }
     }
 
-    void pollAll()
-    const timer = window.setInterval(() => void pollAll(), POLL_INTERVAL_MS)
+    void fetchAll()
+    return () => { cancelled = true }
+  }, [workspaceKey])
 
-    return () => {
-      cancelled = true
-      window.clearInterval(timer)
-    }
-  }, [workspaceKey, activeWorkspaceId])
+  /** 接收全局 SSE 推送的 team 数据 */
+  const handleTeamUpdate = useCallback((workspaceId: string, rawWorkers: unknown[]) => {
+    const workers = (rawWorkers as TeamListItemPayload[]).map(fromPayload)
+    setWorkersByWorkspaceId((current) => {
+      const existing = current[workspaceId] ?? []
+      if (areWorkersEqual(existing, workers)) return current
+      return { ...current, [workspaceId]: workers }
+    })
+  }, [])
 
-  return [workersByWorkspaceId, setWorkersByWorkspaceId] as const
+  return { workersByWorkspaceId, setWorkersByWorkspaceId, handleTeamUpdate }
 }
