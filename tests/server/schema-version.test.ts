@@ -138,6 +138,9 @@ describe('schema version', () => {
         'created_at',
         'updated_at',
         'discussion_triggers',
+        'use_count',
+        'command_preset_id',
+        'suggested_name',
       ])
     )
     expect(appStateColumns).toEqual(new Set(['key', 'value', 'updated_at']))
@@ -173,7 +176,7 @@ describe('schema version', () => {
       .get('active_workspace_id') as { key: string; value: string | null } | undefined
 
     expect(presetCount.count).toBe(4)
-    expect(roleTemplateCount.count).toBe(4)
+    expect(roleTemplateCount.count).toBe(5)
     expect(appState).toEqual({ key: 'active_workspace_id', value: null })
 
     db.close()

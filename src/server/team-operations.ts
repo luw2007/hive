@@ -1,4 +1,5 @@
 import type { AgentRuntime } from './agent-runtime.js'
+import { appendEntry } from './agent-journal.js'
 import type { DispatchRecord } from './dispatch-ledger-store.js'
 import { ConflictError, PtyInactiveError } from './http-errors.js'
 import type { MessageLogHandle, MessageLogRecord } from './message-log-store.js'
@@ -202,9 +203,15 @@ export const createTeamOperations = ({
       return dispatchTask(workspaceId, worker.id, text, input)
     },
     recordUserInput(workspaceId: string, orchestratorId: string, text: string) {
-      workspaceStore.getAgent(workspaceId, orchestratorId)
+      const orch = workspaceStore.getAgent(workspaceId, orchestratorId)
       agentRuntime.writeUserInputPrompt(workspaceId, text)
       insertMessage(createUserInputMessage(workspaceId, orchestratorId, text))
+      const workspacePath = workspaceStore.getWorkspaceSnapshot(workspaceId).summary.path
+      void appendEntry(workspacePath, orch.name, {
+        type: 'user_input_received',
+        summary: text.slice(0, 200),
+        body: text,
+      }).catch(() => {})
     },
     statusTask(workspaceId: string, workerId: string, input: StatusTaskInput = {}) {
       const text = input.text ?? ''
@@ -274,6 +281,20 @@ export const createTeamOperations = ({
               requireActiveRun: input.requireActiveRun,
             })
             forwarded = true
+            try {
+              const orchId = `${workspaceId}:orchestrator`
+              const orchAgent = workspaceStore.getAgent(workspaceId, orchId)
+              const workspacePath = workspaceStore.getWorkspaceSnapshot(workspaceId).summary.path
+              void appendEntry(workspacePath, orchAgent.name, {
+                type: 'report_sent',
+                summary: `${worker.name}: ${text.slice(0, 180)}`,
+                body: text,
+                ...(dispatch.id ? { dispatch_id: dispatch.id } : {}),
+                ...(artifacts.length > 0 ? { artifacts } : {}),
+              }).catch(() => {})
+            } catch {
+              // orch agent not yet registered; skip journal write
+            }
           } catch (error) {
             forwardError = reportForwardErrorMessage(error)
             console.error('[hive] swallowed:teamReport.forward', error)

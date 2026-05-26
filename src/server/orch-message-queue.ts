@@ -28,12 +28,15 @@ interface WorkspaceQueue {
   messages: QueuedMessage[]
   flushTimer: ReturnType<typeof setInterval> | null
   batchTimer: ReturnType<typeof setTimeout> | null
+  held: boolean
 }
 
 export interface OrchMessageQueue {
   enqueue: (workspaceId: string, text: string, priority?: MessagePriority) => void
   flush: (workspaceId: string) => string[]
   peek: (workspaceId: string) => number
+  hold: (workspaceId: string) => void
+  resume: (workspaceId: string) => void
   dispose: () => void
 }
 
@@ -53,7 +56,7 @@ export const createOrchMessageQueue = (
   const getOrCreateQueue = (workspaceId: string): WorkspaceQueue => {
     let queue = queues.get(workspaceId)
     if (!queue) {
-      queue = { messages: [], flushTimer: null, batchTimer: null }
+      queue = { messages: [], flushTimer: null, batchTimer: null, held: false }
       queues.set(workspaceId, queue)
     }
     return queue
@@ -84,7 +87,7 @@ export const createOrchMessageQueue = (
 
   const flushNormal = (workspaceId: string) => {
     const queue = queues.get(workspaceId)
-    if (!queue || queue.messages.length === 0) return
+    if (!queue || queue.messages.length === 0 || queue.held) return
     const merged = mergeBatch(queue.messages)
     queue.messages = []
     if (queue.batchTimer) {
@@ -117,17 +120,45 @@ export const createOrchMessageQueue = (
   return {
     enqueue(workspaceId, text, priority = 'normal') {
       if (priority === 'high') {
+        const queue = getOrCreateQueue(workspaceId)
+        if (queue.held) {
+          queue.messages.push({ text, priority, enqueuedAt: Date.now() })
+          return
+        }
         onFlush(workspaceId, [text])
         return
       }
       const queue = getOrCreateQueue(workspaceId)
       queue.messages.push({ text, priority, enqueuedAt: Date.now() })
-      startBatchTimer(workspaceId, queue)
-      startFlushTimer(workspaceId, queue)
+      if (!queue.held) {
+        startBatchTimer(workspaceId, queue)
+        startFlushTimer(workspaceId, queue)
+      }
     },
     flush,
     peek(workspaceId) {
       return queues.get(workspaceId)?.messages.length ?? 0
+    },
+    hold(workspaceId) {
+      const queue = getOrCreateQueue(workspaceId)
+      queue.held = true
+      if (queue.batchTimer) {
+        clearTimeout(queue.batchTimer)
+        queue.batchTimer = null
+      }
+      if (queue.flushTimer) {
+        clearInterval(queue.flushTimer)
+        queue.flushTimer = null
+      }
+    },
+    resume(workspaceId) {
+      const queue = queues.get(workspaceId)
+      if (!queue) return
+      queue.held = false
+      if (queue.messages.length > 0) {
+        startBatchTimer(workspaceId, queue)
+        startFlushTimer(workspaceId, queue)
+      }
     },
     dispose() {
       for (const queue of queues.values()) {

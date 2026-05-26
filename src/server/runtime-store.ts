@@ -109,6 +109,7 @@ interface RuntimeStore {
   validateAgentToken: (agentId: string, token: string | undefined) => boolean
   validateUiToken: (token: string | undefined) => boolean
   getDb: () => import('better-sqlite3').Database
+  getAgentRuntime: () => import('./agent-runtime-contract.js').AgentRuntime
   handoffHandler?:
     | {
         activeHandoff: (ctx: {
@@ -324,6 +325,7 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
       services.agentRuntime.validateAgentToken(agentId, token),
     validateUiToken: (token) => services.uiAuth.validate(token),
     getDb: () => services.db,
+    getAgentRuntime: () => services.agentRuntime,
     handoffHandler,
     reattachTmuxSessions: lifecycle.reattachTmuxSessions,
     registerTeamListener: (workspaceId, listener) =>

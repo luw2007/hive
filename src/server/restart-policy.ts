@@ -1,5 +1,6 @@
 import type { WorkspaceSummary } from '../shared/types.js'
 import type { AgentLaunchConfigInput } from './agent-run-store.js'
+import { getActiveDecisions } from './decision-ledger.js'
 import { buildRecoverySummary } from './recovery-summary.js'
 import {
   findPreviousRun,
@@ -51,7 +52,7 @@ export const createRestartPolicy = ({
 
     if (startConfig.resumedSessionId) return true
 
-    const text = buildRecoverySummary({
+    const baseInput = {
       activeDispatches: listActiveDispatches(workspace.id),
       activeDiscussions: listActiveDiscussions(workspace.id),
       agent,
@@ -61,14 +62,18 @@ export const createRestartPolicy = ({
       tasksContent,
       workers,
       workspace,
-    })
-    writeSystemMessage({
-      deleteMessage,
-      insertMessage,
-      record: createSystemRecoverySummaryMessage(workspace.id, agentId, text),
-      runId,
-      text,
-      writeToRun,
+    }
+
+    void getActiveDecisions(snapshot.summary.path).catch(() => []).then((decisions) => {
+      const text = buildRecoverySummary({ ...baseInput, decisions })
+      writeSystemMessage({
+        deleteMessage,
+        insertMessage,
+        record: createSystemRecoverySummaryMessage(workspace.id, agentId, text),
+        runId,
+        text,
+        writeToRun,
+      })
     })
     return true
   },

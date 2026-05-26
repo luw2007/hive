@@ -38,6 +38,9 @@ describe('decision-ledger', () => {
     expect(parsed.category).toBe('tech')
     expect(parsed.content).toBe('Use PostgreSQL for persistence')
     expect(parsed.reason).toBe('Team familiarity and JSONB support')
+    expect(parsed.source).toBe('orch')
+    expect(parsed.confirmed_by).toBeNull()
+    expect(parsed.last_referenced).toBeNull()
     expect(parsed.active).toBe(true)
   })
 
@@ -179,5 +182,65 @@ describe('decision-ledger', () => {
         reason: 'test',
       })
     ).rejects.toThrow(/not found or already inactive/)
+  })
+
+  test('appendDecision accepts source and confirmed_by fields', async () => {
+    const decision = await appendDecision(workspacePath, {
+      category: 'priority',
+      content: 'Focus on auth flow first',
+      reason: 'User explicitly requested',
+      source: 'user',
+      confirmed_by: 'user',
+    })
+
+    expect(decision.source).toBe('user')
+    expect(decision.confirmed_by).toBe('user')
+    expect(decision.last_referenced).toBeNull()
+    expect(decision.category).toBe('priority')
+  })
+
+  test('appendDecision defaults source to orch when not provided', async () => {
+    const decision = await appendDecision(workspacePath, {
+      category: 'tech',
+      content: 'Use Bun runtime',
+      reason: 'Faster startup',
+    })
+
+    expect(decision.source).toBe('orch')
+    expect(decision.confirmed_by).toBeNull()
+  })
+
+  test('supersede preserves source/confirmed_by on new decision', async () => {
+    const original = await appendDecision(workspacePath, {
+      category: 'constraint',
+      content: 'Limit to 3 agents',
+      reason: 'resource constraint',
+      source: 'orch',
+    })
+
+    const replacement = await supersede(workspacePath, original.id, {
+      category: 'constraint',
+      content: 'Limit to 5 agents',
+      reason: 'user override',
+      source: 'user',
+      confirmed_by: 'user',
+    })
+
+    expect(replacement.source).toBe('user')
+    expect(replacement.confirmed_by).toBe('user')
+    expect(replacement.last_referenced).toBeNull()
+  })
+
+  test('priority category is accepted', async () => {
+    const decision = await appendDecision(workspacePath, {
+      category: 'priority',
+      content: 'Auth before dashboard',
+      reason: 'Blocking other work',
+    })
+
+    expect(decision.category).toBe('priority')
+    const active = await getActiveDecisions(workspacePath, 'priority')
+    expect(active).toHaveLength(1)
+    expect(active[0]!.content).toBe('Auth before dashboard')
   })
 })

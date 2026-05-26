@@ -8,8 +8,11 @@ import { appendEntry } from '../../src/server/agent-journal.js'
 import {
   buildWorkerRotationRecovery,
   shouldRotateWorker,
+  shouldRotateOrchestrator,
+  applyBudgetControl,
   type RotationContext,
   type RotationProtection,
+  type OrchestratorRotationContext,
 } from '../../src/server/session-rotation.js'
 
 const makeContext = (overrides: Partial<RotationContext> = {}): RotationContext => ({
@@ -173,5 +176,118 @@ describe('buildWorkerRotationRecovery', () => {
 
     expect(recovery).toMatch(/^<hive-system-message type="rotation-recovery">/)
     expect(recovery).toMatch(/<\/hive-system-message>$/)
+  })
+})
+
+const makeOrchContext = (overrides: Partial<OrchestratorRotationContext> = {}): OrchestratorRotationContext => ({
+  allWorkersIdle: false,
+  compactDetectedAndIdle: false,
+  messageCount: 0,
+  noPendingDispatches: false,
+  sessionStartedAt: Date.now() - 120_000,
+  userSilentDurationMs: 0,
+  ...overrides,
+})
+
+describe('shouldRotateOrchestrator', () => {
+  test('returns true when all workers idle, no pending dispatches, and user silent > 5min', () => {
+    const ctx = makeOrchContext({
+      allWorkersIdle: true,
+      noPendingDispatches: true,
+      userSilentDurationMs: 6 * 60_000,
+    })
+    expect(shouldRotateOrchestrator(ctx, makeProtection())).toBe(true)
+  })
+
+  test('returns false when user recently active (< 5min)', () => {
+    const ctx = makeOrchContext({
+      allWorkersIdle: true,
+      noPendingDispatches: true,
+      userSilentDurationMs: 4 * 60_000,
+    })
+    expect(shouldRotateOrchestrator(ctx, makeProtection())).toBe(false)
+  })
+
+  test('returns false when workers are not all idle even if user silent', () => {
+    const ctx = makeOrchContext({
+      allWorkersIdle: false,
+      noPendingDispatches: true,
+      userSilentDurationMs: 6 * 60_000,
+    })
+    expect(shouldRotateOrchestrator(ctx, makeProtection())).toBe(false)
+  })
+
+  test('returns false when there are pending dispatches even if workers idle and user silent', () => {
+    const ctx = makeOrchContext({
+      allWorkersIdle: true,
+      noPendingDispatches: false,
+      userSilentDurationMs: 6 * 60_000,
+    })
+    expect(shouldRotateOrchestrator(ctx, makeProtection())).toBe(false)
+  })
+
+  test('returns false when suspended', () => {
+    const ctx = makeOrchContext({
+      allWorkersIdle: true,
+      noPendingDispatches: true,
+      userSilentDurationMs: 6 * 60_000,
+    })
+    expect(shouldRotateOrchestrator(ctx, makeProtection({ suspended: true }))).toBe(false)
+  })
+})
+
+describe('applyBudgetControl', () => {
+  const makeSection = (key: string, content: string, priority: number) => ({ key, content, priority })
+
+  test('small recovery passes through unchanged', () => {
+    const sections = [
+      makeSection('rules', 'rules content', 7),
+      makeSection('journal', 'journal content', 2),
+      makeSection('tasks', 'tasks content', 1),
+    ]
+    const result = applyBudgetControl(sections, 1000)
+    expect(result).toContain('rules content')
+    expect(result).toContain('journal content')
+    expect(result).toContain('tasks content')
+  })
+
+  test('oversized recovery is truncated to fit maxChars', () => {
+    const bigContent = 'x'.repeat(5000)
+    const sections = [
+      makeSection('rules', 'rules', 7),
+      makeSection('journal', bigContent, 2),
+      makeSection('tasks', bigContent, 1),
+    ]
+    const result = applyBudgetControl(sections, 500)
+    expect(result.length).toBeLessThanOrEqual(500)
+  })
+
+  test('rules and checkpoint are never truncated', () => {
+    const bigContent = 'x'.repeat(5000)
+    const rulesContent = 'RULES_MUST_STAY'
+    const checkpointContent = 'CHECKPOINT_MUST_STAY'
+    const sections = [
+      makeSection('rules', rulesContent, 7),
+      makeSection('checkpoint', checkpointContent, 6),
+      makeSection('tasks', bigContent, 1),
+      makeSection('journal', bigContent, 2),
+    ]
+    const result = applyBudgetControl(sections, 200)
+    expect(result).toContain(rulesContent)
+    expect(result).toContain(checkpointContent)
+  })
+
+  test('tasks_md is cut first (lowest priority)', () => {
+    const tasksContent = 'TASKS_CONTENT_THAT_SHOULD_BE_CUT'
+    const journalContent = 'JOURNAL_CONTENT'
+    const sections = [
+      makeSection('rules', 'rules', 7),
+      makeSection('journal', journalContent, 2),
+      makeSection('tasks', tasksContent, 1),
+    ]
+    // budget = rules(5) + \n(1) + journal(15) = 21 exactly — tasks must be dropped
+    const result = applyBudgetControl(sections, 21)
+    expect(result).toContain(journalContent)
+    expect(result).not.toContain(tasksContent)
   })
 })

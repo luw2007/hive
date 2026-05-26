@@ -31,7 +31,7 @@ describe('agent-journal', () => {
     expect(existsSync(join(journalDir, 'entries'))).toBe(true)
   })
 
-  test('appendEntry writes manifest.jsonl line with correct schema fields', async () => {
+  test('appendEntry writes manifest.jsonl line with correct schema fields including seq', async () => {
     await appendEntry(workspacePath, 'bob', {
       type: 'report_sent',
       summary: 'Completed auth module',
@@ -44,6 +44,7 @@ describe('agent-journal', () => {
     const line = readFileSync(manifestPath, 'utf-8').trim()
     const entry = JSON.parse(line)
 
+    expect(entry.seq).toBe(1)
     expect(entry.ts).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
     expect(entry.type).toBe('report_sent')
     expect(entry.summary).toBe('Completed auth module')
@@ -101,7 +102,7 @@ describe('agent-journal', () => {
     expect(result).toEqual([])
   })
 
-  test('multiple appendEntry calls produce ordered manifest lines', async () => {
+  test('multiple appendEntry calls produce ordered manifest lines with incrementing seq', async () => {
     await appendEntry(workspacePath, 'eve', {
       type: 'dispatch_received',
       summary: 'Task A',
@@ -123,12 +124,15 @@ describe('agent-journal', () => {
 
     expect(lines).toHaveLength(3)
     const entries = lines.map((l) => JSON.parse(l))
+    expect(entries[0]!.seq).toBe(1)
+    expect(entries[1]!.seq).toBe(2)
+    expect(entries[2]!.seq).toBe(3)
     expect(entries[0]!.type).toBe('dispatch_received')
     expect(entries[1]!.type).toBe('status_sent')
     expect(entries[2]!.type).toBe('report_sent')
   })
 
-  test('entry filenames are derived from timestamp + type', async () => {
+  test('entry filenames use seq-prefixed pattern: {seq padded 4}-{type}-{hash}.md', async () => {
     await appendEntry(workspacePath, 'frank', {
       type: 'session_rotated',
       summary: 'Rotation triggered',
@@ -138,16 +142,14 @@ describe('agent-journal', () => {
     const manifestPath = join(workspacePath, '.hive', 'journal', 'frank', 'manifest.jsonl')
     const { file } = JSON.parse(readFileSync(manifestPath, 'utf-8').trim())
 
-    expect(file).toMatch(/^entries\//)
-    expect(file).toContain('session_rotated')
-    expect(file).toMatch(/\.md$/)
+    expect(file).toMatch(/^entries\/0001-session_rotated-[a-zA-Z0-9]+\.md$/)
   })
 
-  test('appendEntry summary is truncated to 120 chars if longer', async () => {
+  test('appendEntry summary is truncated to 200 chars if longer', async () => {
     const longSummary = 'x'.repeat(300)
 
     await appendEntry(workspacePath, 'grace', {
-      type: 'checkpoint',
+      type: 'checkpoint_saved',
       summary: longSummary,
       body: 'checkpoint data',
     })
@@ -155,6 +157,56 @@ describe('agent-journal', () => {
     const manifestPath = join(workspacePath, '.hive', 'journal', 'grace', 'manifest.jsonl')
     const entry = JSON.parse(readFileSync(manifestPath, 'utf-8').trim())
 
-    expect(entry.summary.length).toBeLessThanOrEqual(120)
+    expect(entry.summary.length).toBeLessThanOrEqual(200)
+    expect(entry.summary.length).toBe(200)
+  })
+
+  test('appendEntry stores artifacts when provided', async () => {
+    await appendEntry(workspacePath, 'hal', {
+      type: 'report_sent',
+      summary: 'Done with auth',
+      body: 'completed',
+      artifacts: ['src/auth.ts', 'src/auth.test.ts'],
+    })
+
+    const manifestPath = join(workspacePath, '.hive', 'journal', 'hal', 'manifest.jsonl')
+    const entry = JSON.parse(readFileSync(manifestPath, 'utf-8').trim())
+
+    expect(entry.artifacts).toEqual(['src/auth.ts', 'src/auth.test.ts'])
+  })
+
+  test('appendEntry omits artifacts field when not provided', async () => {
+    await appendEntry(workspacePath, 'iris', {
+      type: 'dispatch_received',
+      summary: 'Task without artifacts',
+      body: 'body',
+    })
+
+    const manifestPath = join(workspacePath, '.hive', 'journal', 'iris', 'manifest.jsonl')
+    const entry = JSON.parse(readFileSync(manifestPath, 'utf-8').trim())
+
+    expect(entry.artifacts).toBeUndefined()
+  })
+
+  test('checkpoint_saved and user_input_received are valid entry types', async () => {
+    await appendEntry(workspacePath, 'jake', {
+      type: 'checkpoint_saved',
+      summary: 'Progress checkpoint',
+      body: 'saving state',
+    })
+    await appendEntry(workspacePath, 'jake', {
+      type: 'user_input_received',
+      summary: 'User said hello',
+      body: 'hello world',
+    })
+
+    const manifestPath = join(workspacePath, '.hive', 'journal', 'jake', 'manifest.jsonl')
+    const lines = readFileSync(manifestPath, 'utf-8').trim().split('\n')
+    const entries = lines.map((l) => JSON.parse(l))
+
+    expect(entries[0]!.type).toBe('checkpoint_saved')
+    expect(entries[1]!.type).toBe('user_input_received')
+    expect(entries[0]!.seq).toBe(1)
+    expect(entries[1]!.seq).toBe(2)
   })
 })

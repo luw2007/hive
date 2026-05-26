@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-export type DecisionCategory = 'constraint' | 'preference' | 'process' | 'scope' | 'tech'
+export type DecisionCategory = 'constraint' | 'preference' | 'priority' | 'process' | 'scope' | 'tech'
 
 export interface Decision {
   id: string
@@ -10,6 +10,9 @@ export interface Decision {
   category: DecisionCategory
   content: string
   reason: string
+  source: 'user' | 'orch'
+  confirmed_by: 'user' | null
+  last_referenced: number | null
   active: boolean
   superseded_by?: string
 }
@@ -18,6 +21,8 @@ export interface DecisionInput {
   category: DecisionCategory
   content: string
   reason: string
+  source?: 'user' | 'orch'
+  confirmed_by?: 'user' | null
 }
 
 const HIVE_DIR = '.hive'
@@ -39,6 +44,9 @@ export async function appendDecision(
     category: input.category,
     content: input.content,
     reason: input.reason,
+    source: input.source ?? 'orch',
+    confirmed_by: input.confirmed_by ?? null,
+    last_referenced: null,
     active: true,
   }
 
@@ -114,6 +122,9 @@ export async function supersede(
     category: newInput.category,
     content: newInput.content,
     reason: newInput.reason,
+    source: newInput.source ?? 'orch',
+    confirmed_by: newInput.confirmed_by ?? null,
+    last_referenced: null,
     active: true,
   }
 

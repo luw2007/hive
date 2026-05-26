@@ -2,8 +2,10 @@ import { appendEntry } from './agent-journal.js'
 import { appendDecision, getActiveDecisions, supersede, type DecisionCategory } from './decision-ledger.js'
 import { BadRequestError } from './http-errors.js'
 import { readJsonBody, route, sendJson } from './route-helpers.js'
+import { checkAndRotateWorker } from './rotation-manager.js'
 import type {
   CancelTaskBody,
+  CheckpointBody,
   DecideBody,
   ReportTaskBody,
   RouteDefinition,
@@ -164,6 +166,13 @@ export const teamRoutes: RouteDefinition[] = [
         forwarded: result.forwarded,
         ok: true,
       })
+      checkAndRotateWorker({
+        store,
+        workspace: store.getWorkspaceSnapshot(projectId).summary,
+        agent,
+        dispatchResult: result,
+        hivePort: String(request.socket.localPort ?? ''),
+      })
       return
     } else {
       const result = store.reportTask(projectId, fromAgentId, reportInput)
@@ -187,6 +196,13 @@ export const teamRoutes: RouteDefinition[] = [
         forward_error: result.forwardError,
         forwarded: result.forwarded,
         ok: true,
+      })
+      checkAndRotateWorker({
+        store,
+        workspace: store.getWorkspaceSnapshot(projectId).summary,
+        agent,
+        dispatchResult: result,
+        hivePort: String(request.socket.localPort ?? ''),
       })
       return
     }
@@ -239,9 +255,11 @@ export const teamRoutes: RouteDefinition[] = [
     })
     requireCommandForRole(agent, 'send')
     const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+    const source = (body.source === 'user' ? 'user' : 'orch') as 'user' | 'orch'
+    const confirmedBy = (body.confirmed_by === 'user' ? 'user' : null) as 'user' | null
     const decision = body.supersede_id
-      ? await supersede(workspacePath, body.supersede_id, { category, content, reason })
-      : await appendDecision(workspacePath, { category, content, reason })
+      ? await supersede(workspacePath, body.supersede_id, { category, content, reason, source, confirmed_by: confirmedBy })
+      : await appendDecision(workspacePath, { category, content, reason, source, confirmed_by: confirmedBy })
     sendJson(response, 201, { ok: true, decision })
   }),
   route('GET', '/api/team/decisions', async ({ request, response, store }) => {
@@ -262,5 +280,34 @@ export const teamRoutes: RouteDefinition[] = [
     const category = url.searchParams.get('category') as DecisionCategory | null
     const decisions = await getActiveDecisions(workspacePath, category ?? undefined)
     sendJson(response, 200, { ok: true, decisions })
+  }),
+  route('POST', '/api/team/checkpoint', async ({ request, response, store }) => {
+    const body = await readJsonBody<CheckpointBody>(request)
+    const projectId = requireNonEmptyString(body.project_id, 'project_id')
+    const fromAgentId = requireNonEmptyString(body.from_agent_id, 'from_agent_id')
+    const text = requireNonEmptyString(body.text, 'text')
+    const agent = authenticateCliAgent({
+      fromAgentId,
+      getAgent: store.getAgent,
+      token: body.token,
+      validateToken: store.validateAgentToken,
+      workspaceId: projectId,
+    })
+    requireCommandForRole(agent, 'report')
+    const artifacts = getArtifacts(body.artifacts)
+    const db = store.getDb()
+    const activeRun = store.getActiveRunByAgentId(projectId, fromAgentId)
+    if (activeRun) {
+      db.prepare('UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?')
+        .run(text, Date.now(), activeRun.runId)
+    }
+    const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
+    appendEntry(workspacePath, agent.name, {
+      type: 'checkpoint_saved',
+      summary: text.slice(0, 200),
+      body: text,
+      ...(artifacts.length > 0 ? { artifacts } : {}),
+    }).catch(() => {})
+    sendJson(response, 201, { ok: true })
   }),
 ]

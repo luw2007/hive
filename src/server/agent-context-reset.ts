@@ -1,5 +1,6 @@
 import type { RuntimeStore } from './runtime-store.js'
 import { buildRecoverySummary, type ActiveDiscussionInfo } from './recovery-summary.js'
+import { getActiveDecisions } from './decision-ledger.js'
 import { hasInteractivePromptReady, isInteractiveAgentCommand } from './post-start-input-writer.js'
 import type { TasksFileService } from './tasks-file.js'
 
@@ -78,6 +79,7 @@ export const resetAgentContext = async (
     agent,
     allTaskMessages,
     messages,
+    decisions: await getActiveDecisions(snapshot.summary.path).catch(() => []),
     tasksContent,
     workers,
     workspace: snapshot.summary,
