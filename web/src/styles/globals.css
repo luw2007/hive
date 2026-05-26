@@ -2362,3 +2362,302 @@ body {
   background: var(--bg-2);
   color: var(--text-secondary);
 }
+
+/* ─── QuickTaskFab ─── */
+.quick-task-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: background 0.15s, transform 0.15s;
+}
+.quick-task-fab:hover {
+  background: var(--accent-hover, var(--accent));
+  transform: scale(1.05);
+}
+.quick-task-fab:active {
+  transform: scale(0.95);
+}
+
+.quick-task-popover {
+  position: fixed;
+  right: 24px;
+  bottom: 84px;
+  z-index: 51;
+  width: 280px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+.quick-task-popover__header {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+.quick-task-popover__form {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quick-task-popover__input,
+.quick-task-popover__select {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--text-primary);
+  outline: none;
+}
+.quick-task-popover__input:focus,
+.quick-task-popover__select:focus {
+  border-color: var(--accent);
+}
+.quick-task-popover__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.quick-task-popover__btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.quick-task-popover__btn:hover {
+  background: var(--bg-3);
+}
+.quick-task-popover__btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.quick-task-popover__btn--primary:hover {
+  opacity: 0.9;
+}
+.quick-task-popover__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Secretary Chat Bubble & Panel --- */
+.secretary-chat-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  z-index: 50;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* badge 需要 relative 定位参考 */
+  isolation: isolate;
+}
+.secretary-chat-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.secretary-chat-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 156px;
+  z-index: 51;
+  width: 320px;
+  height: 420px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.secretary-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+.secretary-chat-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.secretary-chat-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-3);
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+.secretary-chat-clear:hover {
+  background: var(--bg-3);
+  color: var(--fg-1);
+}
+
+.secretary-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.secretary-chat-empty {
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 12px;
+  margin-top: 40px;
+}
+
+.secretary-chat-msg {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.secretary-chat-msg-user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+.secretary-chat-msg-assistant {
+  align-self: flex-start;
+  background: var(--bg-3);
+  color: var(--fg-1);
+  border-bottom-left-radius: 2px;
+}
+
+.secretary-chat-input-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-2);
+}
+.secretary-chat-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  background: var(--bg-1);
+  color: var(--fg-1);
+  outline: none;
+}
+.secretary-chat-input:focus {
+  border-color: var(--accent);
+}
+.secretary-chat-send {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.secretary-chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Secretary: unread badge */
+.secretary-chat-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid var(--bg-1);
+  pointer-events: none;
+}
+
+/* Secretary: system message */
+.secretary-chat-msg-system {
+  align-self: stretch;
+  max-width: 100%;
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+  border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.secretary-chat-msg-icon {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+/* Secretary: action buttons */
+.secretary-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.secretary-chat-action-btn {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.secretary-chat-action-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.secretary-chat-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

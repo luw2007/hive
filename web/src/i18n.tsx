@@ -162,6 +162,8 @@ const enMessages = {
   'orchestrator.startingTitle': 'Starting Orchestrator',
   'orchestrator.stoppedDesc':
     'Start the Orchestrator to plan tasks and dispatch them to team members.',
+  'orchestrator.resetContext': 'Reset Context',
+  'orchestrator.resetContextAria': 'Clear agent context and re-inject runtime state',
   'orchestrator.stoppedTitle': 'Orchestrator is stopped',
   'role.coder': 'Coder',
   'role.custom': 'Custom',
@@ -306,6 +308,18 @@ const enMessages = {
   'tasks.raw.reload': 'Reload',
   'tasks.raw.save': 'Save tasks',
   'tasks.title.todo': 'Tasks',
+  // quickTask.* — QuickTaskFab
+  'quickTask.title': 'New Task',
+  'quickTask.placeholder': 'What needs to be done?',
+  'quickTask.noAssignee': 'No assignee',
+  'quickTask.create': 'Create',
+  'quickTask.cancel': 'Cancel',
+  'quickTask.created': 'Task created',
+  // secretary.* — SecretaryChatBubble
+  'secretary.title': 'Secretary',
+  'secretary.placeholder': 'Ask secretary...',
+  'secretary.empty': 'No messages yet. Ask the secretary for task planning advice.',
+  'secretary.clear': 'Clear history',
   // notifications.* — WorkspaceNotifications + NotificationSettingsButton + NotificationProvider
   'notifications.desktop.aria': 'Browser notifications',
   'notifications.desktop.helper': 'Use system notifications when permission is granted.',
@@ -666,6 +680,8 @@ const zhMessages: Record<TranslationKey, string> = {
   'orchestrator.startingDesc': '正在准备 Orchestrator 终端。',
   'orchestrator.startingTitle': 'Orchestrator 启动中',
   'orchestrator.stoppedDesc': '启动 Orchestrator 后才能规划任务并分派给团队成员。',
+  'orchestrator.resetContext': '重置上下文',
+  'orchestrator.resetContextAria': '清空 Agent 上下文并重新注入运行时状态',
   'orchestrator.stoppedTitle': 'Orchestrator 已停止',
   'role.coder': '开发',
   'role.custom': '自定义',
@@ -805,6 +821,18 @@ const zhMessages: Record<TranslationKey, string> = {
   'tasks.raw.reload': '重新载入',
   'tasks.raw.save': '保存任务',
   'tasks.title.todo': 'Tasks',
+  // quickTask.*
+  'quickTask.title': '新建任务',
+  'quickTask.placeholder': '要做什么？',
+  'quickTask.noAssignee': '不指派',
+  'quickTask.create': '创建',
+  'quickTask.cancel': '取消',
+  'quickTask.created': '任务已创建',
+  // secretary.*
+  'secretary.title': '董秘',
+  'secretary.placeholder': '向董秘提问...',
+  'secretary.empty': '暂无消息。可以向董秘咨询任务规划建议。',
+  'secretary.clear': '清空记录',
   // notifications.*
   'notifications.desktop.aria': '浏览器通知',
   'notifications.desktop.helper': '授权后使用系统通知。',
