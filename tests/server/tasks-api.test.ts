@@ -52,38 +52,58 @@ const startServer = async () => {
 }
 
 describe('tasks api', () => {
-  test('GET returns current .hive/tasks.md content and PUT persists updates there', async () => {
+  test('PUT is read-only: ignores write, returns current DB-generated content', async () => {
     const { baseUrl, workspace } = await startServer()
     const cookie = await getUiCookie(baseUrl)
-    const hiveTasksPath = join(workspace.path, '.hive', 'tasks.md')
-    const legacyTasksPath = join(workspace.path, 'tasks.md')
 
+    // 初始内容为空
     const initialResponse = await fetch(`${baseUrl}/api/workspaces/${workspace.id}/tasks`, {
       headers: { cookie },
     })
-
     expect(initialResponse.status).toBe(200)
     await expect(initialResponse.json()).resolves.toEqual({ content: '' })
 
+    // PUT 请求被忽略，返回只读标记
     const updateResponse = await fetch(`${baseUrl}/api/workspaces/${workspace.id}/tasks`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json', cookie },
       body: JSON.stringify({ content: '- [ ] implement login\n' }),
     })
-
     expect(updateResponse.status).toBe(200)
-    await expect(updateResponse.json()).resolves.toEqual({
-      content: '- [ ] implement login\n',
-    })
-    expect(readFileSync(hiveTasksPath, 'utf8')).toBe('- [ ] implement login\n')
-    expect(existsSync(legacyTasksPath)).toBe(false)
+    const putResult = await updateResponse.json() as { content: string; readonly: boolean }
+    expect(putResult.readonly).toBe(true)
+    expect(putResult.content).toBe('')
+  })
 
-    const readBackResponse = await fetch(`${baseUrl}/api/workspaces/${workspace.id}/tasks`, {
+  test('task creation via API generates .hive/tasks.md', async () => {
+    const { baseUrl, workspace } = await startServer()
+    const cookie = await getUiCookie(baseUrl)
+    const hiveTasksPath = join(workspace.path, '.hive', 'tasks.md')
+
+    // 通过 task API 创建任务
+    const createResponse = await fetch(`${baseUrl}/api/team/tasks`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie },
+      body: JSON.stringify({
+        workspace_id: workspace.id,
+        title: 'implement login',
+        source: 'user',
+      }),
+    })
+    expect(createResponse.status).toBe(201)
+
+    // 验证 md 文件已自动生成
+    expect(existsSync(hiveTasksPath)).toBe(true)
+    const content = readFileSync(hiveTasksPath, 'utf8')
+    expect(content).toContain('implement login')
+    expect(content).toContain('[ ]')
+    expect(content).toContain('<!-- tid:')
+
+    // GET 端点返回生成的内容
+    const getResponse = await fetch(`${baseUrl}/api/workspaces/${workspace.id}/tasks`, {
       headers: { cookie },
     })
-
-    await expect(readBackResponse.json()).resolves.toEqual({
-      content: '- [ ] implement login\n',
-    })
+    const getResult = await getResponse.json() as { content: string }
+    expect(getResult.content).toContain('implement login')
   })
 })

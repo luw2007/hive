@@ -17,6 +17,7 @@ const renderPane = (state: OrchestratorPaneState) => {
   const onStart = vi.fn()
   const onRestart = vi.fn()
   const onRemoveWorkspace = vi.fn()
+  const onResetContext = vi.fn()
   render(
     <OrchestratorPane
       state={state}
@@ -24,9 +25,10 @@ const renderPane = (state: OrchestratorPaneState) => {
       onStart={onStart}
       onRestart={onRestart}
       onRemoveWorkspace={onRemoveWorkspace}
+      onResetContext={onResetContext}
     />
   )
-  return { onRemoveWorkspace, onStop, onStart, onRestart }
+  return { onRemoveWorkspace, onStop, onStart, onRestart, onResetContext }
 }
 
 describe('OrchestratorPane three-state UI', () => {

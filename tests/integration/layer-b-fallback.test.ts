@@ -321,10 +321,14 @@ describe('Layer B fallback integration', () => {
       const alice = await createWorkerViaHttp(server.baseUrl, cookie, workspace.id, 'Alice')
       const bob = await createWorkerViaHttp(server.baseUrl, cookie, workspace.id, 'Bob', 'tester')
 
-      await fetch(`${server.baseUrl}/api/workspaces/${workspace.id}/tasks`, {
-        method: 'PUT',
+      await fetch(`${server.baseUrl}/api/team/tasks`, {
+        method: 'POST',
         headers: { 'content-type': 'application/json', cookie },
-        body: JSON.stringify({ content: '# Tasks\n- [ ] layer b fallback\n' }),
+        body: JSON.stringify({
+          workspace_id: workspace.id,
+          title: 'layer b fallback',
+          source: 'user',
+        }),
       })
       await fetch(`${server.baseUrl}/api/workspaces/${workspace.id}/user-input`, {
         method: 'POST',
