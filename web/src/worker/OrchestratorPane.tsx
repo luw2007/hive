@@ -1,4 +1,4 @@
-import { Copy, Crown, LoaderCircle, Play, RotateCcw } from 'lucide-react'
+import { Copy, Crown, Eraser, LoaderCircle, Play, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { useI18n } from '../i18n.js'
 import { EmptyState } from '../ui/EmptyState.js'
@@ -17,6 +17,7 @@ type OrchestratorPaneProps = {
   onRemoveWorkspace: () => void
   onStart: () => void
   onRestart: () => void
+  onResetContext: () => void
 }
 
 const StartingBody = () => {
@@ -141,29 +142,46 @@ const FailedBody = ({
 export const OrchestratorPane = ({
   state,
   onRemoveWorkspace,
+  onResetContext,
   onRestart,
   onStart,
-}: OrchestratorPaneProps) => (
-  <div
-    className="relative flex h-full w-full min-w-0 flex-col"
-    style={{
-      background: 'var(--bg-crust)',
-      borderRight: '1px solid var(--border)',
-    }}
-    data-testid="orchestrator-terminal-slot"
-  >
-    {state.kind === 'running' ? (
-      <div
-        id={`orch-pty-${state.runId}`}
-        className="flex h-full w-full"
-        data-pty-slot="orchestrator"
-      />
-    ) : state.kind === 'failed' ? (
-      <FailedBody error={state.error} onRemoveWorkspace={onRemoveWorkspace} onRestart={onRestart} />
-    ) : state.kind === 'stopped' ? (
-      <StoppedBody onStart={onStart} />
-    ) : (
-      <StartingBody />
-    )}
-  </div>
-)
+}: OrchestratorPaneProps) => {
+  const { t } = useI18n()
+  return (
+    <div
+      className="relative flex h-full w-full min-w-0 flex-col"
+      style={{
+        background: 'var(--bg-crust)',
+        borderRight: '1px solid var(--border)',
+      }}
+      data-testid="orchestrator-terminal-slot"
+    >
+      {state.kind === 'running' ? (
+        <>
+          <div
+            id={`orch-pty-${state.runId}`}
+            className="flex h-full w-full"
+            data-pty-slot="orchestrator"
+          />
+          <Tooltip label={t('orchestrator.resetContextAria')}>
+            <button
+              type="button"
+              onClick={onResetContext}
+              aria-label={t('orchestrator.resetContextAria')}
+              className="icon-btn icon-btn--ghost absolute right-2 top-2 z-10 h-6 px-1.5 opacity-60 hover:opacity-100"
+              data-testid="orchestrator-reset-context"
+            >
+              <Eraser size={13} aria-hidden />
+            </button>
+          </Tooltip>
+        </>
+      ) : state.kind === 'failed' ? (
+        <FailedBody error={state.error} onRemoveWorkspace={onRemoveWorkspace} onRestart={onRestart} />
+      ) : state.kind === 'stopped' ? (
+        <StoppedBody onStart={onStart} />
+      ) : (
+        <StartingBody />
+      )}
+    </div>
+  )
+}

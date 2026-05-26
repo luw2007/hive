@@ -57,7 +57,7 @@ const refreshUiSession = (): Promise<void> => {
   return uiSessionRefreshPromise
 }
 
-const apiFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   const response = await fetch(input, init)
   if (!(await isStaleUiSession(response))) return response
 
@@ -310,6 +310,19 @@ export const restartAgentRun = async (
     console.error('[hive] swallowed:restartAgentRun.stop', error)
   })
   return startAgentRun(workspaceId, agentId)
+}
+
+export const resetAgentContext = async (
+  workspaceId: string,
+  agentId: string
+): Promise<void> => {
+  const response = await apiFetch(
+    `/api/workspaces/${workspaceId}/agents/${agentId}/reset-context`,
+    { method: 'POST' }
+  )
+  if (!response.ok) {
+    throw new Error('Failed to reset agent context')
+  }
 }
 
 export const getActiveWorkspaceId = async (): Promise<string | null> => {
@@ -609,6 +622,34 @@ export const saveWorkspaceTasks = async (
   return (await response.json()) as { content: string }
 }
 
+export interface CreateTaskInput {
+  workspace_id: string
+  title: string
+  source: 'user' | 'orch' | 'discussion'
+  worker_name?: string
+}
+
+export interface CreateTaskResult {
+  id: string
+  seq: number
+  status: string
+  title: string
+}
+
+export const createTask = async (input: CreateTaskInput): Promise<CreateTaskResult> => {
+  const response = await apiFetch('/api/team/tasks', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, 'Failed to create task'))
+  }
+
+  return (await response.json()) as CreateTaskResult
+}
+
 export interface FsBrowseEntryPayload {
   is_dir: true
   is_git_repository: boolean
@@ -706,4 +747,89 @@ export const openWorkspaceInEditor = async (
     }
   }
   throw new Error(await readErrorMessage(response, 'Failed to open workspace'))
+}
+
+// --- Secretary Chat API ---
+
+export interface SecretaryAction {
+  id: string
+  label: string
+  type: 'create_task' | 'dispatch' | 'cancel_task' | 'start_discussion'
+  payload: Record<string, unknown>
+}
+
+export interface SecretaryMessage {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp: number
+  actions?: SecretaryAction[]
+}
+
+export interface SecretaryStatusResponse {
+  status: string
+  running: boolean
+  run_id: string | null
+}
+
+export const getSecretaryMessages = async (workspaceId: string): Promise<SecretaryMessage[]> => {
+  const response = await apiFetch(`/api/workspaces/${workspaceId}/secretary/messages`)
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, 'Failed to get secretary messages'))
+  }
+  const data = (await response.json()) as { messages: SecretaryMessage[] }
+  return data.messages
+}
+
+export const sendSecretaryMessage = async (
+  workspaceId: string,
+  content: string
+): Promise<{ message: SecretaryMessage; secretary_running: boolean }> => {
+  const response = await apiFetch(`/api/workspaces/${workspaceId}/secretary/messages`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content }),
+  })
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, 'Failed to send message'))
+  }
+  return (await response.json()) as { message: SecretaryMessage; secretary_running: boolean }
+}
+
+export const clearSecretaryMessages = async (workspaceId: string): Promise<void> => {
+  const response = await apiFetch(`/api/workspaces/${workspaceId}/secretary/messages`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, 'Failed to clear messages'))
+  }
+}
+
+export const getSecretaryStatus = async (workspaceId: string): Promise<SecretaryStatusResponse> => {
+  const response = await apiFetch(`/api/workspaces/${workspaceId}/secretary/status`)
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, 'Failed to get secretary status'))
+  }
+  return (await response.json()) as SecretaryStatusResponse
+}
+
+export interface ExecuteActionResult {
+  ok: boolean
+  detail: string
+}
+
+export const executeSecretaryAction = async (
+  workspaceId: string,
+  actionId: string,
+  overrides?: Record<string, unknown>
+): Promise<ExecuteActionResult> => {
+  const response = await apiFetch(`/api/workspaces/${workspaceId}/secretary/execute`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action_id: actionId, ...(overrides ? { overrides } : {}) }),
+  })
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, 'Failed to execute action'))
+  }
+  return (await response.json()) as ExecuteActionResult
 }
