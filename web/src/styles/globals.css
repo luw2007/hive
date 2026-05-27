@@ -2473,14 +2473,15 @@ body {
   background: var(--accent);
   color: #fff;
   border: none;
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  /* badge 需要 relative 定位参考 */
   isolation: isolate;
+  touch-action: none;
+  user-select: none;
 }
 .secretary-chat-fab:hover {
   transform: scale(1.08);
@@ -2529,6 +2530,30 @@ body {
 .secretary-chat-clear:hover {
   background: var(--bg-3);
   color: var(--fg-1);
+}
+
+.secretary-task-input-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+}
+.secretary-task-icon {
+  color: var(--fg-3);
+  flex-shrink: 0;
+}
+.secretary-task-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+}
+.secretary-task-input::placeholder {
+  color: var(--fg-3);
 }
 
 .secretary-chat-messages {

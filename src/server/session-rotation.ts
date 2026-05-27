@@ -113,7 +113,7 @@ export const executeWorkerRotation = async (
     type: 'session_rotated',
     summary: `Session rotated (msgs: ${protection.lastRotationAt ? 'scheduled' : 'trigger'})`,
     body: `Worker rotation triggered.\nAgent: ${agent.name}\nWorkspace: ${workspace.name}`,
-  })
+  }).catch(() => {})
 
   const activeRun = runtime.getActiveRunByAgentId(workspace.id, agentId)
   if (activeRun) {
@@ -310,7 +310,7 @@ export const executeOrchestratorRotation = async (
     type: 'session_rotated',
     summary: 'Orchestrator session rotated',
     body: `Orchestrator rotation triggered.\nAgent: ${agent.name}\nWorkspace: ${workspace.name}`,
-  })
+  }).catch(() => {})
 
   queue?.hold(workspace.id)
 
