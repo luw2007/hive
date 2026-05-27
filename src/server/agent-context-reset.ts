@@ -5,13 +5,13 @@ import { hasInteractivePromptReady, isInteractiveAgentCommand } from './post-sta
 import type { TasksFileService } from './tasks-file.js'
 
 const RECOVERY_WINDOW_MS = 60 * 60 * 1000
-const CLEAR_SETTLE_MS = 1500
 const PROMPT_POLL_MS = 100
 const PROMPT_TIMEOUT_MS = 10_000
 
 /**
- * 重置 agent 上下文：向 PTY 发送 /clear，等待 prompt 就绪后注入 recovery summary。
- * 用于 UI "Reset Context" 按钮，解决用户在 CLI 中执行 /clear 或 /new 后丢失 Hive 上下文的问题。
+ * 注入 recovery summary 到 agent 当前 session。
+ * 用于 UI "Reset Context" 按钮：用户自行 /clear 后点击按钮恢复 Hive 上下文。
+ * 不再自动发送 /clear，避免与注入内容粘包。
  */
 export const resetAgentContext = async (
   store: RuntimeStore,
@@ -30,13 +30,10 @@ export const resetAgentContext = async (
     throw new Error('Reset context only supported for interactive agents')
   }
 
-  // 步骤 1: 发送 /clear 命令
-  store.writeRunInput(run.runId, '/clear\n')
-
-  // 步骤 2: 等待 CLI 处理 /clear 并重新出现 prompt
+  // 等待 agent 处于 prompt 就绪状态（用户已自行 /clear）
   await waitForPromptReady(store, run.runId, command)
 
-  // 步骤 3: 注入 recovery summary
+  // 注入 recovery summary
   const snapshot = store.getWorkspaceSnapshot(workspaceId)
   const agent = snapshot.agents.find((a) => a.id === agentId)
   if (!agent) throw new Error('Agent not found in workspace snapshot')
@@ -99,7 +96,6 @@ const waitForPromptReady = (
     const checkPrompt = () => {
       const elapsed = Date.now() - startedAt
       if (elapsed >= PROMPT_TIMEOUT_MS) {
-        // 超时也继续注入，比完全不注入好
         resolve()
         return
       }
@@ -109,7 +105,7 @@ const waitForPromptReady = (
           reject(new Error('Agent exited during context reset'))
           return
         }
-        if (elapsed >= CLEAR_SETTLE_MS && run.output && hasInteractivePromptReady(run.output, command)) {
+        if (run.output && hasInteractivePromptReady(run.output, command)) {
           resolve()
           return
         }
@@ -119,5 +115,5 @@ const waitForPromptReady = (
       }
       setTimeout(checkPrompt, PROMPT_POLL_MS)
     }
-    setTimeout(checkPrompt, CLEAR_SETTLE_MS)
+    checkPrompt()
   })
