@@ -5,7 +5,7 @@ export type TeamCommand = 'send' | 'list' | 'report' | 'status' | 'cancel' | 'he
 
 const ORCHESTRATOR_COMMANDS = new Set<TeamCommand>(['send', 'list', 'cancel', 'help', 'discuss', 'task'])
 const WORKER_COMMANDS = new Set<TeamCommand>(['report', 'status', 'help', 'discuss', 'task'])
-const WORKER_ROLES = new Set<AgentSummary['role']>(['coder', 'reviewer', 'tester', 'custom'])
+const WORKER_ROLES = new Set<AgentSummary['role']>(['coder', 'reviewer', 'tester', 'hr', 'custom'])
 
 export const commandAllowedForRole = (role: AgentSummary['role'], command: TeamCommand) => {
   if (role === 'orchestrator') return ORCHESTRATOR_COMMANDS.has(command)
