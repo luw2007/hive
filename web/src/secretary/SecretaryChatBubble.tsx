@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MessageCircle, Send, X, Trash2, AlertTriangle } from 'lucide-react'
+import { MessageCircle, Send, X, Trash2, AlertTriangle, Plus } from 'lucide-react'
 import {
   clearSecretaryMessages,
+  createTask,
   executeSecretaryAction,
   getSecretaryMessages,
   sendSecretaryMessage,
@@ -16,11 +17,17 @@ interface SecretaryChatBubbleProps {
 
 const POLL_INTERVAL_MS = 3000
 
+function positionKey(workspaceId: string) {
+  return `secretary_position_${workspaceId}`
+}
+
 export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) => {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<SecretaryMessage[]>([])
   const [input, setInput] = useState('')
+  const [taskInput, setTaskInput] = useState('')
+  const [taskSubmitting, setTaskSubmitting] = useState(false)
   const [sending, setSending] = useState(false)
   const [executingAction, setExecutingAction] = useState<string | null>(null)
   const [hasUnread, setHasUnread] = useState(false)
@@ -28,17 +35,90 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
   const inputRef = useRef<HTMLInputElement>(null)
   const prevMessageCountRef = useRef(0)
 
+  // Draggable position state (persisted server-side per workspace)
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: -1, y: -1 })
+  const draggingRef = useRef(false)
+  const dragStartRef = useRef({ mx: 0, my: 0, ox: 0, oy: 0 })
+  const fabRef = useRef<HTMLButtonElement>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Load position from server
+  useEffect(() => {
+    const key = positionKey(workspaceId)
+    void fetch(`/api/settings/app-state/${key}`).then(async (res) => {
+      if (!res.ok) return
+      const payload = (await res.json()) as { key: string; value: { x: number; y: number } | null }
+      if (payload.value && typeof payload.value.x === 'number' && typeof payload.value.y === 'number') {
+        setPos(payload.value)
+      }
+    }).catch(() => {})
+  }, [workspaceId])
+
+  const persistPosition = useCallback((p: { x: number; y: number }) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      const key = positionKey(workspaceId)
+      void fetch(`/api/settings/app-state/${key}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ value: p }),
+      }).catch(() => {})
+    }, 300)
+  }, [workspaceId])
+
+  // Drag handlers
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    draggingRef.current = false
+    const fab = fabRef.current
+    if (!fab) return
+    const rect = fab.getBoundingClientRect()
+    dragStartRef.current = { mx: e.clientX, my: e.clientY, ox: rect.left, oy: rect.top }
+    fab.setPointerCapture(e.pointerId)
+  }, [])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const fab = fabRef.current
+    if (!fab || !fab.hasPointerCapture(e.pointerId)) return
+    const dx = e.clientX - dragStartRef.current.mx
+    const dy = e.clientY - dragStartRef.current.my
+    if (!draggingRef.current && Math.abs(dx) + Math.abs(dy) > 5) {
+      draggingRef.current = true
+    }
+    if (draggingRef.current) {
+      const nx = dragStartRef.current.ox + dx
+      const ny = dragStartRef.current.oy + dy
+      setPos({ x: nx, y: ny })
+    }
+  }, [])
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const fab = fabRef.current
+    if (!fab) return
+    fab.releasePointerCapture(e.pointerId)
+    if (draggingRef.current) {
+      draggingRef.current = false
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const clampedX = Math.max(0, Math.min(pos.x, vw - 48))
+      const clampedY = Math.max(0, Math.min(pos.y, vh - 48))
+      const finalPos = { x: clampedX, y: clampedY }
+      setPos(finalPos)
+      persistPosition(finalPos)
+    } else {
+      setOpen((v) => !v)
+    }
+  }, [pos, persistPosition])
+
   const fetchMessages = useCallback(async () => {
     try {
       const msgs = await getSecretaryMessages(workspaceId)
-      // 检测新消息（未打开时标记未读）
       if (!open && msgs.length > prevMessageCountRef.current) {
         setHasUnread(true)
       }
       prevMessageCountRef.current = msgs.length
       setMessages(msgs)
     } catch {
-      // 静默忽略轮询错误
+      // silent
     }
   }, [workspaceId, open])
 
@@ -80,6 +160,24 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
     }
   }
 
+  const handleCreateTask = async () => {
+    const text = taskInput.trim()
+    if (!text || taskSubmitting) return
+    setTaskSubmitting(true)
+    try {
+      await createTask({ workspace_id: workspaceId, title: text, source: 'user' })
+      setTaskInput('')
+    } catch { /* silent */ }
+    finally { setTaskSubmitting(false) }
+  }
+
+  const handleTaskKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      void handleCreateTask()
+    }
+  }
+
   const handleClear = async () => {
     try {
       await clearSecretaryMessages(workspaceId)
@@ -110,12 +208,26 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
     }
   }
 
+  // Compute FAB style: use saved position or default (right:24, bottom:96)
+  const fabStyle: React.CSSProperties = pos.x >= 0
+    ? { position: 'fixed', left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
+    : {}
+
+  // Panel position follows FAB
+  const panelStyle: React.CSSProperties = pos.x >= 0
+    ? { position: 'fixed', left: pos.x - 272, top: pos.y - 432, right: 'auto', bottom: 'auto' }
+    : {}
+
   return (
     <>
-      {/* FAB Bubble */}
+      {/* FAB Bubble — draggable */}
       <button
+        ref={fabRef}
         className="secretary-chat-fab"
-        onClick={() => setOpen((v) => !v)}
+        style={fabStyle}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
         title={t('secretary.title')}
         type="button"
       >
@@ -125,7 +237,7 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
 
       {/* Chat Panel */}
       {open && (
-        <div className="secretary-chat-panel">
+        <div className="secretary-chat-panel" style={panelStyle}>
           {/* Header */}
           <div className="secretary-chat-header">
             <span className="secretary-chat-title">{t('secretary.title')}</span>
@@ -137,6 +249,20 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
             >
               <Trash2 size={14} />
             </button>
+          </div>
+
+          {/* Quick task creation input */}
+          <div className="secretary-task-input-area">
+            <Plus size={14} className="secretary-task-icon" />
+            <input
+              className="secretary-task-input"
+              disabled={taskSubmitting}
+              onKeyDown={handleTaskKeyDown}
+              onChange={(e) => setTaskInput(e.target.value)}
+              placeholder={t('secretary.taskPlaceholder')}
+              type="text"
+              value={taskInput}
+            />
           </div>
 
           {/* Messages */}

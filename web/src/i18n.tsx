@@ -320,6 +320,7 @@ const enMessages = {
   'secretary.placeholder': 'Ask secretary...',
   'secretary.empty': 'No messages yet. Ask the secretary for task planning advice.',
   'secretary.clear': 'Clear history',
+  'secretary.taskPlaceholder': 'Add task...',
   // notifications.* — WorkspaceNotifications + NotificationSettingsButton + NotificationProvider
   'notifications.desktop.aria': 'Browser notifications',
   'notifications.desktop.helper': 'Use system notifications when permission is granted.',
@@ -833,6 +834,7 @@ const zhMessages: Record<TranslationKey, string> = {
   'secretary.placeholder': '向董秘提问...',
   'secretary.empty': '暂无消息。可以向董秘咨询任务规划建议。',
   'secretary.clear': '清空记录',
+  'secretary.taskPlaceholder': '添加任务...',
   // notifications.*
   'notifications.desktop.aria': '浏览器通知',
   'notifications.desktop.helper': '授权后使用系统通知。',

@@ -57,7 +57,10 @@ export const globalSseRoutes: RouteDefinition[] = [
       response.write(': keepalive\n\n')
     }, 15_000)
 
+    let cleaned = false
     const cleanup = () => {
+      if (cleaned) return
+      cleaned = true
       unsubscribe()
       clearInterval(keepalive)
     }
