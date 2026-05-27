@@ -19,6 +19,7 @@ export interface WorkerRow {
   name: string
   description: string | null
   role: WorkerRole
+  role_template_name: string | null
 }
 
 export interface WorkspaceSummaryRow extends WorkspaceRow {}
