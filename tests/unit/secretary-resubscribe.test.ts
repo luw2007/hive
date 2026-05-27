@@ -45,6 +45,7 @@ describe('secretary 重启后重新订阅输出流', () => {
         return undefined
       },
       configureAgentLaunch: vi.fn(),
+      listWorkers: (_wId: string) => [] as any[],
       startAgent: vi.fn().mockResolvedValue({
         runId: RUN_ID,
         agentId: SECRETARY_ID,
@@ -55,6 +56,9 @@ describe('secretary 重启后重新订阅输出流', () => {
       }),
       writeRunInput: (runId: string, data: string | Buffer) => {
         writtenInputs.push({ runId, data: String(data) })
+      },
+      writeAgentStdin: (_wId: string, _aId: string, data: string) => {
+        writtenInputs.push({ runId: RUN_ID, data })
       },
       getPtyOutputBus: () => ({
         subscribe: (runId: string, listener: (chunk: string) => void) => {
@@ -144,6 +148,7 @@ describe('secretary 重启后重新订阅输出流', () => {
       configureAgentLaunch: vi.fn(),
       startAgent: vi.fn(),
       writeRunInput: vi.fn(),
+      writeAgentStdin: vi.fn(),
       getPtyOutputBus: () => ({
         subscribe: (rId: string, listener: (chunk: string) => void) => {
           localListeners.set(rId, listener)
@@ -154,6 +159,9 @@ describe('secretary 重启后重新订阅输出流', () => {
       }),
       taskService: { listTasks: () => [], createTask: vi.fn() },
     }
+
+    // 使用 fake timers 从头开始，确保 startup 阶段 setTimeout 可控
+    vi.useFakeTimers()
 
     await postMessagesRoute.handler({
       params: { workspaceId: wsId },
@@ -169,8 +177,8 @@ describe('secretary 重启后重新订阅输出流', () => {
     // 确认订阅已挂载
     expect(localListeners.has(runId)).toBe(true)
 
-    // handler 完成后切换到 fake timers
-    vi.useFakeTimers()
+    // 推进过 3s 启动阶段（startupPhase 丢弃所有输出）
+    vi.advanceTimersByTime(3100)
 
     // 模拟 PTY 输出
     const listener = localListeners.get(runId)!

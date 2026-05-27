@@ -9,6 +9,8 @@ describe('parseReportArgs', () => {
       result: 'done',
       dispatchId: 'abc',
       artifacts: ['src/foo.ts'],
+      checkpoint: undefined,
+      handover: false,
       priority: undefined,
       useStdin: false,
     })
@@ -20,6 +22,8 @@ describe('parseReportArgs', () => {
       result: 'done',
       dispatchId: 'abc',
       artifacts: [],
+      checkpoint: undefined,
+      handover: false,
       priority: undefined,
       useStdin: false,
     })
@@ -39,6 +43,8 @@ describe('parseReportArgs', () => {
       result: 'done',
       dispatchId: 'abc',
       artifacts: ['src/a.ts', 'src/b.ts'],
+      checkpoint: undefined,
+      handover: false,
       priority: undefined,
       useStdin: false,
     })
@@ -50,6 +56,8 @@ describe('parseReportArgs', () => {
       result: 'done',
       dispatchId: undefined,
       artifacts: [],
+      checkpoint: undefined,
+      handover: false,
       priority: undefined,
       useStdin: false,
     })
@@ -61,6 +69,8 @@ describe('parseReportArgs', () => {
       result: null,
       dispatchId: 'abc',
       artifacts: [],
+      checkpoint: undefined,
+      handover: false,
       priority: undefined,
       useStdin: true,
     })
@@ -88,6 +98,8 @@ describe('parseReportArgs', () => {
       result: null,
       dispatchId: undefined,
       artifacts: [],
+      checkpoint: undefined,
+      handover: false,
       priority: undefined,
       useStdin: true,
     })
