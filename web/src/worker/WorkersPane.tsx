@@ -1,10 +1,11 @@
 import * as Accordion from '@radix-ui/react-accordion'
-import { ChevronDown, UserPlus } from 'lucide-react'
+import { ChevronDown, Trash2, UserPlus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
 import type { TeamListItem } from '../../../src/shared/types.js'
 import type { TerminalRunSummary } from '../api.js'
 import { useI18n } from '../i18n.js'
+import { Confirm } from '../ui/Confirm.js'
 import { DeleteWorkerDialog } from './DeleteWorkerDialog.js'
 import { StopWorkerDialog } from './StopWorkerDialog.js'
 import { EmptyState } from '../ui/EmptyState.js'
@@ -74,10 +75,21 @@ export const WorkersPane = ({
   const [pendingStop, setPendingStop] = useState<{ worker: TeamListItem; runId: string } | null>(null)
   const [renameTarget, setRenameTarget] = useState<TeamListItem | null>(null)
   const [renameBusy, setRenameBusy] = useState(false)
+  const [confirmClearStopped, setConfirmClearStopped] = useState(false)
 
   const handleAccordionChange = useCallback(() => {
     setTimeout(() => window.dispatchEvent(new Event('resize')), 300)
   }, [])
+
+  const stoppedWorkers = useMemo(
+    () => sections.find((s) => s.kind === 'stopped')?.workers ?? [],
+    [sections]
+  )
+
+  const handleClearAllStopped = () => {
+    for (const worker of stoppedWorkers) onDeleteWorker(worker)
+    setConfirmClearStopped(false)
+  }
 
   const handleAction = (kind: WorkerCardActionKind, worker: TeamListItem) => {
     if (kind === 'start') {
@@ -134,7 +146,7 @@ export const WorkersPane = ({
         ) : (
           <Accordion.Root
             type="multiple"
-            defaultValue={['working', 'idle']}
+            defaultValue={['working', 'idle', 'stopped']}
             data-testid="worker-grid"
             onValueChange={handleAccordionChange}
           >
@@ -152,6 +164,17 @@ export const WorkersPane = ({
                       </span>
                       <ChevronDown size={12} className="accordion-chevron" aria-hidden />
                     </Accordion.Trigger>
+                    {section.kind === 'stopped' && section.workers.length > 0 ? (
+                      <button
+                        type="button"
+                        className="ml-auto mr-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-ter hover:bg-3 hover:text-danger"
+                        data-testid="clear-all-stopped"
+                        onClick={(e) => { e.stopPropagation(); setConfirmClearStopped(true) }}
+                      >
+                        <Trash2 size={10} aria-hidden />
+                        {t('worker.clearAllStopped')}
+                      </button>
+                    ) : null}
                   </div>
                 </Accordion.Header>
                 <Accordion.Content className="accordion-content">
@@ -210,6 +233,15 @@ export const WorkersPane = ({
         busy={renameBusy}
         onClose={() => setRenameTarget(null)}
         onSubmit={submitRename}
+      />
+      <Confirm
+        open={confirmClearStopped}
+        onOpenChange={setConfirmClearStopped}
+        title={t('worker.clearAllStoppedConfirmTitle')}
+        description={t('worker.clearAllStoppedConfirmDesc', { count: stoppedWorkers.length })}
+        confirmLabel={t('common.delete')}
+        confirmKind="danger"
+        onConfirm={handleClearAllStopped}
       />
     </div>
   )

@@ -30,6 +30,9 @@ const waitFor = async (assertion: () => void, timeoutMs = 1500, intervalMs = 20)
 }
 
 afterEach(async () => {
+  // Allow pending async restart-policy callbacks (fire-and-forget promises) to settle
+  await new Promise((resolve) => setTimeout(resolve, 50))
+
   while (stores.length > 0) {
     await stores.pop()?.close()
   }

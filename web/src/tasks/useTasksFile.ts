@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { getWorkspaceTasks, saveWorkspaceTasks } from '../api.js'
+import { createTask, getWorkspaceTasks, saveWorkspaceTasks } from '../api.js'
 import {
   appendChildTaskAtLine,
   deleteTaskLine,
@@ -208,24 +208,7 @@ export const useTasksFile = (workspaceId: string | null, demoContent?: string) =
     appendTask: async (text: string) => {
       const trimmed = text.trim()
       if (!workspaceId || !trimmed) return
-      const previous = contentRef.current
-      const needsLeadingNewline = previous.length > 0 && !previous.endsWith('\n')
-      const next = `${previous}${needsLeadingNewline ? '\n' : ''}- [ ] ${trimmed}\n`
-      savedContentRef.current = next
-      contentRef.current = next
-      dirtyRef.current = false
-      setContent(next)
-      try {
-        const response = await saveWorkspaceTasks(workspaceId, { content: next })
-        savedContentRef.current = response.content
-        contentRef.current = response.content
-        setContent(response.content)
-      } catch (error) {
-        savedContentRef.current = previous
-        contentRef.current = previous
-        setContent(previous)
-        throw error
-      }
+      await createTask({ workspace_id: workspaceId, title: trimmed, source: 'user' })
     },
     appendSubtask: async (parentLine: number, text: string) => {
       const trimmed = text.trim()

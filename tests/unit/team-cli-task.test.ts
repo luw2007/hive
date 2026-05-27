@@ -57,7 +57,7 @@ describe('team task', () => {
   })
 
   test('task show without id throws', async () => {
-    await expect(runTeamCommand(['task', 'show'])).rejects.toThrow('Usage: team task show <id>')
+    await expect(runTeamCommand(['task', 'show'])).rejects.toThrow('Usage: team task show <id|#seq>')
   })
 
   test('task create posts title and workspace_id', async () => {
@@ -107,10 +107,10 @@ describe('team task', () => {
   })
 
   test('task done/block/cancel without id throws', async () => {
-    await expect(runTeamCommand(['task', 'done'])).rejects.toThrow('Usage: team task done <id>')
-    await expect(runTeamCommand(['task', 'block'])).rejects.toThrow('Usage: team task block <id>')
+    await expect(runTeamCommand(['task', 'done'])).rejects.toThrow('Usage: team task done <id|#seq>')
+    await expect(runTeamCommand(['task', 'block'])).rejects.toThrow('Usage: team task block <id|#seq>')
     await expect(runTeamCommand(['task', 'cancel'])).rejects.toThrow(
-      'Usage: team task cancel <id>'
+      'Usage: team task cancel <id|#seq>'
     )
   })
 
