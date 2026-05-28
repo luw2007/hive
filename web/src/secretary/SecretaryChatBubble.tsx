@@ -18,7 +18,7 @@ interface SecretaryChatBubbleProps {
 }
 
 const POLL_INTERVAL_MS = 3000
-const PANEL_BOUNDS_KEY = 'secretary-panel-bounds'
+const PANEL_BOUNDS_KEY = (workspaceId: string) => `secretary-panel-bounds-${workspaceId}`
 const PANEL_MIN_W = 280
 const PANEL_MIN_H = 300
 const PANEL_MAX_W = 600
@@ -28,18 +28,29 @@ const PANEL_DEFAULT_H = 480
 
 interface PanelBounds { x: number; y: number; w: number; h: number }
 
-function loadPanelBounds(): PanelBounds | null {
+function loadPanelBounds(workspaceId: string): PanelBounds | null {
   try {
-    const raw = localStorage.getItem(PANEL_BOUNDS_KEY)
-    if (!raw) return null
-    const v = JSON.parse(raw) as PanelBounds
-    if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.w === 'number' && typeof v.h === 'number') return v
+    const raw = localStorage.getItem(PANEL_BOUNDS_KEY(workspaceId))
+    if (raw) {
+      const v = JSON.parse(raw) as PanelBounds
+      if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.w === 'number' && typeof v.h === 'number') return v
+    }
+    // Lazy migration: read old shared key and migrate to per-workspace
+    const legacy = localStorage.getItem('secretary-panel-bounds')
+    if (legacy) {
+      const v = JSON.parse(legacy) as PanelBounds
+      if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.w === 'number' && typeof v.h === 'number') {
+        localStorage.setItem(PANEL_BOUNDS_KEY(workspaceId), legacy)
+        localStorage.removeItem('secretary-panel-bounds')
+        return v
+      }
+    }
   } catch { /* ignore */ }
   return null
 }
 
-function savePanelBounds(b: PanelBounds) {
-  try { localStorage.setItem(PANEL_BOUNDS_KEY, JSON.stringify(b)) } catch { /* ignore */ }
+function savePanelBounds(workspaceId: string, b: PanelBounds) {
+  try { localStorage.setItem(PANEL_BOUNDS_KEY(workspaceId), JSON.stringify(b)) } catch { /* ignore */ }
 }
 
 function clampBounds(b: PanelBounds): PanelBounds {
@@ -88,7 +99,7 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Panel bounds (independent from FAB)
-  const [panelBounds, setPanelBounds] = useState<PanelBounds>(() => loadPanelBounds() ?? { x: -1, y: -1, w: PANEL_DEFAULT_W, h: PANEL_DEFAULT_H })
+  const [panelBounds, setPanelBounds] = useState<PanelBounds>(() => loadPanelBounds(workspaceId) ?? { x: -1, y: -1, w: PANEL_DEFAULT_W, h: PANEL_DEFAULT_H })
   const panelRef = useRef<HTMLDivElement>(null)
   const panelDragRef = useRef<{ active: boolean; mx: number; my: number; ox: number; oy: number }>({ active: false, mx: 0, my: 0, ox: 0, oy: 0 })
   const resizeRef = useRef<{ active: boolean; edge: ResizeEdge; mx: number; my: number; ox: number; oy: number; ow: number; oh: number } | null>(null)
@@ -212,7 +223,7 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
       if (resizeRef.current) resizeRef.current.active = false
       setPanelBounds((prev) => {
         const clamped = clampBounds(prev)
-        savePanelBounds(clamped)
+        savePanelBounds(workspaceId, clamped)
         return clamped
       })
     }
