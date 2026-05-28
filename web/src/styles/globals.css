@@ -2379,7 +2379,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--shadow-tint), 0.4);
   transition: background 0.15s, transform 0.15s;
 }
 .quick-task-fab:hover {
@@ -2399,7 +2399,7 @@ body {
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(var(--shadow-tint), 0.5);
   overflow: hidden;
 }
 .quick-task-popover__header {
@@ -2477,7 +2477,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(var(--shadow-tint), 0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   isolation: isolate;
   touch-action: none;
@@ -2485,7 +2485,7 @@ body {
 }
 .secretary-chat-fab:hover {
   transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--shadow-tint), 0.45);
 }
 
 .secretary-chat-panel {
@@ -2498,7 +2498,7 @@ body {
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(var(--shadow-tint), 0.4);
   display: flex;
   flex-direction: column;
   overflow: hidden;
