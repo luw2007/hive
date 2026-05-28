@@ -131,7 +131,7 @@ const formatWorkers = (workers: AgentSummary[]) => {
   if (workers.length === 0) return ['- 当前没有其他 worker']
   return workers.map(
     (worker) =>
-      `- ${worker.name} (${worker.role}, ${worker.status}, pending_task_count: ${worker.pendingTaskCount})`
+      `- ${worker.name} (${worker.roleTemplateName ?? worker.role}, ${worker.status}, pending_task_count: ${worker.pendingTaskCount})`
   )
 }
 
