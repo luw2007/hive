@@ -2494,7 +2494,7 @@ body {
   bottom: 84px;
   z-index: 51;
   width: 320px;
-  height: 420px;
+  height: 480px;
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -2504,6 +2504,20 @@ body {
   overflow: hidden;
 }
 
+/* Resize handles */
+.secretary-resize-handle {
+  position: absolute;
+  z-index: 10;
+}
+.secretary-resize-n  { top: 0; left: 4px; right: 4px; height: 4px; cursor: n-resize; }
+.secretary-resize-s  { bottom: 0; left: 4px; right: 4px; height: 4px; cursor: s-resize; }
+.secretary-resize-e  { right: 0; top: 4px; bottom: 4px; width: 4px; cursor: e-resize; }
+.secretary-resize-w  { left: 0; top: 4px; bottom: 4px; width: 4px; cursor: w-resize; }
+.secretary-resize-nw { top: 0; left: 0; width: 8px; height: 8px; cursor: nw-resize; }
+.secretary-resize-ne { top: 0; right: 0; width: 8px; height: 8px; cursor: ne-resize; }
+.secretary-resize-sw { bottom: 0; left: 0; width: 8px; height: 8px; cursor: sw-resize; }
+.secretary-resize-se { bottom: 0; right: 0; width: 8px; height: 8px; cursor: se-resize; }
+
 .secretary-chat-header {
   display: flex;
   align-items: center;
@@ -2511,6 +2525,10 @@ body {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-2);
+}
+.secretary-chat-header-draggable {
+  cursor: move;
+  user-select: none;
 }
 .secretary-chat-title {
   font-size: 13px;
