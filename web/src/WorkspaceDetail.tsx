@@ -14,7 +14,6 @@ import { CollapsiblePanel } from './layout/CollapsiblePanel.js'
 import { usePanelLayout } from './layout/usePanelLayout.js'
 import { logSwallowed } from './lib/log-swallowed.js'
 import { WorkspaceNotifications } from './notifications/WorkspaceNotifications.js'
-import { QuickTaskFab } from './tasks/QuickTaskFab.js'
 import { SecretaryChatBubble } from './secretary/SecretaryChatBubble.js'
 import { TaskGraphDrawer } from './tasks/TaskGraphDrawer.js'
 import type { useTasksFile } from './tasks/useTasksFile.js'
@@ -524,8 +523,7 @@ export const WorkspaceDetail = ({
           />
         </Suspense>
       ) : null}
-      {workspace ? <QuickTaskFab workspaceId={workspace.id} workers={workers} /> : null}
-      {workspace ? <SecretaryChatBubble workspaceId={workspace.id} /> : null}
+      {workspace ? <SecretaryChatBubble workspaceId={workspace.id} workers={workers} /> : null}
     </div>
   )
 }

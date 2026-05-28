@@ -2465,7 +2465,7 @@ body {
 .secretary-chat-fab {
   position: fixed;
   right: 24px;
-  bottom: 96px;
+  bottom: 24px;
   z-index: 50;
   width: 48px;
   height: 48px;
@@ -2491,7 +2491,7 @@ body {
 .secretary-chat-panel {
   position: fixed;
   right: 24px;
-  bottom: 156px;
+  bottom: 84px;
   z-index: 51;
   width: 320px;
   height: 420px;
@@ -2554,6 +2554,19 @@ body {
 }
 .secretary-task-input::placeholder {
   color: var(--fg-3);
+}
+.secretary-task-assignee {
+  padding: 2px 6px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--text-primary);
+  outline: none;
+  max-width: 90px;
+}
+.secretary-task-assignee:focus {
+  border-color: var(--accent);
 }
 
 .secretary-chat-messages {

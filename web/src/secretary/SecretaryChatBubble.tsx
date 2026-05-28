@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessageCircle, Send, X, Trash2, AlertTriangle, Plus } from 'lucide-react'
+import type { TeamListItem } from '../../../src/shared/types.js'
 import {
   clearSecretaryMessages,
   createTask,
@@ -13,6 +14,7 @@ import { useI18n } from '../i18n.js'
 
 interface SecretaryChatBubbleProps {
   workspaceId: string
+  workers: TeamListItem[]
 }
 
 const POLL_INTERVAL_MS = 3000
@@ -21,18 +23,20 @@ function positionKey(workspaceId: string) {
   return `secretary_position_${workspaceId}`
 }
 
-export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) => {
+export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbleProps) => {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<SecretaryMessage[]>([])
   const [input, setInput] = useState('')
   const [taskInput, setTaskInput] = useState('')
+  const [taskAssignee, setTaskAssignee] = useState('')
   const [taskSubmitting, setTaskSubmitting] = useState(false)
   const [sending, setSending] = useState(false)
   const [executingAction, setExecutingAction] = useState<string | null>(null)
   const [hasUnread, setHasUnread] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const taskInputRef = useRef<HTMLInputElement>(null)
   const prevMessageCountRef = useRef(0)
 
   // Draggable position state (persisted server-side per workspace)
@@ -109,6 +113,19 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
     }
   }, [pos, persistPosition])
 
+  // Ctrl+Shift+T shortcut: open panel and focus task input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+        e.preventDefault()
+        setOpen(true)
+        setTimeout(() => taskInputRef.current?.focus(), 100)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const fetchMessages = useCallback(async () => {
     try {
       const msgs = await getSecretaryMessages(workspaceId)
@@ -165,8 +182,14 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
     if (!text || taskSubmitting) return
     setTaskSubmitting(true)
     try {
-      await createTask({ workspace_id: workspaceId, title: text, source: 'user' })
+      await createTask({
+        workspace_id: workspaceId,
+        title: text,
+        source: 'user',
+        ...(taskAssignee ? { worker_name: taskAssignee } : {}),
+      })
       setTaskInput('')
+      setTaskAssignee('')
     } catch { /* silent */ }
     finally { setTaskSubmitting(false) }
   }
@@ -208,7 +231,7 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
     }
   }
 
-  // Compute FAB style: use saved position or default (right:24, bottom:96)
+  // Compute FAB style: use saved position or default (right:24, bottom:24)
   const fabStyle: React.CSSProperties = pos.x >= 0
     ? { position: 'fixed', left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
     : {}
@@ -255,6 +278,7 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
           <div className="secretary-task-input-area">
             <Plus size={14} className="secretary-task-icon" />
             <input
+              ref={taskInputRef}
               className="secretary-task-input"
               disabled={taskSubmitting}
               onKeyDown={handleTaskKeyDown}
@@ -263,12 +287,27 @@ export const SecretaryChatBubble = ({ workspaceId }: SecretaryChatBubbleProps) =
               type="text"
               value={taskInput}
             />
+            {workers.filter((w) => w.status !== 'stopped').length > 0 && (
+              <select
+                className="secretary-task-assignee"
+                value={taskAssignee}
+                onChange={(e) => setTaskAssignee(e.target.value)}
+                disabled={taskSubmitting}
+              >
+                <option value="">{t('quickTask.noAssignee')}</option>
+                {workers.filter((w) => w.status !== 'stopped').map((w) => (
+                  <option key={w.id} value={w.name}>{w.name}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Messages */}
           <div className="secretary-chat-messages">
             {messages.length === 0 && (
-              <div className="secretary-chat-empty">{t('secretary.empty')}</div>
+              <div className="secretary-chat-empty">{t('secretary.empty').split('\n').map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}</div>
             )}
             {messages.map((msg) => (
               <div

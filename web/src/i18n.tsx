@@ -320,10 +320,10 @@ const enMessages = {
   'quickTask.created': 'Task created',
   // secretary.* — SecretaryChatBubble
   'secretary.title': 'Secretary',
-  'secretary.placeholder': 'Ask secretary...',
-  'secretary.empty': 'No messages yet. Ask the secretary for task planning advice.',
+  'secretary.placeholder': 'e.g. "check team status" or "suggest next steps"',
+  'secretary.empty': 'No messages yet.\nTry: "what tasks are blocked?" or "summarize progress"',
   'secretary.clear': 'Clear history',
-  'secretary.taskPlaceholder': 'Add task...',
+  'secretary.taskPlaceholder': 'New task title, Enter to add',
   // notifications.* — WorkspaceNotifications + NotificationSettingsButton + NotificationProvider
   'notifications.desktop.aria': 'Browser notifications',
   'notifications.desktop.helper': 'Use system notifications when permission is granted.',
@@ -837,10 +837,10 @@ const zhMessages: Record<TranslationKey, string> = {
   'quickTask.created': '任务已创建',
   // secretary.*
   'secretary.title': '董秘',
-  'secretary.placeholder': '向董秘提问...',
-  'secretary.empty': '暂无消息。可以向董秘咨询任务规划建议。',
+  'secretary.placeholder': '如："检查团队状态"、"建议下一步"',
+  'secretary.empty': '暂无消息。\n试试："哪些任务被阻塞了？" 或 "总结当前进度"',
   'secretary.clear': '清空记录',
-  'secretary.taskPlaceholder': '添加任务...',
+  'secretary.taskPlaceholder': '输入任务标题，回车添加',
   // notifications.*
   'notifications.desktop.aria': '浏览器通知',
   'notifications.desktop.helper': '授权后使用系统通知。',
