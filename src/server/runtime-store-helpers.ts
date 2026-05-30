@@ -97,24 +97,7 @@ export const createRuntimeStoreServices = (
     return _workspaceStore.getWorkspaceSnapshot(workspaceId).summary.path;
   });
 
-  const taskService = createTaskService(db, {
-    onChange: (workspaceId) => {
-      try {
-        const content = tasksRegenerator.regenerate(workspaceId);
-        notifyTasksUpdated(tasksFileWatchCallbacks, workspaceId, content);
-
-        // 积压检测
-        if (_workspaceStore) {
-          const openTasks = taskService.listTasks(workspaceId, { status: 'open' });
-          const proposedTasks = taskService.listTasks(workspaceId, { status: 'proposed' });
-          const workers = _workspaceStore.listWorkers(workspaceId);
-          checkTaskBacklog(workspaceId, openTasks.length, proposedTasks.length, workers);
-        }
-      } catch {
-        // workspace 可能尚未初始化（启动期间），静默跳过
-      }
-    },
-  });
+  const taskService = createTaskService(db);
 
   const uiAuth = createUiAuth();
   const shellRuntime = createWorkspaceShellRuntime(options.agentManager);
