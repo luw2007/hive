@@ -73,6 +73,26 @@ const emitScriptWrite = (
   }
 }
 
+// Unit tests must never touch real tmux: hasTmux() gates the persistent-session
+// path in agent-manager, and createSession/attachSession would leak real sessions
+// on machines that have tmux installed.
+vi.mock('../../src/server/tmux-session-manager.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/server/tmux-session-manager.js')>()
+  return {
+    ...actual,
+    hasTmux: () => false,
+    createSession: () => {
+      throw new Error('tmux is mocked in unit tests')
+    },
+    attachSession: () => {
+      throw new Error('tmux is mocked in unit tests')
+    },
+    listHiveSessions: () => [],
+    isSessionAlive: () => false,
+    killSession: () => {},
+  }
+})
+
 vi.mock('node-pty', () => ({
   spawn: (_command: string, args: string[] = [], options: MockSpawnOptions = {}) => {
     const scriptPath = args[0] ?? ''
