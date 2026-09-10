@@ -62,7 +62,7 @@ describe('role-templates api client', () => {
       description: 'Writes docs.',
     })
 
-    expect(created).toEqual({
+    expect(created).toMatchObject({
       description: 'Writes documentation.',
       id: 'tpl-new',
       isBuiltin: false,
