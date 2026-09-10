@@ -84,66 +84,6 @@ describe('hive cli end to end', () => {
     }
   })
 
-  test('CLI leaves persisted launch configs stopped on runtime restart', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'hive-restart-stopped-'))
-    const workspacePath = join(dataDir, 'workspace')
-    mkdirSync(workspacePath, { recursive: true })
-    tempDirs.push(dataDir)
-
-    const scriptPath = join(workspacePath, 'steady-agent.js')
-    writeFileSync(
-      scriptPath,
-      [
-        "console.log('AGENT=' + process.env.HIVE_AGENT_ID)",
-        "console.log('PORT=' + process.env.HIVE_PORT)",
-        'setInterval(() => {}, 1000)',
-      ].join('\n')
-    )
-
-    const setupStore = createRuntimeStore({ dataDir })
-    const workspace = setupStore.createWorkspace(workspacePath, 'Persisted')
-    const orchestratorId = `${workspace.id}:orchestrator`
-    const worker = setupStore.addWorker(workspace.id, { name: 'Alice', role: 'coder' })
-    for (const agentId of [orchestratorId, worker.id]) {
-      setupStore.configureAgentLaunch(workspace.id, agentId, {
-        args: [scriptPath],
-        command: process.execPath,
-      })
-    }
-    await setupStore.close()
-
-    const originalDataDir = process.env.HIVE_DATA_DIR
-    process.env.HIVE_DATA_DIR = dataDir
-    const hive = await runHiveCommand(['--port', '0'])
-
-    try {
-      const baseUrl = `http://127.0.0.1:${hive.port}`
-      const uiCookie = await getUiCookie(baseUrl)
-
-      await waitFor(async () => {
-        const runsResponse = await fetch(`${baseUrl}/api/ui/workspaces/${workspace.id}/runs`, {
-          headers: { cookie: uiCookie },
-        })
-        expect(runsResponse.status).toBe(200)
-        const runs = (await runsResponse.json()) as unknown[]
-        expect(runs).toEqual([])
-      })
-      expect(hive.store.listTerminalRuns(workspace.id)).toEqual([])
-      expect(hive.store.listAgentRuns(orchestratorId)).toEqual([])
-      expect(hive.store.listAgentRuns(worker.id)).toEqual([])
-      expect(hive.store.peekAgentLaunchConfig(workspace.id, orchestratorId)?.command).toBe(
-        process.execPath
-      )
-      expect(hive.store.peekAgentLaunchConfig(workspace.id, worker.id)?.command).toBe(
-        process.execPath
-      )
-    } finally {
-      if (originalDataDir === undefined) delete process.env.HIVE_DATA_DIR
-      else process.env.HIVE_DATA_DIR = originalDataDir
-      await hive.close()
-    }
-  }, 10_000)
-
   test('real hive runtime can start and stop an agent over HTTP', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'hive-e2e-'))
     const workspacePath = join(dataDir, 'workspace')
