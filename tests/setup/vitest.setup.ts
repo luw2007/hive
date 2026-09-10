@@ -1,5 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 
+import { cleanup } from '@testing-library/react'
+
 import { afterEach, vi } from 'vitest'
 
 // Node 25 ships an experimental localStorage that overrides jsdom's implementation
@@ -87,6 +89,7 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 }
 
 afterEach(() => {
+  cleanup()
   if (typeof document === 'undefined') return
 
   document.body.removeAttribute('data-scroll-locked')
