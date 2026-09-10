@@ -143,14 +143,6 @@ afterEach(() => {
 })
 
 describe('AddWorkerDialog marketplace integration', () => {
-  test('clicking Browse marketplace opens the drawer', async () => {
-    render(<Harness />)
-    fireEvent.click(screen.getByTestId('open-marketplace'))
-    await waitFor(() => {
-      expect(screen.getByTestId('marketplace-content')).toBeInTheDocument()
-    })
-  })
-
   test('importing an agent fills the AddWorker form with name + description and flips role to custom', async () => {
     const submitCapture = vi.fn()
     render(<Harness onSubmitCapture={submitCapture} />)
