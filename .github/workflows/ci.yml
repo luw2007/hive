@@ -27,6 +27,9 @@ jobs:
       - name: Type check
         run: pnpm tsc --noEmit
 
+      - name: Remove tmux from test runner
+        run: sudo apt-get remove -y tmux
+
       - name: Test
         run: pnpm vitest run
 
