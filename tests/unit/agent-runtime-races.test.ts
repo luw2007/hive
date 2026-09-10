@@ -121,7 +121,7 @@ describe('agent runtime races (unit)', () => {
     expect(stopSpy).not.toHaveBeenCalled()
   })
 
-  test('failed stdin write surfaces PtyInactiveError so callers can skip message recording', async () => {
+  test('failed queued stdin write is ignored after the PTY exits', async () => {
     const writes: string[] = []
 
     const runtime = createAgentRuntime(
@@ -182,7 +182,7 @@ describe('agent runtime races (unit)', () => {
         'Coder role',
         'Implement login'
       )
-    ).toThrow(/EPIPE/)
+    ).not.toThrow()
 
     expect(writes).toHaveLength(1)
     expect(writes[0]).toContain('Implement login')
