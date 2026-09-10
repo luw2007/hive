@@ -105,7 +105,7 @@ export interface TaskWithDetails {
   recentEvents: TaskEventRecord[]
 }
 
-export const createTaskService = (db: Database) => {
+export const createTaskService = (db: Database, onChange?: (workspaceId: string) => void) => {
   const createTask = (input: CreateTaskInput): TaskRecord => {
     const id = randomUUID()
     const now = Date.now()
@@ -132,6 +132,7 @@ export const createTaskService = (db: Database) => {
       `INSERT INTO task_events (workspace_id, task_id, event_type, agent_id, payload, created_at)
        VALUES (?, ?, 'created', ?, ?, ?)`
     ).run(input.workspaceId, id, input.agentId ?? null, null, now)
+    onChange?.(input.workspaceId)
 
     return {
       id,
@@ -221,6 +222,7 @@ export const createTaskService = (db: Database) => {
       `INSERT INTO task_events (workspace_id, task_id, event_type, agent_id, payload, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`
     ).run(row.workspace_id, taskId, eventType, agentId ?? null, payload, now)
+    onChange?.(row.workspace_id)
 
     return { ...toTaskRecord(row), status }
   }
@@ -236,6 +238,7 @@ export const createTaskService = (db: Database) => {
       `INSERT INTO task_events (workspace_id, task_id, event_type, agent_id, created_at)
        VALUES (?, ?, 'cancelled', ?, ?)`
     ).run(row.workspace_id, taskId, agentId ?? null, now)
+    onChange?.(row.workspace_id)
 
     return true
   }
@@ -248,6 +251,7 @@ export const createTaskService = (db: Database) => {
 
     const now = Date.now()
     db.prepare('UPDATE dispatches SET task_id = ? WHERE id = ?').run(taskId, dispatchId)
+    onChange?.(taskRow.workspace_id)
 
     db.prepare(
       `INSERT INTO task_events (workspace_id, task_id, event_type, agent_id, dispatch_id, created_at)

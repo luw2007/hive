@@ -89,7 +89,14 @@ export const createRuntimeStoreServices = (
     return _workspaceStore.getWorkspaceSnapshot(workspaceId).summary.path
   })
 
-  const taskService = createTaskService(db)
+  const taskService = createTaskService(db, (workspaceId) => {
+    try {
+      const content = tasksRegenerator.regenerate(workspaceId)
+      notifyTasksUpdated(tasksFileWatchCallbacks, workspaceId, content)
+    } catch {
+      // Workspace may not be initialized during startup.
+    }
+  })
 
   const uiAuth = createUiAuth()
   const shellRuntime = createWorkspaceShellRuntime(options.agentManager)
