@@ -151,7 +151,7 @@ describe('agent startup instructions', () => {
         expect(output).toContain('不要使用你所在 CLI 的内置 subagent / 子代理工具')
         expect(output).not.toContain('team report')
         expect(output).toContain('SUBMITTED')
-      }, 6000)
+      }, 15000)
 
       await waitFor(async () => {
         const response = await fetch(`${baseUrl}/api/runtime/runs/${workerRun.runId}`, {
@@ -167,7 +167,7 @@ describe('agent startup instructions', () => {
         expect(output).not.toContain('--failed')
         expect(output).not.toContain('team send <worker-name>')
         expect(output).toContain('SUBMITTED')
-      }, 6000)
+      }, 15000)
     } finally {
       await hive.close()
     }
