@@ -223,9 +223,8 @@ describe('worker flow with real server', () => {
     // Delete via the card's dropdown action menu.
     const workers = serverContext?.store.listWorkers(workspaceId) ?? []
     const alice = workers.find((w) => w.name === 'Alice')
-    fireEvent.click(screen.getByTestId(`worker-card-more-${alice?.id}`))
-    const deleteItem = await screen.findByTestId(`worker-card-delete-${alice?.id}`)
-    fireEvent.click(deleteItem)
+    fireEvent.pointerDown(screen.getByTestId(`worker-card-more-${alice?.id}`))
+    fireEvent.click(await screen.findByTestId(`worker-card-delete-${alice?.id}`))
     const confirm = await screen.findByTestId('confirm-title')
     expect(confirm).toHaveTextContent('Delete Alice?')
     fireEvent.click(screen.getByTestId('confirm-action'))
@@ -424,7 +423,7 @@ describe('worker flow with real server', () => {
 
     render(<App />)
 
-    const card = await screen.findByRole('button', { name: /^Open Bob$/ })
+    const card = await screen.findByTestId(`worker-card-${bob.id}`)
     expect(within(card).getByText('stopped')).toBeInTheDocument()
     fireEvent.click(card)
 
