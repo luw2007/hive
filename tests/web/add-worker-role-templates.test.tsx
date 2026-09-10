@@ -48,11 +48,9 @@ const Harness = () => {
         commandPresets={composer.commandPresets}
         commandPresetId={composer.commandPresetId}
         creating={composer.creating}
-        customRoleName={composer.customRoleName}
         customTemplates={composer.customTemplates}
         onApplyMarketplaceImport={composer.applyMarketplaceImport}
         onClose={() => {}}
-        onCustomRoleNameChange={composer.setCustomRoleName}
         onDeleteTemplate={composer.deleteTemplate}
         onNameChange={composer.setWorkerName}
         onPresetChange={composer.setCommandPresetId}

@@ -373,6 +373,7 @@ export const useWorkerComposer = ({
     setWorkerName(name)
     setSelectedTemplateId(null)
     setWorkerRole('custom')
+    setCustomRoleName(name)
     roleDescriptionEditedRef.current = true
     setRoleDescriptionState(description)
   }
