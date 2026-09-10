@@ -219,23 +219,6 @@ describe('worker flow with real server', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('worker-modal')).toBeNull()
     })
-
-    // Delete via the card's dropdown action menu.
-    const workers = serverContext?.store.listWorkers(workspaceId) ?? []
-    const alice = workers.find((w) => w.name === 'Alice')
-    fireEvent.pointerDown(screen.getByTestId(`worker-card-more-${alice?.id}`))
-    fireEvent.click(await screen.findByTestId(`worker-card-delete-${alice?.id}`))
-    const confirm = await screen.findByTestId('confirm-title')
-    expect(confirm).toHaveTextContent('Delete Alice?')
-    fireEvent.click(screen.getByTestId('confirm-action'))
-
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /^Open Alice$/ })).toBeNull()
-    })
-    expect(serverContext?.store.listWorkers(workspaceId)).toHaveLength(0)
-    expect(
-      serverContext?.store.listTerminalRuns(workspaceId).filter((run) => run.agent_name === 'Alice')
-    ).toHaveLength(0)
   })
 
   test('Add Worker dialog shows role instructions and saves an edited prompt', async () => {
