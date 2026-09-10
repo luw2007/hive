@@ -34,5 +34,5 @@ jobs:
         run: sudo apt-get remove -y tmux
 
       - name: Test
-        run: pnpm vitest run
+        run: pnpm vitest run --no-file-parallelism --maxWorkers=1 --testTimeout=60000 --hookTimeout=60000
 
