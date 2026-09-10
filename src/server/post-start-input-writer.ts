@@ -47,15 +47,15 @@ const isWritableRunStatus = (status: string | undefined) =>
   status === undefined || status === 'starting' || status === 'running'
 
 const writeIfRunWritable = (agentManager: AgentManager, runId: string, text: string) => {
-  let run: ReturnType<AgentManager['getRun']>
   try {
-    run = agentManager.getRun(runId)
+    const run = agentManager.getRun(runId)
+    if (!isWritableRunStatus(run.status)) return false
+    agentManager.writeInput(runId, text)
+    return true
   } catch {
+    // The PTY may exit between checking its snapshot and writing.
     return false
   }
-  if (!isWritableRunStatus(run.status)) return false
-  agentManager.writeInput(runId, text)
-  return true
 }
 
 const submitPastedInteractiveInput = (
