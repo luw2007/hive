@@ -60,7 +60,7 @@ const WORKER_FLOW_TIMEOUT_MS = 5000
 
 const openAddWorkerDialog = async (label = 'Add team member') => {
   fireEvent.click(
-    await screen.findByTestId('add-worker-trigger', {}, { timeout: WORKER_FLOW_TIMEOUT_MS })
+    await screen.findByTestId('panel-add-worker', {}, { timeout: WORKER_FLOW_TIMEOUT_MS })
   )
   return screen.findByRole('form', { name: label }, { timeout: WORKER_FLOW_TIMEOUT_MS })
 }
@@ -198,7 +198,7 @@ describe('worker flow with real server', () => {
     expect(within(card).getByText('idle')).toBeInTheDocument()
     // Add Member affordance now lives only in the WorkersPane header (the
     // dashed in-grid Add Member tile was redundant and visually misleading).
-    expect(screen.getByTestId('add-worker-trigger')).toHaveTextContent('Add Member')
+    expect(screen.getByTestId('panel-add-worker')).toHaveTextContent('Add Member')
 
     const workerRun = serverContext?.store
       .listTerminalRuns(workspaceId)
@@ -285,10 +285,10 @@ describe('worker flow with real server', () => {
   test('Add Worker random name follows the selected Chinese language', async () => {
     render(<App />)
 
-    await screen.findByTestId('add-worker-trigger', {}, { timeout: WORKER_FLOW_TIMEOUT_MS })
+    await screen.findByTestId('panel-add-worker', {}, { timeout: WORKER_FLOW_TIMEOUT_MS })
     fireEvent.click(screen.getByRole('button', { name: 'Switch language to 中文' }))
     await waitFor(() => {
-      expect(screen.getByTestId('add-worker-trigger')).toHaveTextContent('添加成员')
+      expect(screen.getByTestId('panel-add-worker')).toHaveTextContent('添加成员')
     })
 
     const dialog = await openAddWorkerDialog('添加团队成员')

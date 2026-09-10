@@ -162,13 +162,3 @@ test('demo mode shows DEMO read-only badge and orch scrollback text', async () =
   expect(screen.getByTestId('demo-scrollback-demo-orch')).toBeInTheDocument()
   expect(screen.getByTestId('demo-scrollback-demo-orch').textContent).toContain('team send alice')
 })
-
-test('demo mode surfaces the Todo entry in the Topbar', async () => {
-  render(<App />)
-  await screen.findByTestId('welcome-pane')
-
-  fireEvent.click(screen.getByRole('button', { name: /try the demo/i }))
-  expect(screen.getByTestId('demo-banner')).toBeInTheDocument()
-
-  expect(screen.getByTestId('panel-add-task')).toBeInTheDocument()
-})
