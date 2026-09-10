@@ -211,7 +211,7 @@ describe('worker flow with real server', () => {
     fireEvent.click(card)
     const modal = await screen.findByTestId('worker-modal')
     expect(within(modal).getByTestId('worker-modal-terminal-slot')).toBeInTheDocument()
-    expect(screen.queryByTestId('terminal-bottom-panel')).toBeNull()
+    expect(screen.getByTestId('terminal-bottom-panel')).toHaveTextContent('No active sessions')
     await waitFor(() => {
       expect(document.getElementById(`worker-pty-${workerRun?.run_id}`)).not.toBeNull()
     })
@@ -399,7 +399,7 @@ describe('worker flow with real server', () => {
 
     const modal = await screen.findByTestId('worker-modal')
     expect(within(modal).getByTestId('worker-modal-terminal-slot')).toBeInTheDocument()
-    expect(screen.queryByTestId('terminal-bottom-panel')).toBeNull()
+    expect(screen.getByTestId('terminal-bottom-panel')).toHaveTextContent('No active sessions')
     await waitFor(() => {
       expect(document.querySelector('[id^="worker-pty-"]')).not.toBeNull()
     })
@@ -429,7 +429,7 @@ describe('worker flow with real server', () => {
     fireEvent.click(card)
 
     const modal = await screen.findByTestId('worker-modal')
-    expect(screen.queryByTestId('terminal-bottom-panel')).toBeNull()
+    expect(screen.getByTestId('terminal-bottom-panel')).toHaveTextContent('No active sessions')
     fireEvent.click(within(modal).getByTestId('worker-start-empty'))
 
     await waitFor(() => {
