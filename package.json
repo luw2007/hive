@@ -96,8 +96,8 @@
     "lucide-react": "^1.8.0",
     "marked": "^18.0.4",
     "node-pty": "^1.1.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "ws": "^8.20.0"
