@@ -35,6 +35,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm build
+      - name: Remove tmux from test runner
+        if: runner.os != 'Windows'
+        run: |
+          if command -v brew >/dev/null 2>&1; then brew uninstall tmux || true; else sudo apt-get remove -y tmux; fi
       - run: pnpm vitest run --no-file-parallelism --maxWorkers=1 --testTimeout=60000 --hookTimeout=60000
         if: runner.os != 'Windows'
       - run: pnpm test:windows
