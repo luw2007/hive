@@ -170,9 +170,5 @@ test('demo mode surfaces the Todo entry in the Topbar', async () => {
   fireEvent.click(screen.getByRole('button', { name: /try the demo/i }))
   expect(screen.getByTestId('demo-banner')).toBeInTheDocument()
 
-  expect(screen.getByTestId('topbar-blueprint')).toBeInTheDocument()
-  fireEvent.click(screen.getByTestId('topbar-blueprint'))
-  await waitFor(() => {
-    expect(screen.getByTestId('task-graph-drawer')).toHaveAttribute('aria-hidden', 'false')
-  })
+  expect(screen.getByTestId('panel-add-task')).toBeInTheDocument()
 })

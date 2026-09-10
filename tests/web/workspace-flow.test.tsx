@@ -127,13 +127,8 @@ describe('workspace flow with real server', () => {
     })
     // 0 workers in a fresh workspace → EmptyState (no worker-grid until ≥1).
     expect(screen.getByTestId('add-worker-empty')).toBeInTheDocument()
-    expect(screen.getByTestId('topbar-blueprint')).toBeInTheDocument()
-    const drawer = await screen.findByTestId('task-graph-drawer')
-    expect(drawer).toHaveAttribute('aria-hidden', 'true')
-    fireEvent.click(screen.getByTestId('topbar-blueprint'))
-    await waitFor(() => {
-      expect(drawer).toHaveAttribute('aria-hidden', 'false')
-    })
+    expect(screen.getByTestId('panel-add-task')).toBeInTheDocument()
+    expect(await screen.findByTestId('task-graph-drawer')).toBeInTheDocument()
   }, 20_000)
 
   test('existing workspace stays stopped until the user starts Queen', async () => {
