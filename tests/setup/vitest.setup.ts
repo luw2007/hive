@@ -2,7 +2,6 @@ import '@testing-library/jest-dom/vitest'
 
 import { afterEach, vi } from 'vitest'
 
-
 // Node 25 ships an experimental localStorage that overrides jsdom's implementation
 // but lacks standard methods (setItem, getItem, clear, removeItem). Polyfill when needed.
 if (typeof window !== 'undefined' && typeof window.localStorage?.setItem !== 'function') {
