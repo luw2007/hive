@@ -420,6 +420,7 @@ describe('worker flow with real server', () => {
       }
     )
     expect(response.status).toBe(201)
+    const bob = (await response.json()) as { id: string }
 
     render(<App />)
 
