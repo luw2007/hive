@@ -1,4 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+
+vi.mock('../../src/server/tmux-session-manager.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/server/tmux-session-manager.js')>()
+  return { ...actual, hasTmux: () => false }
+})
 import { runTeamCommand } from '../../src/cli/team.js'
 import { startTestServer } from '../helpers/test-server.js'
 
