@@ -142,9 +142,7 @@ describe('TerminalBottomPanel', () => {
         startingWorkerId={null}
       />
     )
-    expect(screen.getByTestId('terminal-bottom-panel')).toHaveTextContent(
-      'terminalPanel.noSessions'
-    )
+    expect(screen.getByTestId('terminal-bottom-panel')).toHaveTextContent('No active sessions')
   })
 
   test('resize handle is keyboard-focusable and exposes role separator', () => {
