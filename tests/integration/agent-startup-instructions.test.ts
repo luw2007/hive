@@ -37,7 +37,7 @@ afterEach(() => {
 
 describe('agent startup instructions', () => {
   test('new orchestrator and worker runs receive team command guidance over real PTY stdin', {
-    timeout: 15000,
+    timeout: 30000,
   }, async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'hive-agent-startup-instructions-'))
     const workspacePath = join(dataDir, 'workspace')
