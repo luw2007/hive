@@ -128,8 +128,8 @@ describe('TerminalBottomPanel', () => {
     expect(onStartWorker).toHaveBeenCalledWith('w1')
   })
 
-  test('panel renders nothing when tab list is empty', () => {
-    const { container } = render(
+  test('panel shows an empty state when tab list is empty', () => {
+    render(
       <TerminalBottomPanel
         tabs={[]}
         activeId={null}
@@ -142,7 +142,9 @@ describe('TerminalBottomPanel', () => {
         startingWorkerId={null}
       />
     )
-    expect(container.firstChild).toBeNull()
+    expect(screen.getByTestId('terminal-bottom-panel')).toHaveTextContent(
+      'terminalPanel.noSessions'
+    )
   })
 
   test('resize handle is keyboard-focusable and exposes role separator', () => {
