@@ -1,6 +1,23 @@
 import '@testing-library/jest-dom/vitest'
 
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
+
+// Tests must not attach to or create real tmux sessions on CI hosts.
+vi.mock('../../src/server/tmux-session-manager.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/server/tmux-session-manager.js')>()
+  return {
+    ...actual,
+    hasTmux: () => false,
+    createSession: () => {
+      throw new Error('tmux is mocked in tests')
+    },
+    attachSession: () => {
+      throw new Error('tmux is mocked in tests')
+    },
+    listHiveSessions: () => [],
+    isSessionAlive: () => false,
+  }
+})
 
 // Node 25 ships an experimental localStorage that overrides jsdom's implementation
 // but lacks standard methods (setItem, getItem, clear, removeItem). Polyfill when needed.
