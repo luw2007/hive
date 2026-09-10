@@ -18,7 +18,9 @@ const dispatchListeners = new Set<DispatchListener>()
 /** 在任意组件中订阅 dispatches 推送。返回 unsubscribe 函数。 */
 export const subscribeDispatches = (listener: DispatchListener): (() => void) => {
   dispatchListeners.add(listener)
-  return () => { dispatchListeners.delete(listener) }
+  return () => {
+    dispatchListeners.delete(listener)
+  }
 }
 
 /**
@@ -87,10 +89,7 @@ export const useGlobalSSE = (onTeam: GlobalSSETeamHandler) => {
         }
 
         const delay = getReconnectDelay(attempt)
-        const timer = window.setTimeout(
-          () => connect(Math.min(attempt + 1, 5)),
-          delay
-        )
+        const timer = window.setTimeout(() => connect(Math.min(attempt + 1, 5)), delay)
         reconnectTimers.push(timer)
       }
     }

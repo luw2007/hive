@@ -81,7 +81,13 @@ export const WorkerCard = ({
         />
         <span className="min-w-0 flex-1 truncate text-sm leading-tight" title={worker.name}>
           <span className="font-medium text-pri">{worker.name}</span>
-          <span className="text-ter"> · {worker.role === 'custom' && worker.roleTemplateName ? worker.roleTemplateName : t(roleKey(worker.role))}</span>
+          <span className="text-ter">
+            {' '}
+            ·{' '}
+            {worker.role === 'custom' && worker.roleTemplateName
+              ? worker.roleTemplateName
+              : t(roleKey(worker.role))}
+          </span>
         </span>
         <span
           className={`pill ${pillToneByStatus[status.kind]} worker-card__status`}

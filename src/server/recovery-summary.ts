@@ -44,16 +44,16 @@ export interface ActiveDiscussionInfo {
 
 const formatActiveDispatches = (dispatches: ActiveDispatchInfo[]) => {
   if (dispatches.length === 0) return ['- （无活跃派单）']
-  return dispatches.slice(0, 5).map(
-    (d) => `- @${d.toWorkerName} [${d.status}]: ${d.text.slice(0, 80)}`
-  )
+  return dispatches
+    .slice(0, 5)
+    .map((d) => `- @${d.toWorkerName} [${d.status}]: ${d.text.slice(0, 80)}`)
 }
 
 const formatActiveDiscussions = (discussions: ActiveDiscussionInfo[]) => {
   if (discussions.length === 0) return ['- （无进行中讨论）']
-  return discussions.slice(0, 3).map(
-    (d) => `- "${d.topic}" (${d.status}, round ${d.currentRound}/${d.maxRounds})`
-  )
+  return discussions
+    .slice(0, 3)
+    .map((d) => `- "${d.topic}" (${d.status}, round ${d.currentRound}/${d.maxRounds})`)
 }
 
 const formatUserInputs = (messages: RecoveryMessage[]) => {
@@ -179,7 +179,7 @@ export const buildRecoverySummary = ({
     ...formatTaskEvents(messages, agent),
     '',
     '## 当前未完成任务',
-    ...formatOpenTasks(allTaskMessages ?? messages, agent, workers),
+    ...formatOpenTasks(allTaskMessages ?? messages, agent, workers)
   )
 
   if (activeDispatches && activeDispatches.length > 0) {
@@ -211,7 +211,7 @@ export const buildRecoverySummary = ({
     agent.role === 'orchestrator' ? '## Hive worker 派单规则' : '## Hive worker 边界',
     ...getHiveTeamRules(agent),
     '',
-    '请基于此继续。如果不确定，问 user。',
+    '请基于此继续。如果不确定，问 user。'
   )
 
   return wrapSystemMessage(sections.join('\n'))

@@ -21,18 +21,28 @@ export const ActiveDispatchesSection = ({ dispatches }: { dispatches: DispatchIt
         className="task-completed-toggle"
       >
         <span className="inline-flex items-center gap-1.5">
-          {expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
+          {expanded ? (
+            <ChevronDown size={12} aria-hidden />
+          ) : (
+            <ChevronRight size={12} aria-hidden />
+          )}
           <CornerDownRight size={12} aria-hidden />
           <span>{t('tasks.dispatches.active', { count: active.length })}</span>
         </span>
       </button>
       {expanded ? (
-        <ul className="flex flex-col gap-1 pl-4 text-xs text-sec" data-testid="active-dispatches-list">
+        <ul
+          className="flex flex-col gap-1 pl-4 text-xs text-sec"
+          data-testid="active-dispatches-list"
+        >
           {active.map((d) => {
             const agentName = d.to_agent_id.split(':').pop() ?? d.to_agent_id
             return (
               <li key={d.id} className="flex items-center gap-1.5 truncate">
-                <span className="dispatch-badge" data-tone={d.state === 'queued' ? 'orange' : 'blue'}>
+                <span
+                  className="dispatch-badge"
+                  data-tone={d.state === 'queued' ? 'orange' : 'blue'}
+                >
                   {d.state}
                 </span>
                 <span className="font-medium">@{agentName}:</span>

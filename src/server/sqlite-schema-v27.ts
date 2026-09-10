@@ -2,9 +2,7 @@ import type { Database } from 'better-sqlite3'
 
 export const applySchemaVersion27 = (db: Database) => {
   const columns = new Set(
-    (db.prepare('PRAGMA table_info(tasks)').all() as Array<{ name: string }>).map(
-      (col) => col.name
-    )
+    (db.prepare('PRAGMA table_info(tasks)').all() as Array<{ name: string }>).map((col) => col.name)
   )
   if (!columns.has('seq')) {
     db.exec('ALTER TABLE tasks ADD COLUMN seq INTEGER')

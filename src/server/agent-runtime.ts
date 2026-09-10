@@ -129,14 +129,16 @@ export const createAgentRuntime = (
         agentId,
         launchCache.get(workspace.id, agentId),
         input.hivePort
-      ).then((run) => {
-        attachCompactDetector(flowAdapter.getOutputBus(), run.runId, workspace.id, agentId)
-        return run
-      }).finally(() => {
-        if (startPromises.get(key) === startPromise) {
-          startPromises.delete(key)
-        }
-      })
+      )
+        .then((run) => {
+          attachCompactDetector(flowAdapter.getOutputBus(), run.runId, workspace.id, agentId)
+          return run
+        })
+        .finally(() => {
+          if (startPromises.get(key) === startPromise) {
+            startPromises.delete(key)
+          }
+        })
       startPromises.set(key, startPromise)
       return startPromise
     },

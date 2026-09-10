@@ -112,12 +112,7 @@ describe('buildWorkerRotationRecovery', () => {
       })
     }
 
-    const recovery = await buildWorkerRotationRecovery(
-      workspacePath,
-      agent,
-      workspace,
-      null
-    )
+    const recovery = await buildWorkerRotationRecovery(workspacePath, agent, workspace, null)
 
     expect(recovery).toContain('Task 3')
     expect(recovery).toContain('Task 7')
@@ -144,42 +139,29 @@ describe('buildWorkerRotationRecovery', () => {
   })
 
   test('shows no pending dispatch when null', async () => {
-    const recovery = await buildWorkerRotationRecovery(
-      workspacePath,
-      agent,
-      workspace,
-      null
-    )
+    const recovery = await buildWorkerRotationRecovery(workspacePath, agent, workspace, null)
 
     expect(recovery).toContain('待处理派单：无，等待新派单')
   })
 
   test('includes worker rules section', async () => {
-    const recovery = await buildWorkerRotationRecovery(
-      workspacePath,
-      agent,
-      workspace,
-      null
-    )
+    const recovery = await buildWorkerRotationRecovery(workspacePath, agent, workspace, null)
 
     expect(recovery).toContain('## 你的规则')
     expect(recovery).toContain('team report')
   })
 
   test('wraps output in hive-system-message tag', async () => {
-    const recovery = await buildWorkerRotationRecovery(
-      workspacePath,
-      agent,
-      workspace,
-      null
-    )
+    const recovery = await buildWorkerRotationRecovery(workspacePath, agent, workspace, null)
 
     expect(recovery).toMatch(/^<hive-system-message type="rotation-recovery">/)
     expect(recovery).toMatch(/<\/hive-system-message>$/)
   })
 })
 
-const makeOrchContext = (overrides: Partial<OrchestratorRotationContext> = {}): OrchestratorRotationContext => ({
+const makeOrchContext = (
+  overrides: Partial<OrchestratorRotationContext> = {}
+): OrchestratorRotationContext => ({
   allWorkersIdle: false,
   compactDetectedAndIdle: false,
   messageCount: 0,
@@ -237,7 +219,11 @@ describe('shouldRotateOrchestrator', () => {
 })
 
 describe('applyBudgetControl', () => {
-  const makeSection = (key: string, content: string, priority: number) => ({ key, content, priority })
+  const makeSection = (key: string, content: string, priority: number) => ({
+    key,
+    content,
+    priority,
+  })
 
   test('small recovery passes through unchanged', () => {
     const sections = [

@@ -65,11 +65,12 @@ const extractClaudeResponse = (raw: string): string => {
   const stripped = raw
     .replace(ANSI_ESCAPE_RE, '')
     .replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '')
-    .replace(/\u00A0/g, ' ')  // TUI 用 NBSP 做空格，必须保留为空格
+    .replace(/\u00A0/g, ' ') // TUI 用 NBSP 做空格，必须保留为空格
 
   // Phase 2: 找 ⏺/● 标记的响应段落（可能不在行首）
   // 噪音边界：\w+… (动画词如 Spinning…/Quantumizing…/Boondoggling…)、status bar 等
-  const NOISE_BOUNDARY = /\w+…|∴\s*Thinking|running.?stop.?hooks|\[OMC[^\]]*\]|Worked for \d|max\/effort|❯|∴/
+  const NOISE_BOUNDARY =
+    /\w+…|∴\s*Thinking|running.?stop.?hooks|\[OMC[^\]]*\]|Worked for \d|max\/effort|❯|∴/
   const markerRe = /[⏺●]\s*/g
   const responseBlocks: string[] = []
   let match: RegExpExecArray | null
@@ -79,8 +80,8 @@ const extractClaudeResponse = (raw: string): string => {
     // 取到下一个噪音边界或末尾
     const boundaryMatch = NOISE_BOUNDARY.exec(afterMarker)
     const content = (boundaryMatch ? afterMarker.slice(0, boundaryMatch.index) : afterMarker)
-      .replace(/[\u2500-\u259F\u23F5\u25C8\u276F]/g, '')  // 残留 TUI chrome
-      .replace(/[\u2800-\u28FF✽✻✶✢]+/g, '')               // spinners
+      .replace(/[\u2500-\u259F\u23F5\u25C8\u276F]/g, '') // 残留 TUI chrome
+      .replace(/[\u2800-\u28FF✽✻✶✢]+/g, '') // spinners
       .replace(/\n{3,}/g, '\n\n')
       .trim()
     if (content.length > 0) {
@@ -94,10 +95,13 @@ const extractClaudeResponse = (raw: string): string => {
 
   // Fallback: 无 ⏺ 标记时的正则清洗
   return stripped
-    .replace(/[\u2500-\u259F\u23F5\u25C8\u276F\u2733]/g, '')  // TUI chrome (不含 NBSP!)
-    .replace(/[\u2800-\u28FF✽✻✶✢·]+/g, '')                    // spinners
+    .replace(/[\u2500-\u259F\u23F5\u25C8\u276F\u2733]/g, '') // TUI chrome (不含 NBSP!)
+    .replace(/[\u2800-\u28FF✽✻✶✢·]+/g, '') // spinners
     .replace(/0;\s*[^\n]{0,50}(?:Claude Code|Hive[^\n]*)\s*/g, '')
-    .replace(/(?:Claude\s*Code\s*v[\d.]+|Opus[\d.·\s]*|bypass\s*permissions?\s*on|shift\+tab\s*to\s*cycle|\d+\s*tokens?|max\s*[·/]\s*effort|\[OMC[^\]]*\][^\n]*|Boondoggling[^\n]*|Hive secretary[^\n]*|Spinning[^\n]*|∴\s*Thinking[^\n]*|Worked for[^\n]*|running stop hooks[^\n]*)/gi, '')
+    .replace(
+      /(?:Claude\s*Code\s*v[\d.]+|Opus[\d.·\s]*|bypass\s*permissions?\s*on|shift\+tab\s*to\s*cycle|\d+\s*tokens?|max\s*[·/]\s*effort|\[OMC[^\]]*\][^\n]*|Boondoggling[^\n]*|Hive secretary[^\n]*|Spinning[^\n]*|∴\s*Thinking[^\n]*|Worked for[^\n]*|running stop hooks[^\n]*)/gi,
+      ''
+    )
     .replace(/\d+;\d+[Hf]/g, '')
     .replace(/\[Hive[^\]]*\][^\n]*/g, '')
     .replace(/\d+s\)/g, '')
@@ -234,8 +238,14 @@ const subscribeSecretaryOutput = (workspaceId: string, runId: string, store: Run
 
   outputSubscriptions.set(workspaceId, () => {
     unsubscribe()
-    if (startupTimer) { clearTimeout(startupTimer); startupTimer = null }
-    if (timer) { clearTimeout(timer); timer = null }
+    if (startupTimer) {
+      clearTimeout(startupTimer)
+      startupTimer = null
+    }
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+    }
     startupPhase = false
     flush()
   })
@@ -294,7 +304,9 @@ const ensureSecretaryRunning = async (
   }
 
   try {
-    const run = await store.startAgent(workspaceId, secretaryId, { hivePort: getRuntimePort(request) })
+    const run = await store.startAgent(workspaceId, secretaryId, {
+      hivePort: getRuntimePort(request),
+    })
     subscribeSecretaryOutput(workspaceId, run.runId, store)
     return run
   } catch (error) {
@@ -318,127 +330,147 @@ interface ExecuteActionBody {
 }
 
 export const secretaryRoutes: RouteDefinition[] = [
-  route('GET', '/api/workspaces/:workspaceId/secretary/messages', async ({ params, response, store }) => {
-    const workspaceId = params.workspaceId!
-    store.getAgent(workspaceId, getSecretaryId(workspaceId))
-    const messages = getMessages(workspaceId)
-    sendJson(response, 200, { messages })
-  }),
-
-  route('POST', '/api/workspaces/:workspaceId/secretary/messages', async ({ params, request, response, store }) => {
-    const workspaceId = params.workspaceId!
-    const body = await readJsonBody<SendMessageBody>(request)
-
-    if (!body.content || typeof body.content !== 'string') {
-      throw new BadRequestError('Missing content')
+  route(
+    'GET',
+    '/api/workspaces/:workspaceId/secretary/messages',
+    async ({ params, response, store }) => {
+      const workspaceId = params.workspaceId!
+      store.getAgent(workspaceId, getSecretaryId(workspaceId))
+      const messages = getMessages(workspaceId)
+      sendJson(response, 200, { messages })
     }
+  ),
 
-    const secretaryId = getSecretaryId(workspaceId)
-    store.getAgent(workspaceId, secretaryId)
+  route(
+    'POST',
+    '/api/workspaces/:workspaceId/secretary/messages',
+    async ({ params, request, response, store }) => {
+      const workspaceId = params.workspaceId!
+      const body = await readJsonBody<SendMessageBody>(request)
 
-    const trimmedContent = body.content.trim()
-    lastUserInputs.set(workspaceId, trimmedContent)
-    const userMsg = pushSecretaryMessage(workspaceId, 'user', trimmedContent)
-
-    // 自动启动 secretary（如果尚未运行）+ 确保输出已订阅
-    const activeRun = await ensureSecretaryRunning(workspaceId, request, store)
-    if (activeRun) {
-      // 必须用 writeAgentStdin 走 postStartInputWriter：
-      // 等待交互式 prompt ready → bracketed paste → submit
-      // 直接 writeRunInput 会在 Claude Code TUI 未就绪时丢失输入
-      store.writeAgentStdin(workspaceId, secretaryId, trimmedContent)
-    }
-
-    sendJson(response, 201, { message: userMsg, secretary_running: !!activeRun })
-  }),
-
-  route('POST', '/api/workspaces/:workspaceId/secretary/execute', async ({ params, request, response, store }) => {
-    const workspaceId = params.workspaceId!
-    const body = await readJsonBody<ExecuteActionBody>(request)
-
-    if (!body.action_id || typeof body.action_id !== 'string') {
-      throw new BadRequestError('Missing action_id')
-    }
-
-    // 在消息缓冲中找到对应 action
-    const messages = getMessages(workspaceId)
-    let foundAction: SecretaryAction | undefined
-    for (const msg of messages) {
-      if (!msg.actions) continue
-      foundAction = msg.actions.find((a) => a.id === body.action_id)
-      if (foundAction) break
-    }
-
-    if (!foundAction) {
-      throw new BadRequestError('Action not found or expired')
-    }
-
-    // 根据 action type 执行
-    let result: { ok: boolean; detail: string }
-
-    switch (foundAction.type) {
-      case 'create_task': {
-        const title = (body.overrides?.title as string) || (foundAction.payload.title as string)
-        if (title) {
-          const task = store.taskService.createTask({
-            workspaceId,
-            title,
-            source: 'secretary',
-          })
-          result = { ok: true, detail: `任务 #${task.seq} "${task.title}" 已创建` }
-        } else {
-          result = { ok: true, detail: '查看任务列表' }
-        }
-        break
+      if (!body.content || typeof body.content !== 'string') {
+        throw new BadRequestError('Missing content')
       }
-      case 'dispatch': {
-        // dispatch 需要有 pending task 才能执行
-        const tasks = store.taskService.listTasks(workspaceId, { status: 'open' })
-        if (tasks.length === 0) {
-          result = { ok: false, detail: '没有待办任务可派发' }
-        } else {
-          const firstTask = tasks[0]!
-          result = {
-            ok: true,
-            detail: `建议将任务 #${firstTask.seq} "${firstTask.title}" 派给 ${foundAction.payload.worker_name}。请在 Orchestrator 中执行 team send。`,
+
+      const secretaryId = getSecretaryId(workspaceId)
+      store.getAgent(workspaceId, secretaryId)
+
+      const trimmedContent = body.content.trim()
+      lastUserInputs.set(workspaceId, trimmedContent)
+      const userMsg = pushSecretaryMessage(workspaceId, 'user', trimmedContent)
+
+      // 自动启动 secretary（如果尚未运行）+ 确保输出已订阅
+      const activeRun = await ensureSecretaryRunning(workspaceId, request, store)
+      if (activeRun) {
+        // 必须用 writeAgentStdin 走 postStartInputWriter：
+        // 等待交互式 prompt ready → bracketed paste → submit
+        // 直接 writeRunInput 会在 Claude Code TUI 未就绪时丢失输入
+        store.writeAgentStdin(workspaceId, secretaryId, trimmedContent)
+      }
+
+      sendJson(response, 201, { message: userMsg, secretary_running: !!activeRun })
+    }
+  ),
+
+  route(
+    'POST',
+    '/api/workspaces/:workspaceId/secretary/execute',
+    async ({ params, request, response, store }) => {
+      const workspaceId = params.workspaceId!
+      const body = await readJsonBody<ExecuteActionBody>(request)
+
+      if (!body.action_id || typeof body.action_id !== 'string') {
+        throw new BadRequestError('Missing action_id')
+      }
+
+      // 在消息缓冲中找到对应 action
+      const messages = getMessages(workspaceId)
+      let foundAction: SecretaryAction | undefined
+      for (const msg of messages) {
+        if (!msg.actions) continue
+        foundAction = msg.actions.find((a) => a.id === body.action_id)
+        if (foundAction) break
+      }
+
+      if (!foundAction) {
+        throw new BadRequestError('Action not found or expired')
+      }
+
+      // 根据 action type 执行
+      let result: { ok: boolean; detail: string }
+
+      switch (foundAction.type) {
+        case 'create_task': {
+          const title = (body.overrides?.title as string) || (foundAction.payload.title as string)
+          if (title) {
+            const task = store.taskService.createTask({
+              workspaceId,
+              title,
+              source: 'secretary',
+            })
+            result = { ok: true, detail: `任务 #${task.seq} "${task.title}" 已创建` }
+          } else {
+            result = { ok: true, detail: '查看任务列表' }
           }
+          break
         }
-        break
+        case 'dispatch': {
+          // dispatch 需要有 pending task 才能执行
+          const tasks = store.taskService.listTasks(workspaceId, { status: 'open' })
+          if (tasks.length === 0) {
+            result = { ok: false, detail: '没有待办任务可派发' }
+          } else {
+            const firstTask = tasks[0]!
+            result = {
+              ok: true,
+              detail: `建议将任务 #${firstTask.seq} "${firstTask.title}" 派给 ${foundAction.payload.worker_name}。请在 Orchestrator 中执行 team send。`,
+            }
+          }
+          break
+        }
+        case 'start_discussion': {
+          result = { ok: true, detail: '请在 Orchestrator 中发起讨论' }
+          break
+        }
+        default: {
+          result = { ok: false, detail: '未知动作类型' }
+        }
       }
-      case 'start_discussion': {
-        result = { ok: true, detail: '请在 Orchestrator 中发起讨论' }
-        break
-      }
-      default: {
-        result = { ok: false, detail: '未知动作类型' }
-      }
+
+      // 记录执行结果为 system 消息
+      pushSecretaryMessage(workspaceId, 'system', `✅ ${result.detail}`)
+
+      sendJson(response, 200, result)
     }
+  ),
 
-    // 记录执行结果为 system 消息
-    pushSecretaryMessage(workspaceId, 'system', `✅ ${result.detail}`)
+  route(
+    'DELETE',
+    '/api/workspaces/:workspaceId/secretary/messages',
+    async ({ params, response, store }) => {
+      const workspaceId = params.workspaceId!
+      store.getAgent(workspaceId, getSecretaryId(workspaceId))
+      // 取消输出订阅
+      outputSubscriptions.get(workspaceId)?.()
+      outputSubscriptions.delete(workspaceId)
+      messageBuffers.delete(workspaceId)
+      sendJson(response, 200, { cleared: true })
+    }
+  ),
 
-    sendJson(response, 200, result)
-  }),
-
-  route('DELETE', '/api/workspaces/:workspaceId/secretary/messages', async ({ params, response, store }) => {
-    const workspaceId = params.workspaceId!
-    store.getAgent(workspaceId, getSecretaryId(workspaceId))
-    // 取消输出订阅
-    outputSubscriptions.get(workspaceId)?.()
-    outputSubscriptions.delete(workspaceId)
-    messageBuffers.delete(workspaceId)
-    sendJson(response, 200, { cleared: true })
-  }),
-
-  route('GET', '/api/workspaces/:workspaceId/secretary/status', async ({ params, response, store }) => {
-    const workspaceId = params.workspaceId!
-    const secretaryId = getSecretaryId(workspaceId)
-    const agent = store.getAgent(workspaceId, secretaryId)
-    const activeRun = store.getActiveRunByAgentId(workspaceId, secretaryId)
-    sendJson(response, 200, {
-      status: agent.status,
-      running: !!activeRun,
-      run_id: activeRun?.runId ?? null,
-    })
-  }),
+  route(
+    'GET',
+    '/api/workspaces/:workspaceId/secretary/status',
+    async ({ params, response, store }) => {
+      const workspaceId = params.workspaceId!
+      const secretaryId = getSecretaryId(workspaceId)
+      const agent = store.getAgent(workspaceId, secretaryId)
+      const activeRun = store.getActiveRunByAgentId(workspaceId, secretaryId)
+      sendJson(response, 200, {
+        status: agent.status,
+        running: !!activeRun,
+        run_id: activeRun?.runId ?? null,
+      })
+    }
+  ),
 ]

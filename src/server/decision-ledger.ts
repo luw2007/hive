@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto'
 import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-export type DecisionCategory = 'constraint' | 'preference' | 'priority' | 'process' | 'scope' | 'tech'
+export type DecisionCategory =
+  | 'constraint'
+  | 'preference'
+  | 'priority'
+  | 'process'
+  | 'scope'
+  | 'tech'
 
 export interface Decision {
   id: string
@@ -28,8 +34,7 @@ export interface DecisionInput {
 const HIVE_DIR = '.hive'
 const DECISIONS_FILE = 'decisions.jsonl'
 
-const getDecisionsPath = (workspacePath: string) =>
-  join(workspacePath, HIVE_DIR, DECISIONS_FILE)
+const getDecisionsPath = (workspacePath: string) => join(workspacePath, HIVE_DIR, DECISIONS_FILE)
 
 export async function appendDecision(
   workspacePath: string,
@@ -132,7 +137,8 @@ export async function supersede(
   oldDecision.superseded_by = newDecision.id
 
   const filePath = getDecisionsPath(workspacePath)
-  const lines = all.map((d) => JSON.stringify(d)).join('\n') + '\n' + JSON.stringify(newDecision) + '\n'
+  const lines =
+    all.map((d) => JSON.stringify(d)).join('\n') + '\n' + JSON.stringify(newDecision) + '\n'
 
   const dir = join(workspacePath, HIVE_DIR)
   await mkdir(dir, { recursive: true })

@@ -117,10 +117,14 @@ export const DiscussionStartDialog = ({
                     }`}
                   >
                     <span className="font-medium">
-                      {t(`discussion.template.${tpl.id}.name` as 'discussion.template.design-review.name')}
+                      {t(
+                        `discussion.template.${tpl.id}.name` as 'discussion.template.design-review.name'
+                      )}
                     </span>
                     <p className="mt-0.5 text-ter">
-                      {t(`discussion.template.${tpl.id}.desc` as 'discussion.template.design-review.desc')}
+                      {t(
+                        `discussion.template.${tpl.id}.desc` as 'discussion.template.design-review.desc'
+                      )}
                     </p>
                   </button>
                 ))}
@@ -137,7 +141,9 @@ export const DiscussionStartDialog = ({
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder={
                   templateId
-                    ? t(`discussion.template.${templateId}.hint` as 'discussion.template.design-review.hint')
+                    ? t(
+                        `discussion.template.${templateId}.hint` as 'discussion.template.design-review.hint'
+                      )
                     : t('discussion.startDialog.topicPlaceholder')
                 }
                 required
@@ -161,7 +167,9 @@ export const DiscussionStartDialog = ({
                       className="accent-blue-500"
                     />
                     <span className="text-sm text-pri">{w.name}</span>
-                    <span className="text-xs text-ter">({t(`role.${w.role}` as 'role.coder')})</span>
+                    <span className="text-xs text-ter">
+                      ({t(`role.${w.role}` as 'role.coder')})
+                    </span>
                   </label>
                 ))}
                 {availableWorkers.length === 0 ? (
@@ -171,9 +179,7 @@ export const DiscussionStartDialog = ({
                 ) : null}
               </div>
               {selectedIds.size > 0 && selectedIds.size < 2 ? (
-                <p className="text-xs text-orange-500">
-                  {t('discussion.startDialog.minMembers')}
-                </p>
+                <p className="text-xs text-orange-500">{t('discussion.startDialog.minMembers')}</p>
               ) : null}
             </div>
 
@@ -215,9 +221,7 @@ export const DiscussionStartDialog = ({
                 </button>
               </Dialog.Close>
               <button type="submit" className="btn btn--primary" disabled={!canSubmit}>
-                {loading
-                  ? t('discussion.startDialog.starting')
-                  : t('discussion.startDialog.start')}
+                {loading ? t('discussion.startDialog.starting') : t('discussion.startDialog.start')}
               </button>
             </div>
           </form>

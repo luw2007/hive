@@ -4,8 +4,12 @@ import { createCompactDetector } from '../../src/server/compact-detector.js'
 import { createPtyOutputBus } from '../../src/server/pty-output-bus.js'
 
 describe('compact-detector', () => {
-  beforeEach(() => { vi.useFakeTimers() })
-  afterEach(() => { vi.useRealTimers() })
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('detects "auto-compacting" in PTY output', () => {
     const bus = createPtyOutputBus()

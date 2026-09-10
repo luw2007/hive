@@ -78,7 +78,9 @@ export const createHandoffStore = (db: Database) => {
   }
 
   const getReport = (id: string): HandoffReport | null => {
-    const row = db.prepare('SELECT * FROM handoff_reports WHERE id = ?').get(id) as HandoffRow | undefined
+    const row = db.prepare('SELECT * FROM handoff_reports WHERE id = ?').get(id) as
+      | HandoffRow
+      | undefined
     return row ? toRecord(row) : null
   }
 

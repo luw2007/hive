@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { DiscussionGroup, DiscussionMember, DiscussionMessage } from '../../src/server/discussion-operations.js'
+import type {
+  DiscussionGroup,
+  DiscussionMember,
+  DiscussionMessage,
+} from '../../src/server/discussion-operations.js'
 import {
   createDiscussionRecoveryInjector,
   injectDiscussionRecoveryIfNeeded,
@@ -48,7 +52,9 @@ const makeMessage = (overrides: Partial<DiscussionMessage> = {}): DiscussionMess
   ...overrides,
 })
 
-const makeDeps = (overrides: Partial<DiscussionRecoveryInjectorDeps> = {}): DiscussionRecoveryInjectorDeps => ({
+const makeDeps = (
+  overrides: Partial<DiscussionRecoveryInjectorDeps> = {}
+): DiscussionRecoveryInjectorDeps => ({
   discussionOps: {
     getActiveDiscussionsForAgent: vi.fn().mockReturnValue([]),
     getPhaseKey: vi.fn().mockReturnValue('discussing:1'),
@@ -91,7 +97,11 @@ describe('discussion-recovery-injector', () => {
     expect(text).toContain('API 设计方案')
     expect(text).toContain('team discuss --submit')
     expect(deps.discussionOps.recordSyncAttempt).toHaveBeenCalledWith(
-      'group-1', 'agent-1', 'discussing:1', 'run-1', 'full'
+      'group-1',
+      'agent-1',
+      'discussing:1',
+      'run-1',
+      'full'
     )
   })
 
@@ -113,7 +123,11 @@ describe('discussion-recovery-injector', () => {
     const text = (deps.writeAgentStdin as ReturnType<typeof vi.fn>).mock.calls[0]![2] as string
     expect(text).toContain('讨论状态变更')
     expect(deps.discussionOps.recordSyncAttempt).toHaveBeenCalledWith(
-      'group-1', 'agent-1', 'discussing:2', 'run-1', 'minimal'
+      'group-1',
+      'agent-1',
+      'discussing:2',
+      'run-1',
+      'minimal'
     )
   })
 
@@ -135,7 +149,11 @@ describe('discussion-recovery-injector', () => {
     const text = (deps.writeAgentStdin as ReturnType<typeof vi.fn>).mock.calls[0]![2] as string
     expect(text).toContain('讨论已结束')
     expect(deps.discussionOps.recordSyncAttempt).toHaveBeenCalledWith(
-      'group-1', 'agent-1', 'terminal', 'run-1', 'terminal'
+      'group-1',
+      'agent-1',
+      'terminal',
+      'run-1',
+      'terminal'
     )
   })
 
@@ -169,14 +187,16 @@ describe('discussion-recovery-injector', () => {
           { group: group1, member: member1, messages: [] },
           { group: group2, member: member2, messages: [] },
         ]),
-        getPhaseKey: vi.fn().mockImplementation((g: DiscussionGroup) =>
-          g.status === 'thinking' ? 'thinking:0' : 'discussing:1'
-        ),
+        getPhaseKey: vi
+          .fn()
+          .mockImplementation((g: DiscussionGroup) =>
+            g.status === 'thinking' ? 'thinking:0' : 'discussing:1'
+          ),
         shouldInjectSync: vi.fn().mockReturnValue(true),
         recordSyncAttempt: vi.fn(),
-        getMembers: vi.fn().mockImplementation((groupId: string) =>
-          groupId === 'group-1' ? [member1] : [member2]
-        ),
+        getMembers: vi
+          .fn()
+          .mockImplementation((groupId: string) => (groupId === 'group-1' ? [member1] : [member2])),
       },
     })
 

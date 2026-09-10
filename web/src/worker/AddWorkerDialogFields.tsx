@@ -1,4 +1,13 @@
-import { BookmarkPlus, Check, ChevronDown, Plus, RotateCcw, Search, SquareTerminal, Trash2 } from 'lucide-react'
+import {
+  BookmarkPlus,
+  Check,
+  ChevronDown,
+  Plus,
+  RotateCcw,
+  Search,
+  SquareTerminal,
+  Trash2,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -54,13 +63,9 @@ const RoleCard = ({
       <RoleAvatar role={spec.value} size={20} />
       <span className="min-w-0 flex-1 text-left">
         <span className="block truncate text-base font-medium text-pri">{label}</span>
-        {subtitle ? (
-          <span className="block truncate text-xs text-sec">{subtitle}</span>
-        ) : null}
+        {subtitle ? <span className="block truncate text-xs text-sec">{subtitle}</span> : null}
       </span>
-      {useCount ? (
-        <span className="text-xs text-ter">×{useCount}</span>
-      ) : null}
+      {useCount ? <span className="text-xs text-ter">×{useCount}</span> : null}
       {active ? <Check size={14} className="shrink-0 text-accent" aria-hidden /> : null}
     </button>
   )
@@ -121,7 +126,10 @@ export const RolePicker = ({
                 data-testid={`template-card-${tpl.id}`}
                 className={`selectable-card flex items-center gap-3 px-3 py-2.5${selectedTemplateId === tpl.id ? ' ring-1 ring-accent' : ''}`}
               >
-                <RoleAvatar role={tpl.roleType === 'orchestrator' ? 'custom' : tpl.roleType} size={20} />
+                <RoleAvatar
+                  role={tpl.roleType === 'orchestrator' ? 'custom' : tpl.roleType}
+                  size={20}
+                />
                 <span className="min-w-0 flex-1 text-left">
                   <span className="block truncate text-sm font-medium text-pri">{tpl.name}</span>
                   <span className="flex gap-1.5">
@@ -133,9 +141,7 @@ export const RolePicker = ({
                     ) : null}
                   </span>
                 </span>
-                {tpl.useCount ? (
-                  <span className="text-xs text-ter">×{tpl.useCount}</span>
-                ) : null}
+                {tpl.useCount ? <span className="text-xs text-ter">×{tpl.useCount}</span> : null}
                 {selectedTemplateId === tpl.id ? (
                   <Check size={14} className="shrink-0 text-accent" aria-hidden />
                 ) : null}
@@ -149,7 +155,11 @@ export const RolePicker = ({
         <SectionLabel>{t('addWorker.role')}</SectionLabel>
         <div
           className="grid grid-cols-3 gap-2"
-          style={ROLE_CARDS.length + roleOnlyTemplates.length > 6 ? { maxHeight: 150, overflowY: 'auto' } : undefined}
+          style={
+            ROLE_CARDS.length + roleOnlyTemplates.length > 6
+              ? { maxHeight: 150, overflowY: 'auto' }
+              : undefined
+          }
         >
           {ROLE_CARDS.map((spec) => {
             const tpl = customTemplates.find((t) => t.roleType === spec.value && t.isBuiltin)
@@ -179,9 +189,7 @@ export const RolePicker = ({
                   <span className="block truncate text-xs text-ter">{sourceLabel(tpl.source)}</span>
                 ) : null}
               </span>
-              {tpl.useCount ? (
-                <span className="text-xs text-ter">×{tpl.useCount}</span>
-              ) : null}
+              {tpl.useCount ? <span className="text-xs text-ter">×{tpl.useCount}</span> : null}
               {selectedTemplateId === tpl.id ? (
                 <Check size={14} className="shrink-0 text-accent" aria-hidden />
               ) : null}

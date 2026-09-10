@@ -30,13 +30,19 @@ export const globalSseRoutes: RouteDefinition[] = [
       if (response.destroyed) return
       const workers = store.listWorkers(workspaceId)
       const data = enrichTeamList(workspaceId, store, workers).map(serializeTeamListItem)
-      response.write(`event: team\ndata: ${JSON.stringify({ workspace_id: workspaceId, workers: data })}\n\n`)
+      response.write(
+        `event: team\ndata: ${JSON.stringify({ workspace_id: workspaceId, workers: data })}\n\n`
+      )
     }
 
     const sendDispatchSnapshot = (workspaceId: string) => {
       if (response.destroyed) return
-      const dispatches = store.listDispatches(workspaceId, { limit: 100 }).map(serializeDispatchRecord)
-      response.write(`event: dispatches\ndata: ${JSON.stringify({ workspace_id: workspaceId, dispatches })}\n\n`)
+      const dispatches = store
+        .listDispatches(workspaceId, { limit: 100 })
+        .map(serializeDispatchRecord)
+      response.write(
+        `event: dispatches\ndata: ${JSON.stringify({ workspace_id: workspaceId, dispatches })}\n\n`
+      )
     }
 
     // 初始推送所有 workspace 的当前状态

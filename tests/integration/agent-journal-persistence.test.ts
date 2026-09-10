@@ -162,7 +162,15 @@ describe('agent journal persistence', () => {
   })
 
   test('report writes report_sent entry to worker journal', async () => {
-    const { baseUrl, orchestratorId, orchToken, workerId, workerToken, workspaceId, workspacePath } = ctx
+    const {
+      baseUrl,
+      orchestratorId,
+      orchToken,
+      workerId,
+      workerToken,
+      workspaceId,
+      workspacePath,
+    } = ctx
 
     const sendRes = await fetch(`${baseUrl}/api/team/send`, {
       method: 'POST',
@@ -198,7 +206,15 @@ describe('agent journal persistence', () => {
   })
 
   test('status writes status_sent entry to worker journal', async () => {
-    const { baseUrl, orchestratorId, orchToken, workerId, workerToken, workspaceId, workspacePath } = ctx
+    const {
+      baseUrl,
+      orchestratorId,
+      orchToken,
+      workerId,
+      workerToken,
+      workspaceId,
+      workspacePath,
+    } = ctx
 
     await fetch(`${baseUrl}/api/team/send`, {
       method: 'POST',
@@ -272,13 +288,23 @@ describe('agent journal persistence', () => {
     const activeRun = store.getActiveRunByAgentId(workspaceId, workerId)
     if (activeRun) {
       const db = store.getDb()
-      const row = db.prepare('SELECT checkpoint_json FROM agent_runs WHERE run_id = ?').get(activeRun.runId) as { checkpoint_json: string | null } | undefined
+      const row = db
+        .prepare('SELECT checkpoint_json FROM agent_runs WHERE run_id = ?')
+        .get(activeRun.runId) as { checkpoint_json: string | null } | undefined
       expect(row?.checkpoint_json).toContain('50% done')
     }
   })
 
   test('seq counter increments monotonically across multiple entries', async () => {
-    const { baseUrl, orchestratorId, orchToken, workerId, workerToken, workspaceId, workspacePath } = ctx
+    const {
+      baseUrl,
+      orchestratorId,
+      orchToken,
+      workerId,
+      workerToken,
+      workspaceId,
+      workspacePath,
+    } = ctx
 
     for (let i = 0; i < 3; i++) {
       const sendRes = await fetch(`${baseUrl}/api/team/send`, {
@@ -298,7 +324,9 @@ describe('agent journal persistence', () => {
       const expectedDispatchCount = i + 1
       await waitFor(() => {
         const entries = parseManifest(workspacePath, 'alice')
-        const dispatchEntries = entries.filter((e: { type: string }) => e.type === 'dispatch_received')
+        const dispatchEntries = entries.filter(
+          (e: { type: string }) => e.type === 'dispatch_received'
+        )
         expect(dispatchEntries.length).toBe(expectedDispatchCount)
       })
 
@@ -338,7 +366,15 @@ describe('agent journal persistence', () => {
   })
 
   test('getRecentEntries(count=5) returns last 5 of 10 entries', async () => {
-    const { baseUrl, orchestratorId, orchToken, workerId, workerToken, workspaceId, workspacePath } = ctx
+    const {
+      baseUrl,
+      orchestratorId,
+      orchToken,
+      workerId,
+      workerToken,
+      workspaceId,
+      workspacePath,
+    } = ctx
 
     for (let i = 0; i < 5; i++) {
       const sendRes = await fetch(`${baseUrl}/api/team/send`, {
@@ -357,7 +393,9 @@ describe('agent journal persistence', () => {
       const expectedDispatch = i + 1
       await waitFor(() => {
         const entries = parseManifest(workspacePath, 'alice')
-        expect(entries.filter((e: { type: string }) => e.type === 'dispatch_received').length).toBe(expectedDispatch)
+        expect(entries.filter((e: { type: string }) => e.type === 'dispatch_received').length).toBe(
+          expectedDispatch
+        )
       })
 
       await fetch(`${baseUrl}/api/team/report`, {
@@ -375,7 +413,9 @@ describe('agent journal persistence', () => {
       const expectedReport = i + 1
       await waitFor(() => {
         const entries = parseManifest(workspacePath, 'alice')
-        expect(entries.filter((e: { type: string }) => e.type === 'report_sent').length).toBe(expectedReport)
+        expect(entries.filter((e: { type: string }) => e.type === 'report_sent').length).toBe(
+          expectedReport
+        )
       })
     }
 

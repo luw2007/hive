@@ -46,7 +46,10 @@ describe('agent run bootstrap', () => {
 
     const [hiveBinDir] = (bootstrap.startEnv.PATH ?? '').split(delimiter)
     expect(hiveBinDir).toBeTruthy()
-    accessSync(join(hiveBinDir!, process.platform === 'win32' ? 'team.cmd' : 'team'), constants.X_OK)
+    accessSync(
+      join(hiveBinDir!, process.platform === 'win32' ? 'team.cmd' : 'team'),
+      constants.X_OK
+    )
   })
 
   test('does not snapshot sessions before spawning when a preset resume id is available', () => {

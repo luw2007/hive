@@ -33,10 +33,15 @@ export const createSession = (
       [
         'new-session',
         '-d',
-        '-s', name,
-        '-x', String(opts.cols),
-        '-y', String(opts.rows),
-        '--', command, ...args,
+        '-s',
+        name,
+        '-x',
+        String(opts.cols),
+        '-y',
+        String(opts.rows),
+        '--',
+        command,
+        ...args,
       ],
       { cwd: opts.cwd, env: { ...process.env, ...opts.env }, stdio: 'pipe' }
     )

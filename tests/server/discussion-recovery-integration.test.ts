@@ -13,7 +13,9 @@ describe('discussion crash recovery integration', () => {
   let ops: ReturnType<typeof createDiscussionOperations>
   let writeAgentStdin: ReturnType<typeof vi.fn>
 
-  const buildDeps = (overrides: Partial<DiscussionRecoveryInjectorDeps> = {}): DiscussionRecoveryInjectorDeps => ({
+  const buildDeps = (
+    overrides: Partial<DiscussionRecoveryInjectorDeps> = {}
+  ): DiscussionRecoveryInjectorDeps => ({
     discussionOps: ops,
     writeAgentStdin,
     ...overrides,

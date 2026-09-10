@@ -175,9 +175,7 @@ export const createWorkspaceStore = (
           .prepare('SELECT id FROM workspaces ORDER BY sort_order ASC, created_at ASC')
           .all() as Array<{ id: string }>
       ).map((row) => row.id)
-      return order
-        .filter((id) => workspaces.has(id))
-        .map((id) => workspaces.get(id)!.summary)
+      return order.filter((id) => workspaces.has(id)).map((id) => workspaces.get(id)!.summary)
     },
     reorderWorkspaces(workspaceIds: string[]) {
       const stmt = db.prepare('UPDATE workspaces SET sort_order = ? WHERE id = ?')

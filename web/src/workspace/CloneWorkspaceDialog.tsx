@@ -79,9 +79,7 @@ export const CloneWorkspaceDialog = ({
 
               <div className="flex flex-col gap-4 overflow-y-auto px-5 py-4">
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium text-sec">
-                    {t('cloneWorkspace.branch')}
-                  </span>
+                  <span className="text-sm font-medium text-sec">{t('cloneWorkspace.branch')}</span>
                   <input
                     // biome-ignore lint/a11y/noAutofocus: dialog is user-initiated
                     autoFocus
@@ -94,18 +92,14 @@ export const CloneWorkspaceDialog = ({
                 </label>
 
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium text-sec">
-                    {t('cloneWorkspace.name')}
-                  </span>
+                  <span className="text-sm font-medium text-sec">{t('cloneWorkspace.name')}</span>
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={derivedName}
                     className="input"
                   />
-                  <span className="text-xs text-ter">
-                    {t('cloneWorkspace.nameHint')}
-                  </span>
+                  <span className="text-xs text-ter">{t('cloneWorkspace.nameHint')}</span>
                 </label>
 
                 <div className="flex flex-col gap-2">
@@ -127,9 +121,7 @@ export const CloneWorkspaceDialog = ({
                   </label>
                 </div>
 
-                {error ? (
-                  <p className="text-sm text-status-red">{error}</p>
-                ) : null}
+                {error ? <p className="text-sm text-status-red">{error}</p> : null}
               </div>
 
               <div

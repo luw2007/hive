@@ -50,7 +50,10 @@ export const StopWorkerDialog = ({
             <button
               type="button"
               className="btn btn--danger"
-              onClick={() => { onConfirm(); onOpenChange(false) }}
+              onClick={() => {
+                onConfirm()
+                onOpenChange(false)
+              }}
             >
               <Square size={12} aria-hidden />
               {t('worker.stopSubmit')}

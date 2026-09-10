@@ -27,7 +27,12 @@ import { renderInlineMarkdown } from './inline-markdown.js'
 import { TaskGraphRawEditor } from './TaskGraphRawEditor.js'
 import { countDirectCheckboxChildren, type ParsedTask, parseTaskMarkdown } from './task-markdown.js'
 import { ownerToneFromName, parseTaskMetadata, type TaskMetaItem } from './task-meta.js'
-import { type DispatchItem, groupDispatchesByTaskId, type TaskDispatchSummary, useDispatchesForWorkspace } from './useTasksApi.js'
+import {
+  type DispatchItem,
+  groupDispatchesByTaskId,
+  type TaskDispatchSummary,
+  useDispatchesForWorkspace,
+} from './useTasksApi.js'
 import { DispatchHistorySection } from './DispatchHistorySection.js'
 
 /**
@@ -326,7 +331,9 @@ const TaskItem = ({
                   className={`task-row__title task-row__title--clamp min-w-0 flex-1 ${
                     task.checked ? 'text-ter line-through' : 'text-pri'
                   }`}
-                  onDoubleClick={() => { if (canEdit) setEditing(true) }}
+                  onDoubleClick={() => {
+                    if (canEdit) setEditing(true)
+                  }}
                   title={title}
                 >
                   <span className="text-xs font-mono text-neutral-400 mr-1.5">#{task.seq}</span>
@@ -443,7 +450,7 @@ const TaskItem = ({
                 </button>
               </Tooltip>
             ) : null}
-            {(canEdit || canAddSubtask || canDelete) ? (
+            {canEdit || canAddSubtask || canDelete ? (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <button
@@ -471,7 +478,10 @@ const TaskItem = ({
                       <DropdownMenu.Item
                         className="dropdown-menu__item"
                         data-testid={`task-add-subtask-${task.line}`}
-                        onSelect={() => { setCollapsed(false); setAdding(true) }}
+                        onSelect={() => {
+                          setCollapsed(false)
+                          setAdding(true)
+                        }}
                       >
                         <CornerDownRight size={12} aria-hidden />
                         {t('tasks.action.addSubtask')}
@@ -689,7 +699,10 @@ export const TaskGraphDrawer = ({
   const { dispatches } = useDispatchesForWorkspace(open ? workspaceId : null)
   const dispatchByTaskId = useMemo(() => groupDispatchesByTaskId(dispatches), [dispatches])
   const orphanDispatches = useMemo(
-    () => dispatches.filter((d) => d.task_id !== null && d.state !== 'reported' && d.state !== 'cancelled'),
+    () =>
+      dispatches.filter(
+        (d) => d.task_id !== null && d.state !== 'reported' && d.state !== 'cancelled'
+      ),
     [dispatches]
   )
   // Copy the *raw markdown line* from the source-of-truth content, not the
@@ -728,7 +741,9 @@ export const TaskGraphDrawer = ({
   })
   const toggleCompleted = () => {
     setCompletedOpen((v) => {
-      try { localStorage.setItem('hive:done-collapsed', v ? 'true' : 'false') } catch {}
+      try {
+        localStorage.setItem('hive:done-collapsed', v ? 'true' : 'false')
+      } catch {}
       return !v
     })
   }
@@ -829,7 +844,11 @@ export const TaskGraphDrawer = ({
           <>
             {onAppendTask ? (
               <div className="mb-1">
-                <AddTaskInline disabled={connectionStale} onSubmit={onAppendTask} forceOpen={requestAddTask} />
+                <AddTaskInline
+                  disabled={connectionStale}
+                  onSubmit={onAppendTask}
+                  forceOpen={requestAddTask}
+                />
               </div>
             ) : null}
             <EmptyState
@@ -846,7 +865,11 @@ export const TaskGraphDrawer = ({
               ))}
               {onAppendTask ? (
                 <li>
-                  <AddTaskInline disabled={connectionStale} onSubmit={onAppendTask} forceOpen={requestAddTask} />
+                  <AddTaskInline
+                    disabled={connectionStale}
+                    onSubmit={onAppendTask}
+                    forceOpen={requestAddTask}
+                  />
                 </li>
               ) : null}
             </ul>
@@ -878,7 +901,10 @@ export const TaskGraphDrawer = ({
               </div>
             ) : null}
             {dispatches.length > 0 && !rawMode ? (
-              <OrphanDispatchesSection dispatches={dispatches} dispatchByTaskId={dispatchByTaskId} />
+              <OrphanDispatchesSection
+                dispatches={dispatches}
+                dispatchByTaskId={dispatchByTaskId}
+              />
             ) : null}
             {!rawMode ? <DispatchHistorySection workspaceId={workspaceId} /> : null}
           </div>

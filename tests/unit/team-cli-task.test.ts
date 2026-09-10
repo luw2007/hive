@@ -57,7 +57,9 @@ describe('team task', () => {
   })
 
   test('task show without id throws', async () => {
-    await expect(runTeamCommand(['task', 'show'])).rejects.toThrow('Usage: team task show <id|#seq>')
+    await expect(runTeamCommand(['task', 'show'])).rejects.toThrow(
+      'Usage: team task show <id|#seq>'
+    )
   })
 
   test('task create posts title and workspace_id', async () => {
@@ -96,9 +98,7 @@ describe('team task', () => {
   })
 
   test('task cancel posts status=cancelled', async () => {
-    fetchSpy.mockResolvedValue(
-      mockJsonResponse({ ok: true, task_id: 't-5', status: 'cancelled' })
-    )
+    fetchSpy.mockResolvedValue(mockJsonResponse({ ok: true, task_id: 't-5', status: 'cancelled' }))
     await runTeamCommand(['task', 'cancel', 't-5'])
     const [url, init] = fetchSpy.mock.calls[0]! as [string, RequestInit]
     expect(url).toContain('/api/team/tasks/t-5/status')
@@ -107,17 +107,19 @@ describe('team task', () => {
   })
 
   test('task done/block/cancel without id throws', async () => {
-    await expect(runTeamCommand(['task', 'done'])).rejects.toThrow('Usage: team task done <id|#seq>')
-    await expect(runTeamCommand(['task', 'block'])).rejects.toThrow('Usage: team task block <id|#seq>')
+    await expect(runTeamCommand(['task', 'done'])).rejects.toThrow(
+      'Usage: team task done <id|#seq>'
+    )
+    await expect(runTeamCommand(['task', 'block'])).rejects.toThrow(
+      'Usage: team task block <id|#seq>'
+    )
     await expect(runTeamCommand(['task', 'cancel'])).rejects.toThrow(
       'Usage: team task cancel <id|#seq>'
     )
   })
 
   test('unknown task subcommand throws', async () => {
-    await expect(runTeamCommand(['task', 'yeet'])).rejects.toThrow(
-      'Unknown task subcommand: yeet'
-    )
+    await expect(runTeamCommand(['task', 'yeet'])).rejects.toThrow('Unknown task subcommand: yeet')
   })
 })
 
@@ -127,9 +129,9 @@ describe('team send --task / --create-task', () => {
 
   beforeEach(() => {
     Object.assign(process.env, mockEnv)
-    fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      mockJsonResponse({ ok: true, dispatch_id: 'd-1' })
-    )
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(mockJsonResponse({ ok: true, dispatch_id: 'd-1' }))
     vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 

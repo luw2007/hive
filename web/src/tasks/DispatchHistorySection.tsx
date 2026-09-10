@@ -18,8 +18,7 @@ const formatRelativeTime = (ts: number): string => {
   return `${days}d`
 }
 
-const truncate = (text: string, max = 50) =>
-  text.length <= max ? text : `${text.slice(0, max)}…`
+const truncate = (text: string, max = 50) => (text.length <= max ? text : `${text.slice(0, max)}…`)
 
 const HistoryRow = ({ item }: { item: DispatchItem }) => {
   const time = item.reported_at ?? item.created_at
@@ -78,9 +77,7 @@ export const DispatchHistorySection = ({ workspaceId }: { workspaceId: string | 
               {t('tasks.dispatchHistory.loadMore')}
             </button>
           ) : null}
-          {loading ? (
-            <p className="mt-1.5 px-2 text-xs text-ter">{t('common.loading')}</p>
-          ) : null}
+          {loading ? <p className="mt-1.5 px-2 text-xs text-ter">{t('common.loading')}</p> : null}
         </div>
       ) : null}
     </div>

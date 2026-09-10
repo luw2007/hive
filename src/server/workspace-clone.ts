@@ -14,7 +14,10 @@ export const isGitRepo = (path: string): boolean => {
 }
 
 const slugifyBranch = (branch: string): string =>
-  branch.replace(/[/\\:*?"<>|]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  branch
+    .replace(/[/\\:*?"<>|]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 
 export const buildWorktreePath = (basePath: string, branch: string): string => {
   const parentDir = dirname(basePath)
@@ -93,11 +96,21 @@ export const cloneWorkspaceWorkers = (
         store.configureAgentLaunch(targetWorkspaceId, worker.id, {
           command: launchConfig.command,
           ...(launchConfig.args ? { args: launchConfig.args } : {}),
-          ...(launchConfig.commandPresetId != null ? { commandPresetId: launchConfig.commandPresetId } : {}),
-          ...(launchConfig.interactiveCommand != null ? { interactiveCommand: launchConfig.interactiveCommand } : {}),
-          ...(launchConfig.presetAugmentationDisabled != null ? { presetAugmentationDisabled: launchConfig.presetAugmentationDisabled } : {}),
-          ...(launchConfig.resumeArgsTemplate != null ? { resumeArgsTemplate: launchConfig.resumeArgsTemplate } : {}),
-          ...(launchConfig.sessionIdCapture != null ? { sessionIdCapture: launchConfig.sessionIdCapture } : {}),
+          ...(launchConfig.commandPresetId != null
+            ? { commandPresetId: launchConfig.commandPresetId }
+            : {}),
+          ...(launchConfig.interactiveCommand != null
+            ? { interactiveCommand: launchConfig.interactiveCommand }
+            : {}),
+          ...(launchConfig.presetAugmentationDisabled != null
+            ? { presetAugmentationDisabled: launchConfig.presetAugmentationDisabled }
+            : {}),
+          ...(launchConfig.resumeArgsTemplate != null
+            ? { resumeArgsTemplate: launchConfig.resumeArgsTemplate }
+            : {}),
+          ...(launchConfig.sessionIdCapture != null
+            ? { sessionIdCapture: launchConfig.sessionIdCapture }
+            : {}),
         })
       } catch {
         // launch config copy failed — skip, worker still created

@@ -63,8 +63,26 @@ export interface DiscussionTriggers {
 }
 
 const CONDITION_KEYWORDS: Record<DiscussionTriggerCondition, string[]> = {
-  task_has_multiple_approaches: ['approach', 'option', 'alternative', 'choose', 'compare', 'tradeoff', 'versus', 'vs'],
-  task_is_high_risk: ['risk', 'dangerous', 'breaking', 'migration', 'irreversible', 'production', 'deploy', 'critical'],
+  task_has_multiple_approaches: [
+    'approach',
+    'option',
+    'alternative',
+    'choose',
+    'compare',
+    'tradeoff',
+    'versus',
+    'vs',
+  ],
+  task_is_high_risk: [
+    'risk',
+    'dangerous',
+    'breaking',
+    'migration',
+    'irreversible',
+    'production',
+    'deploy',
+    'critical',
+  ],
   task_needs_review: ['review', 'audit', 'check', 'validate', 'approve', 'security', 'compliance'],
   manual: [],
 }
@@ -79,7 +97,8 @@ export const evaluateTrigger = (
   const lower = taskDescription.toLowerCase()
   return triggers.filter((rule) => {
     if (rule.condition === 'manual') return false
-    if (rule.min_workers && availableWorkers !== undefined && availableWorkers < rule.min_workers) return false
+    if (rule.min_workers && availableWorkers !== undefined && availableWorkers < rule.min_workers)
+      return false
     const keywords = CONDITION_KEYWORDS[rule.condition]
     return keywords.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`).test(lower))
   })

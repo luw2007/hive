@@ -329,7 +329,9 @@ export const workspaceRoutes: RouteDefinition[] = [
     }
     const existingIds = new Set(store.listWorkspaces().map((w) => w.id))
     if (body.order.length !== existingIds.size) {
-      throw new BadRequestError(`order length ${body.order.length} does not match workspace count ${existingIds.size}`)
+      throw new BadRequestError(
+        `order length ${body.order.length} does not match workspace count ${existingIds.size}`
+      )
     }
     const seen = new Set<string>()
     for (const id of body.order) {
@@ -377,7 +379,12 @@ export const workspaceRoutes: RouteDefinition[] = [
       }
 
       const basePath = buildWorktreePath(sourcePath, body.branch)
-      const worktreePath = createWorktree(sourcePath, basePath, body.branch, body.create_branch ?? false)
+      const worktreePath = createWorktree(
+        sourcePath,
+        basePath,
+        body.branch,
+        body.create_branch ?? false
+      )
 
       const name = body.name || `${snapshot.summary.name}-${body.branch.replace(/\//g, '-')}`
       const workspace = store.createWorkspace(worktreePath, name)

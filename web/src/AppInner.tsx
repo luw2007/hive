@@ -33,7 +33,8 @@ export const AppInner = () => {
   const { activeWorkspaceId, selectWorkspace, setActiveWorkspaceId } = useWorkspaceSelection()
   const { demoMode, enableDemo, exitDemo } = useDemoMode()
   const localPollIds = demoMode || !workspaces ? [] : workspaces.map(({ id }) => id)
-  const { workersByWorkspaceId, setWorkersByWorkspaceId, handleTeamUpdate } = useWorkspaceWorkers(localPollIds)
+  const { workersByWorkspaceId, setWorkersByWorkspaceId, handleTeamUpdate } =
+    useWorkspaceWorkers(localPollIds)
   useGlobalSSE(handleTeamUpdate)
   const [addDialogTrigger, setAddDialogTrigger] = useState(0)
   const [taskGraphOpen, setTaskGraphOpen] = useState(false)

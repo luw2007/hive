@@ -19,7 +19,11 @@ export type SyncKind = 'full' | 'minimal' | 'terminal'
 export interface DiscussionRecoveryInjectorDeps {
   discussionOps: Pick<
     DiscussionOperations,
-    'getActiveDiscussionsForAgent' | 'getPhaseKey' | 'shouldInjectSync' | 'recordSyncAttempt' | 'getMembers'
+    | 'getActiveDiscussionsForAgent'
+    | 'getPhaseKey'
+    | 'shouldInjectSync'
+    | 'recordSyncAttempt'
+    | 'getMembers'
   >
   writeAgentStdin: (workspaceId: string, agentId: string, text: string) => void
 }
@@ -83,12 +87,11 @@ const buildBriefForKind = (
     .slice(-3)
     .map((m) => m.text.slice(0, 200))
 
-  const visibleMessages = messages
-    .slice(-5)
-    .map((m) => {
-      const name = allMembers.find((mem) => mem.agent_id === m.from_agent_id)?.agent_name ?? m.from_agent_id
-      return { name, text: m.text.slice(0, 200) }
-    })
+  const visibleMessages = messages.slice(-5).map((m) => {
+    const name =
+      allMembers.find((mem) => mem.agent_id === m.from_agent_id)?.agent_name ?? m.from_agent_id
+    return { name, text: m.text.slice(0, 200) }
+  })
 
   const input: FullRecoveryBriefInput = {
     topic: group.topic,

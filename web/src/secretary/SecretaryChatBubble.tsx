@@ -26,31 +26,53 @@ const PANEL_MAX_H = 800
 const PANEL_DEFAULT_W = 320
 const PANEL_DEFAULT_H = 480
 
-interface PanelBounds { x: number; y: number; w: number; h: number }
+interface PanelBounds {
+  x: number
+  y: number
+  w: number
+  h: number
+}
 
 function loadPanelBounds(workspaceId: string): PanelBounds | null {
   try {
     const raw = localStorage.getItem(PANEL_BOUNDS_KEY(workspaceId))
     if (raw) {
       const v = JSON.parse(raw) as PanelBounds
-      if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.w === 'number' && typeof v.h === 'number') return v
+      if (
+        typeof v.x === 'number' &&
+        typeof v.y === 'number' &&
+        typeof v.w === 'number' &&
+        typeof v.h === 'number'
+      )
+        return v
     }
     // Lazy migration: read old shared key and migrate to per-workspace
     const legacy = localStorage.getItem('secretary-panel-bounds')
     if (legacy) {
       const v = JSON.parse(legacy) as PanelBounds
-      if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.w === 'number' && typeof v.h === 'number') {
+      if (
+        typeof v.x === 'number' &&
+        typeof v.y === 'number' &&
+        typeof v.w === 'number' &&
+        typeof v.h === 'number'
+      ) {
         localStorage.setItem(PANEL_BOUNDS_KEY(workspaceId), legacy)
         localStorage.removeItem('secretary-panel-bounds')
         return v
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null
 }
 
 function savePanelBounds(workspaceId: string, b: PanelBounds) {
-  try { localStorage.setItem(PANEL_BOUNDS_KEY(workspaceId), JSON.stringify(b)) } catch { /* ignore */ }
+  try {
+    localStorage.setItem(PANEL_BOUNDS_KEY(workspaceId), JSON.stringify(b))
+  } catch {
+    /* ignore */
+  }
 }
 
 function clampBounds(b: PanelBounds): PanelBounds {
@@ -66,7 +88,12 @@ function clampBounds(b: PanelBounds): PanelBounds {
 function defaultBounds(): PanelBounds {
   const vw = window.innerWidth
   const vh = window.innerHeight
-  return { x: vw - PANEL_DEFAULT_W - 24, y: vh - PANEL_DEFAULT_H - 80, w: PANEL_DEFAULT_W, h: PANEL_DEFAULT_H }
+  return {
+    x: vw - PANEL_DEFAULT_W - 24,
+    y: vh - PANEL_DEFAULT_H - 80,
+    w: PANEL_DEFAULT_W,
+    h: PANEL_DEFAULT_H,
+  }
 }
 
 function positionKey(workspaceId: string) {
@@ -99,10 +126,27 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Panel bounds (independent from FAB)
-  const [panelBounds, setPanelBounds] = useState<PanelBounds>(() => loadPanelBounds(workspaceId) ?? { x: -1, y: -1, w: PANEL_DEFAULT_W, h: PANEL_DEFAULT_H })
+  const [panelBounds, setPanelBounds] = useState<PanelBounds>(
+    () => loadPanelBounds(workspaceId) ?? { x: -1, y: -1, w: PANEL_DEFAULT_W, h: PANEL_DEFAULT_H }
+  )
   const panelRef = useRef<HTMLDivElement>(null)
-  const panelDragRef = useRef<{ active: boolean; mx: number; my: number; ox: number; oy: number }>({ active: false, mx: 0, my: 0, ox: 0, oy: 0 })
-  const resizeRef = useRef<{ active: boolean; edge: ResizeEdge; mx: number; my: number; ox: number; oy: number; ow: number; oh: number } | null>(null)
+  const panelDragRef = useRef<{ active: boolean; mx: number; my: number; ox: number; oy: number }>({
+    active: false,
+    mx: 0,
+    my: 0,
+    ox: 0,
+    oy: 0,
+  })
+  const resizeRef = useRef<{
+    active: boolean
+    edge: ResizeEdge
+    mx: number
+    my: number
+    ox: number
+    oy: number
+    ow: number
+    oh: number
+  } | null>(null)
 
   // Initialize panel position on first open if not persisted
   useEffect(() => {
@@ -114,26 +158,38 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
   // Load position from server
   useEffect(() => {
     const key = positionKey(workspaceId)
-    void fetch(`/api/settings/app-state/${key}`).then(async (res) => {
-      if (!res.ok) return
-      const payload = (await res.json()) as { key: string; value: { x: number; y: number } | null }
-      if (payload.value && typeof payload.value.x === 'number' && typeof payload.value.y === 'number') {
-        setPos(payload.value)
-      }
-    }).catch(() => {})
+    void fetch(`/api/settings/app-state/${key}`)
+      .then(async (res) => {
+        if (!res.ok) return
+        const payload = (await res.json()) as {
+          key: string
+          value: { x: number; y: number } | null
+        }
+        if (
+          payload.value &&
+          typeof payload.value.x === 'number' &&
+          typeof payload.value.y === 'number'
+        ) {
+          setPos(payload.value)
+        }
+      })
+      .catch(() => {})
   }, [workspaceId])
 
-  const persistPosition = useCallback((p: { x: number; y: number }) => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => {
-      const key = positionKey(workspaceId)
-      void fetch(`/api/settings/app-state/${key}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ value: p }),
-      }).catch(() => {})
-    }, 300)
-  }, [workspaceId])
+  const persistPosition = useCallback(
+    (p: { x: number; y: number }) => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        const key = positionKey(workspaceId)
+        void fetch(`/api/settings/app-state/${key}`, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ value: p }),
+        }).catch(() => {})
+      }, 300)
+    },
+    [workspaceId]
+  )
 
   // FAB drag handlers
   const onPointerDown = useCallback((e: React.PointerEvent) => {
@@ -160,32 +216,44 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
     }
   }, [])
 
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
-    const fab = fabRef.current
-    if (!fab) return
-    fab.releasePointerCapture(e.pointerId)
-    if (draggingRef.current) {
-      draggingRef.current = false
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      const clampedX = Math.max(0, Math.min(pos.x, vw - 48))
-      const clampedY = Math.max(0, Math.min(pos.y, vh - 48))
-      const finalPos = { x: clampedX, y: clampedY }
-      setPos(finalPos)
-      persistPosition(finalPos)
-    } else {
-      setOpen((v) => !v)
-    }
-  }, [pos, persistPosition])
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      const fab = fabRef.current
+      if (!fab) return
+      fab.releasePointerCapture(e.pointerId)
+      if (draggingRef.current) {
+        draggingRef.current = false
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+        const clampedX = Math.max(0, Math.min(pos.x, vw - 48))
+        const clampedY = Math.max(0, Math.min(pos.y, vh - 48))
+        const finalPos = { x: clampedX, y: clampedY }
+        setPos(finalPos)
+        persistPosition(finalPos)
+      } else {
+        setOpen((v) => !v)
+      }
+    },
+    [pos, persistPosition]
+  )
 
   // Panel header drag handlers
-  const onPanelHeaderPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const panel = panelRef.current
-    if (!panel) return
-    panelDragRef.current = { active: true, mx: e.clientX, my: e.clientY, ox: panelBounds.x, oy: panelBounds.y }
-    panel.setPointerCapture(e.pointerId)
-  }, [panelBounds.x, panelBounds.y])
+  const onPanelHeaderPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      const panel = panelRef.current
+      if (!panel) return
+      panelDragRef.current = {
+        active: true,
+        mx: e.clientX,
+        my: e.clientY,
+        ox: panelBounds.x,
+        oy: panelBounds.y,
+      }
+      panel.setPointerCapture(e.pointerId)
+    },
+    [panelBounds.x, panelBounds.y]
+  )
 
   const onPanelPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const panel = panelRef.current
@@ -199,8 +267,14 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
       const edge = r.edge
       if (edge.includes('e')) w = r.ow + dx
       if (edge.includes('s')) h = r.oh + dy
-      if (edge.includes('w')) { w = r.ow - dx; x = r.ox + dx }
-      if (edge.includes('n')) { h = r.oh - dy; y = r.oy + dy }
+      if (edge.includes('w')) {
+        w = r.ow - dx
+        x = r.ox + dx
+      }
+      if (edge.includes('n')) {
+        h = r.oh - dy
+        y = r.oy + dy
+      }
       setPanelBounds(clampBounds({ x, y, w, h }))
       return
     }
@@ -229,14 +303,26 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
     }
   }, [])
 
-  const onResizeHandlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>, edge: ResizeEdge) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const panel = panelRef.current
-    if (!panel) return
-    resizeRef.current = { active: true, edge, mx: e.clientX, my: e.clientY, ox: panelBounds.x, oy: panelBounds.y, ow: panelBounds.w, oh: panelBounds.h }
-    panel.setPointerCapture(e.pointerId)
-  }, [panelBounds])
+  const onResizeHandlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, edge: ResizeEdge) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const panel = panelRef.current
+      if (!panel) return
+      resizeRef.current = {
+        active: true,
+        edge,
+        mx: e.clientX,
+        my: e.clientY,
+        ox: panelBounds.x,
+        oy: panelBounds.y,
+        ow: panelBounds.w,
+        oh: panelBounds.h,
+      }
+      panel.setPointerCapture(e.pointerId)
+    },
+    [panelBounds]
+  )
 
   // Ctrl+Shift+T shortcut: open panel and focus task input
   useEffect(() => {
@@ -319,8 +405,11 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
       })
       setTaskInput('')
       setTaskAssignee('')
-    } catch { /* silent */ }
-    finally { setTaskSubmitting(false) }
+    } catch {
+      /* silent */
+    } finally {
+      setTaskSubmitting(false)
+    }
   }
 
   const handleTaskKeyDown = (e: React.KeyboardEvent) => {
@@ -361,14 +450,22 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
   }
 
   // Compute FAB style: use saved position or default (right:24, bottom:24)
-  const fabStyle: React.CSSProperties = pos.x >= 0
-    ? { position: 'fixed', left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
-    : {}
+  const fabStyle: React.CSSProperties =
+    pos.x >= 0 ? { position: 'fixed', left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' } : {}
 
   // Panel uses its own bounds (independent of FAB)
-  const panelStyle: React.CSSProperties = panelBounds.x >= 0
-    ? { position: 'fixed', left: panelBounds.x, top: panelBounds.y, width: panelBounds.w, height: panelBounds.h, right: 'auto', bottom: 'auto' }
-    : { width: panelBounds.w, height: panelBounds.h }
+  const panelStyle: React.CSSProperties =
+    panelBounds.x >= 0
+      ? {
+          position: 'fixed',
+          left: panelBounds.x,
+          top: panelBounds.y,
+          width: panelBounds.w,
+          height: panelBounds.h,
+          right: 'auto',
+          bottom: 'auto',
+        }
+      : { width: panelBounds.w, height: panelBounds.h }
 
   const activeWorkers = workers.filter((w) => w.status !== 'stopped')
 
@@ -399,7 +496,7 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
           onPointerUp={onPanelPointerUp}
         >
           {/* Resize handles */}
-          {(['n','s','e','w','nw','ne','sw','se'] as ResizeEdge[]).map((edge) => (
+          {(['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'] as ResizeEdge[]).map((edge) => (
             <div
               key={edge}
               className={`secretary-resize-handle secretary-resize-${edge}`}
@@ -445,7 +542,9 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
               >
                 <option value="">{t('quickTask.noAssignee')}</option>
                 {activeWorkers.map((w) => (
-                  <option key={w.id} value={w.name}>{w.name}</option>
+                  <option key={w.id} value={w.name}>
+                    {w.name}
+                  </option>
                 ))}
               </select>
             )}
@@ -454,15 +553,19 @@ export const SecretaryChatBubble = ({ workspaceId, workers }: SecretaryChatBubbl
           {/* Messages */}
           <div className="secretary-chat-messages">
             {messages.length === 0 && (
-              <div className="secretary-chat-empty">{t('secretary.empty').split('\n').map((line, i) => (
-                <span key={i}>{line}{i === 0 && <br />}</span>
-              ))}</div>
+              <div className="secretary-chat-empty">
+                {t('secretary.empty')
+                  .split('\n')
+                  .map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i === 0 && <br />}
+                    </span>
+                  ))}
+              </div>
             )}
             {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`secretary-chat-msg secretary-chat-msg-${msg.role}`}
-              >
+              <div key={msg.id} className={`secretary-chat-msg secretary-chat-msg-${msg.role}`}>
                 {msg.role === 'system' && (
                   <AlertTriangle size={14} className="secretary-chat-msg-icon" />
                 )}

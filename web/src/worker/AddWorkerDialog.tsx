@@ -204,7 +204,9 @@ export const AddWorkerDialog = ({
                 <RolePicker
                   customTemplates={customTemplates}
                   workerRole={workerRole}
-                  selectedTemplateName={customTemplates.find((t) => t.id === selectedTemplateId)?.name}
+                  selectedTemplateName={
+                    customTemplates.find((t) => t.id === selectedTemplateId)?.name
+                  }
                   selectedTemplateId={selectedTemplateId}
                   usedTemplateNames={usedTemplateNames}
                   onRoleChange={onRoleChange}
@@ -278,7 +280,10 @@ export const AddWorkerDialog = ({
                     />
                     <button
                       type="button"
-                      onClick={() => { setSaveAsTemplateMode(false); setTemplateName('') }}
+                      onClick={() => {
+                        setSaveAsTemplateMode(false)
+                        setTemplateName('')
+                      }}
                       className="text-xs text-sec hover:text-pri"
                     >
                       {t('common.cancel')}
@@ -311,7 +316,11 @@ export const AddWorkerDialog = ({
                       className="icon-btn icon-btn--primary"
                       data-testid="add-worker-submit"
                     >
-                      {creating ? t('addWorker.creating') : (saveAsTemplateMode ? t('addWorker.saveAndCreate') : t('addWorker.create'))}
+                      {creating
+                        ? t('addWorker.creating')
+                        : saveAsTemplateMode
+                          ? t('addWorker.saveAndCreate')
+                          : t('addWorker.create')}
                     </button>
                   </div>
                 </div>

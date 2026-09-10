@@ -9,7 +9,9 @@ import { ToastProvider } from '../../web/src/ui/useToast.js'
 import { AddWorkerDialog } from '../../web/src/worker/AddWorkerDialog.js'
 
 const baseProps = {
-  commandPresets: [{ id: 'claude', displayName: 'Claude Code', command: 'claude', args: [], available: true }],
+  commandPresets: [
+    { id: 'claude', displayName: 'Claude Code', command: 'claude', args: [], available: true },
+  ],
   commandPresetId: 'claude',
   creating: false,
   customRoleName: 'Helper',

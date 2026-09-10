@@ -271,7 +271,15 @@ export const parseReportArgs = (args: string[], command = 'report'): ParsedRepor
     )
   }
 
-  return { result: useStdin ? null : (positionals[0] ?? null), artifacts, checkpoint, dispatchId, handover, priority, useStdin }
+  return {
+    result: useStdin ? null : (positionals[0] ?? null),
+    artifacts,
+    checkpoint,
+    dispatchId,
+    handover,
+    priority,
+    useStdin,
+  }
 }
 
 const SEQ_PATTERN = /^#(\d+)$/
@@ -394,8 +402,14 @@ export const runTeamCommand = async (argv: string[]) => {
 
     for (let i = 0; i < args.length; i++) {
       const arg = args[i]
-      if (arg === '--task' && args[i + 1]) { taskId = args[++i]; continue }
-      if (arg === '--create-task') { createTask = true; continue }
+      if (arg === '--task' && args[i + 1]) {
+        taskId = args[++i]
+        continue
+      }
+      if (arg === '--create-task') {
+        createTask = true
+        continue
+      }
       filtered.push(arg!)
     }
 
@@ -487,15 +501,17 @@ export const runTeamCommand = async (argv: string[]) => {
     const [subcommand, ...subArgs] = args
 
     if (!subcommand || subcommand === '--help') {
-      console.log([
-        'Usage:',
-        '  team task list [--status <status>]',
-        '  team task create "<title>"',
-        '  team task done <id>',
-        '  team task block <id>',
-        '  team task cancel <id>',
-        '  team task show <id>',
-      ].join('\n'))
+      console.log(
+        [
+          'Usage:',
+          '  team task list [--status <status>]',
+          '  team task create "<title>"',
+          '  team task done <id>',
+          '  team task block <id>',
+          '  team task cancel <id>',
+          '  team task show <id>',
+        ].join('\n')
+      )
       return
     }
 
@@ -509,7 +525,10 @@ export const runTeamCommand = async (argv: string[]) => {
     if (subcommand === 'list') {
       let status: string | undefined
       for (let i = 0; i < subArgs.length; i++) {
-        if (subArgs[i] === '--status' && subArgs[i + 1]) { status = subArgs[++i]; continue }
+        if (subArgs[i] === '--status' && subArgs[i + 1]) {
+          status = subArgs[++i]
+          continue
+        }
       }
       const qs = new URLSearchParams({ workspace_id: env.HIVE_PROJECT_ID })
       if (status) qs.set('status', status)
@@ -580,17 +599,32 @@ export const runTeamCommand = async (argv: string[]) => {
 
       for (let i = 0; i < args.length; i++) {
         const arg = args[i]
-        if (arg === '--members' && args[i + 1]) { members = args[++i]; continue }
-        if (arg === '--topic' && args[i + 1]) { topic = args[++i]; continue }
-        if (arg === '--rounds' && args[i + 1]) { rounds = Number(args[++i]); continue }
-        if (arg === '--listen' && args[i + 1]) { listenMode = args[++i]; continue }
+        if (arg === '--members' && args[i + 1]) {
+          members = args[++i]
+          continue
+        }
+        if (arg === '--topic' && args[i + 1]) {
+          topic = args[++i]
+          continue
+        }
+        if (arg === '--rounds' && args[i + 1]) {
+          rounds = Number(args[++i])
+          continue
+        }
+        if (arg === '--listen' && args[i + 1]) {
+          listenMode = args[++i]
+          continue
+        }
       }
 
       if (!members || !topic) {
         throw new Error('Usage: team discuss --start --members "<w1>,<w2>" --topic "<question>"')
       }
 
-      const memberList = members.split(',').map((m) => m.trim()).filter(Boolean)
+      const memberList = members
+        .split(',')
+        .map((m) => m.trim())
+        .filter(Boolean)
       const response = await postJson(baseUrl, '/api/team/discuss/start', {
         project_id: env.HIVE_PROJECT_ID,
         from_agent_id: env.HIVE_AGENT_ID,
@@ -610,7 +644,10 @@ export const runTeamCommand = async (argv: string[]) => {
       let reason: string | undefined
       const cancel = args.includes('--cancel')
       for (let i = 0; i < args.length; i++) {
-        if (args[i] === '--reason' && args[i + 1]) { reason = args[++i]; continue }
+        if (args[i] === '--reason' && args[i + 1]) {
+          reason = args[++i]
+          continue
+        }
       }
       const response = await postJson(baseUrl, '/api/team/discuss/end', {
         project_id: env.HIVE_PROJECT_ID,
@@ -690,7 +727,10 @@ export const runTeamCommand = async (argv: string[]) => {
     }
 
     // No flag: send discussion message (positional arg)
-    const text = args.filter((a) => !a.startsWith('--')).join(' ').trim()
+    const text = args
+      .filter((a) => !a.startsWith('--'))
+      .join(' ')
+      .trim()
     if (!text) {
       throw new Error('Usage: team discuss "<message>"')
     }
@@ -707,7 +747,9 @@ export const runTeamCommand = async (argv: string[]) => {
   if (command === 'decide') {
     const content = args[0]
     if (!content) {
-      throw new Error('Usage: team decide "<content>" --category <category> --reason "<reason>" [--source <source>] [--supersede <id>]')
+      throw new Error(
+        'Usage: team decide "<content>" --category <category> --reason "<reason>" [--source <source>] [--supersede <id>]'
+      )
     }
     let category: string | undefined
     let reason: string | undefined
@@ -715,12 +757,27 @@ export const runTeamCommand = async (argv: string[]) => {
     let source: string | undefined
     for (let i = 1; i < args.length; i++) {
       const arg = args[i]
-      if (arg === '--category' && args[i + 1]) { category = args[++i]; continue }
-      if (arg === '--reason' && args[i + 1]) { reason = args[++i]; continue }
-      if (arg === '--supersede' && args[i + 1]) { supersedeId = args[++i]; continue }
-      if (arg === '--source' && args[i + 1]) { source = args[++i]; continue }
+      if (arg === '--category' && args[i + 1]) {
+        category = args[++i]
+        continue
+      }
+      if (arg === '--reason' && args[i + 1]) {
+        reason = args[++i]
+        continue
+      }
+      if (arg === '--supersede' && args[i + 1]) {
+        supersedeId = args[++i]
+        continue
+      }
+      if (arg === '--source' && args[i + 1]) {
+        source = args[++i]
+        continue
+      }
     }
-    if (!category) throw new Error('--category is required (tech, scope, priority, constraint, preference, process)')
+    if (!category)
+      throw new Error(
+        '--category is required (tech, scope, priority, constraint, preference, process)'
+      )
     if (!reason) throw new Error('--reason is required')
 
     const env = getHiveEnv()
@@ -749,7 +806,10 @@ export const runTeamCommand = async (argv: string[]) => {
     })
     let category: string | undefined
     for (let i = 0; i < args.length; i++) {
-      if (args[i] === '--category' && args[i + 1]) { category = args[++i]; continue }
+      if (args[i] === '--category' && args[i + 1]) {
+        category = args[++i]
+        continue
+      }
     }
     if (category) qs.set('category', category)
     const response = await fetchRuntime(baseUrl, `/api/team/decisions?${qs.toString()}`, {

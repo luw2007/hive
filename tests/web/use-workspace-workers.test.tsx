@@ -7,10 +7,13 @@ import { useWorkspaceWorkers } from '../../web/src/useWorkspaceWorkers.js'
 
 beforeEach(() => {
   // mock fetch 返回空 workers，避免初始 fetch 影响测试
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => [],
-  }))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+  )
 })
 
 afterEach(() => {

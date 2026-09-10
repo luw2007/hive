@@ -95,7 +95,10 @@ describe('decision ledger API', () => {
       }),
     })
     expect(res.status).toBe(201)
-    const body = (await res.json()) as { ok: boolean; decision: { id: string; content: string; category: string } }
+    const body = (await res.json()) as {
+      ok: boolean
+      decision: { id: string; content: string; category: string }
+    }
     expect(body.ok).toBe(true)
     expect(body.decision.id).toMatch(/^[0-9a-f-]{36}$/)
     expect(body.decision.content).toBe('使用 PostgreSQL 不用 MySQL')
@@ -150,7 +153,10 @@ describe('decision ledger API', () => {
     })
     const getRes = await fetch(`${baseUrl}/api/team/decisions?${qs.toString()}`)
     expect(getRes.status).toBe(200)
-    const getBody = (await getRes.json()) as { ok: boolean; decisions: Array<{ content: string; active: boolean }> }
+    const getBody = (await getRes.json()) as {
+      ok: boolean
+      decisions: Array<{ content: string; active: boolean }>
+    }
     expect(getBody.ok).toBe(true)
 
     const activeContents = getBody.decisions.map((d) => d.content)

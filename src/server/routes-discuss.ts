@@ -10,7 +10,11 @@ import {
   formatSynthesisReport,
   injectToAgent,
 } from './discussion-message-router.js'
-import { appendActionsToTasks, parseNextActions, type TaskService } from './discussion-post-actions.js'
+import {
+  appendActionsToTasks,
+  parseNextActions,
+  type TaskService,
+} from './discussion-post-actions.js'
 import { getDiscussionTemplate } from './discussion-templates.js'
 import { BadRequestError, ConflictError, ForbiddenError } from './http-errors.js'
 import { readJsonBody, route, sendJson } from './route-helpers.js'
@@ -408,7 +412,15 @@ export const discussRoutes: RouteDefinition[] = [
       const writeFn = (ws: string, agentId: string, t: string) =>
         writeToAgentStdin(store, ws, agentId, t)
       injectToAgent(projectId, orchId, reportText, writeFn)
-      handleConcludedPostActions(store, projectId, result.group.topic, reportText, orchId, writeFn, group.id)
+      handleConcludedPostActions(
+        store,
+        projectId,
+        result.group.topic,
+        reportText,
+        orchId,
+        writeFn,
+        group.id
+      )
       clearAllMemberQueues(projectId, result.members)
       markMembersOutOfDiscussion(store, projectId, result.members)
     }

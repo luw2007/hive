@@ -70,7 +70,7 @@ describe('tasks api', () => {
       body: JSON.stringify({ content: '- [ ] implement login\n' }),
     })
     expect(updateResponse.status).toBe(200)
-    const putResult = await updateResponse.json() as { content: string; readonly: boolean }
+    const putResult = (await updateResponse.json()) as { content: string; readonly: boolean }
     expect(putResult.readonly).toBe(true)
     expect(putResult.content).toBe('')
   })
@@ -103,7 +103,7 @@ describe('tasks api', () => {
     const getResponse = await fetch(`${baseUrl}/api/workspaces/${workspace.id}/tasks`, {
       headers: { cookie },
     })
-    const getResult = await getResponse.json() as { content: string }
+    const getResult = (await getResponse.json()) as { content: string }
     expect(getResult.content).toContain('implement login')
   })
 })

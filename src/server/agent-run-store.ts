@@ -232,23 +232,29 @@ export const createAgentRunStore = (db: Database) => {
 
   const updateCheckpoint = (runId: string, checkpointJson: string) => {
     if (closed) return
-    db.prepare(
-      'UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?'
-    ).run(checkpointJson, Date.now(), runId)
+    db.prepare('UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?').run(
+      checkpointJson,
+      Date.now(),
+      runId
+    )
   }
 
   const updateTmuxSession = (runId: string, sessionName: string | null) => {
     if (closed) return
-    db.prepare(
-      'UPDATE agent_runs SET tmux_session = ?, updated_at = ? WHERE run_id = ?'
-    ).run(sessionName, Date.now(), runId)
+    db.prepare('UPDATE agent_runs SET tmux_session = ?, updated_at = ? WHERE run_id = ?').run(
+      sessionName,
+      Date.now(),
+      runId
+    )
   }
 
   const findRunByTmuxSession = (sessionName: string): PersistedAgentRun | null => {
     if (closed) return null
-    const row = db.prepare(
-      'SELECT run_id, agent_id, pid, status, exit_code, started_at, ended_at, tmux_session FROM agent_runs WHERE tmux_session = ? AND status IN (\'starting\', \'running\') ORDER BY started_at DESC LIMIT 1'
-    ).get(sessionName) as AgentRunRow | undefined
+    const row = db
+      .prepare(
+        "SELECT run_id, agent_id, pid, status, exit_code, started_at, ended_at, tmux_session FROM agent_runs WHERE tmux_session = ? AND status IN ('starting', 'running') ORDER BY started_at DESC LIMIT 1"
+      )
+      .get(sessionName) as AgentRunRow | undefined
     if (!row) return null
     return {
       runId: row.run_id,
@@ -264,9 +270,11 @@ export const createAgentRunStore = (db: Database) => {
 
   const getCheckpoint = (agentId: string): string | null => {
     if (closed) return null
-    const row = db.prepare(
-      'SELECT checkpoint_json FROM agent_runs WHERE agent_id = ? AND checkpoint_json IS NOT NULL ORDER BY started_at DESC LIMIT 1'
-    ).get(agentId) as { checkpoint_json: string } | undefined
+    const row = db
+      .prepare(
+        'SELECT checkpoint_json FROM agent_runs WHERE agent_id = ? AND checkpoint_json IS NOT NULL ORDER BY started_at DESC LIMIT 1'
+      )
+      .get(agentId) as { checkpoint_json: string } | undefined
     return row?.checkpoint_json ?? null
   }
 

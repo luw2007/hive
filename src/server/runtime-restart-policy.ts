@@ -31,9 +31,16 @@ export const buildRuntimeRestartPolicy = ({
   tasksFileService,
   workspaceStore,
 }: {
-  agentRunStore: Pick<AgentRunStorePort, 'listAgentRuns'> & { getCheckpoint: (agentId: string) => string | null }
+  agentRunStore: Pick<AgentRunStorePort, 'listAgentRuns'> & {
+    getCheckpoint: (agentId: string) => string | null
+  }
   discussionOps: Pick<DiscussionOperations, 'getActiveGroupsForWorkspace'>
-  dispatchLedgerStore: { listWorkspaceDispatches: (workspaceId: string, options?: ListDispatchesOptions) => DispatchRecord[] }
+  dispatchLedgerStore: {
+    listWorkspaceDispatches: (
+      workspaceId: string,
+      options?: ListDispatchesOptions
+    ) => DispatchRecord[]
+  }
   messageLogStore: {
     deleteMessage: (handle: MessageLogHandle) => void
     insertMessage: (record: MessageLogRecord) => MessageLogHandle
@@ -50,11 +57,13 @@ export const buildRuntimeRestartPolicy = ({
     listActiveDispatches: (workspaceId) => {
       const snapshot = workspaceStore.getWorkspaceSnapshot(workspaceId)
       const nameMap = new Map(snapshot.agents.map((a) => [a.id, a.name]))
-      const dispatches = dispatchLedgerStore.listWorkspaceDispatches(workspaceId, { status: 'submitted' })
+      const dispatches = dispatchLedgerStore.listWorkspaceDispatches(workspaceId, {
+        status: 'submitted',
+      })
       const queued = dispatchLedgerStore.listWorkspaceDispatches(workspaceId, { status: 'queued' })
-      return [...dispatches, ...queued].slice(0, 10).map((d) =>
-        toDispatchInfo(d, (id) => nameMap.get(id) ?? id)
-      )
+      return [...dispatches, ...queued]
+        .slice(0, 10)
+        .map((d) => toDispatchInfo(d, (id) => nameMap.get(id) ?? id))
     },
     listActiveDiscussions: (workspaceId) => {
       const groups = discussionOps.getActiveGroupsForWorkspace(workspaceId)

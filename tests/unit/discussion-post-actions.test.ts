@@ -30,11 +30,7 @@ Some refs.`
 * Notify the team`
 
     const result = parseNextActions(report)
-    expect(result).toEqual([
-      'Fix the broken test',
-      'Deploy to staging',
-      'Notify the team',
-    ])
+    expect(result).toEqual(['Fix the broken test', 'Deploy to staging', 'Notify the team'])
   })
 
   it('should return empty array for empty report without error', () => {
@@ -60,10 +56,6 @@ Done.`
 ## 4. Notes`
 
     const result = parseNextActions(report)
-    expect(result).toEqual([
-      'First action',
-      'Second action',
-      'Third action',
-    ])
+    expect(result).toEqual(['First action', 'Second action', 'Third action'])
   })
 })

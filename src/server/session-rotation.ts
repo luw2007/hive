@@ -46,14 +46,20 @@ interface RecoverySection {
   priority: number
 }
 
-export const applyBudgetControl = (sections: RecoverySection[], maxChars: number = RECOVERY_MAX_CHARS): string => {
+export const applyBudgetControl = (
+  sections: RecoverySection[],
+  maxChars: number = RECOVERY_MAX_CHARS
+): string => {
   const measure = (parts: string[]) => {
     const nonEmpty = parts.filter(Boolean)
     if (nonEmpty.length === 0) return 0
     return nonEmpty.reduce((s, p) => s + p.length, 0) + (nonEmpty.length - 1)
   }
   const render = (map: Map<string, string>) =>
-    sections.map((s) => map.get(s.key) ?? '').filter(Boolean).join('\n')
+    sections
+      .map((s) => map.get(s.key) ?? '')
+      .filter(Boolean)
+      .join('\n')
 
   const contents = new Map(sections.map((s) => [s.key, s.content]))
   if (measure([...contents.values()]) <= maxChars) return render(contents)
@@ -62,14 +68,19 @@ export const applyBudgetControl = (sections: RecoverySection[], maxChars: number
 
   for (const s of sorted) {
     if (s.priority >= 6) break
-    const othersValues = sections.filter((x) => x.key !== s.key).map((x) => contents.get(x.key) ?? '')
+    const othersValues = sections
+      .filter((x) => x.key !== s.key)
+      .map((x) => contents.get(x.key) ?? '')
     const othersLen = measure(othersValues)
     const hasOthers = othersValues.some(Boolean)
     const available = maxChars - othersLen - (hasOthers ? 1 : 0)
     const TRUNCATION_SUFFIX = '...(truncated)'
     if (available <= 0 || (contents.get(s.key) ?? '').length > available) {
       if (available >= TRUNCATION_SUFFIX.length + 1) {
-        contents.set(s.key, s.content.slice(0, available - TRUNCATION_SUFFIX.length) + TRUNCATION_SUFFIX)
+        contents.set(
+          s.key,
+          s.content.slice(0, available - TRUNCATION_SUFFIX.length) + TRUNCATION_SUFFIX
+        )
       } else {
         contents.set(s.key, '')
       }
@@ -161,22 +172,25 @@ export const buildWorkerRotationRecovery = async (
   const decisions = await getActiveDecisions(workspacePath)
 
   const journalLines = entries.map(
-    (e, i) => `${i + 1}. [${e.ts}] ${e.type}: ${e.summary}\n   → 详见 .hive/journal/${agent.name}/entries/${e.file.replace('entries/', '')}`
+    (e, i) =>
+      `${i + 1}. [${e.ts}] ${e.type}: ${e.summary}\n   → 详见 .hive/journal/${agent.name}/entries/${e.file.replace('entries/', '')}`
   )
 
   const completedCount = entries.filter((e) => e.type === 'report_sent').length
 
   const CODER_CATEGORIES = new Set(['tech', 'constraint'])
   const TESTER_CATEGORIES = new Set(['tech', 'constraint', 'scope'])
-  const filteredDecisions = agent.role === 'coder'
-    ? decisions.filter((d) => CODER_CATEGORIES.has(d.category))
-    : agent.role === 'tester'
-    ? decisions.filter((d) => TESTER_CATEGORIES.has(d.category))
-    : decisions
+  const filteredDecisions =
+    agent.role === 'coder'
+      ? decisions.filter((d) => CODER_CATEGORIES.has(d.category))
+      : agent.role === 'tester'
+        ? decisions.filter((d) => TESTER_CATEGORIES.has(d.category))
+        : decisions
 
-  const decisionLines = filteredDecisions.length > 0
-    ? filteredDecisions.map((d) => `- [${d.category}] ${d.content} — 理由：${d.reason}`)
-    : ['- （无）']
+  const decisionLines =
+    filteredDecisions.length > 0
+      ? filteredDecisions.map((d) => `- [${d.category}] ${d.content} — 理由：${d.reason}`)
+      : ['- （无）']
 
   const sections: string[] = [
     `你是 ${workspace.name} 的 ${agent.name}（${agent.role}）。`,
@@ -220,7 +234,8 @@ export const shouldRotateOrchestrator = (
     context.allWorkersIdle &&
     context.noPendingDispatches &&
     context.userSilentDurationMs > 5 * 60_000
-  ) return true
+  )
+    return true
 
   return false
 }
@@ -247,20 +262,25 @@ export const buildOrchestratorRotationRecovery = async (
     .slice(0, DECISION_LIMIT)
 
   const journalLines = entries.map(
-    (e, i) => `${i + 1}. [${e.ts}] ${e.type}: ${e.summary}\n   → 详见 .hive/journal/${agent.name}/entries/${e.file.replace('entries/', '')}`
+    (e, i) =>
+      `${i + 1}. [${e.ts}] ${e.type}: ${e.summary}\n   → 详见 .hive/journal/${agent.name}/entries/${e.file.replace('entries/', '')}`
   )
 
   const workerLines = input.workers.map(
     (w) => `- @${w.name} (${w.role}) — status: ${w.status}, pending: ${w.pendingTaskCount}`
   )
 
-  const dispatchLines = input.activeDispatches.length > 0
-    ? input.activeDispatches.map((d) => `- → @${d.toWorkerName}: ${d.text.slice(0, 80)} [${d.status}]`)
-    : ['- （无活跃派单）']
+  const dispatchLines =
+    input.activeDispatches.length > 0
+      ? input.activeDispatches.map(
+          (d) => `- → @${d.toWorkerName}: ${d.text.slice(0, 80)} [${d.status}]`
+        )
+      : ['- （无活跃派单）']
 
-  const decisionLines = decisions.length > 0
-    ? decisions.map((d) => `- [${d.category}] ${d.content} — 理由：${d.reason}`)
-    : ['- （无）']
+  const decisionLines =
+    decisions.length > 0
+      ? decisions.map((d) => `- [${d.category}] ${d.content} — 理由：${d.reason}`)
+      : ['- （无）']
 
   const header = [
     `你是 ${workspace.name} 的 Orchestrator。`,
@@ -269,10 +289,26 @@ export const buildOrchestratorRotationRecovery = async (
   ].join('\n')
 
   const journalContent = ['## 航行日志（最近 8 条）', ...journalLines].join('\n')
-  const userInputContent = ['## 最近与 user 的对话', ...(input.recentUserInputs.length > 0 ? input.recentUserInputs.slice(-5) : ['（无）'])].join('\n')
-  const decisionsContent = ['## Active Decisions（董秘账本）', '以下是用户在本 workspace 中做出的所有有效决策，你必须遵守：', ...decisionLines].join('\n')
-  const workersContent = ['## 当前活跃 worker', ...workerLines, '', '## 当前派单状态', ...dispatchLines].join('\n')
-  const tasksContent = ['## tasks.md 当前内容', input.tasksContent.slice(0, TASKS_HEAD_LIMIT) || '(空)'].join('\n')
+  const userInputContent = [
+    '## 最近与 user 的对话',
+    ...(input.recentUserInputs.length > 0 ? input.recentUserInputs.slice(-5) : ['（无）']),
+  ].join('\n')
+  const decisionsContent = [
+    '## Active Decisions（董秘账本）',
+    '以下是用户在本 workspace 中做出的所有有效决策，你必须遵守：',
+    ...decisionLines,
+  ].join('\n')
+  const workersContent = [
+    '## 当前活跃 worker',
+    ...workerLines,
+    '',
+    '## 当前派单状态',
+    ...dispatchLines,
+  ].join('\n')
+  const tasksContent = [
+    '## tasks.md 当前内容',
+    input.tasksContent.slice(0, TASKS_HEAD_LIMIT) || '(空)',
+  ].join('\n')
   const footer = [
     '## 如需恢复更多上下文',
     `cat .hive/journal/${agent.name}/manifest.jsonl`,
@@ -321,7 +357,12 @@ export const executeOrchestratorRotation = async (
 
   try {
     await runtime.startAgent(workspace, agentId, { hivePort })
-    const recovery = await buildOrchestratorRotationRecovery(workspace.path, agent, workspace, recoveryInput)
+    const recovery = await buildOrchestratorRotationRecovery(
+      workspace.path,
+      agent,
+      workspace,
+      recoveryInput
+    )
     runtime.writeAgentStdin(workspace.id, agentId, recovery)
     queue?.resume(workspace.id)
 
@@ -346,4 +387,3 @@ export const executeOrchestratorRotation = async (
     }
   }
 }
-

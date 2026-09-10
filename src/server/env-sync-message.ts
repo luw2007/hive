@@ -71,7 +71,7 @@ export const buildEnvSyncMessage = ({
     ...formatRestartWindow(restartWindowMessages),
     agent.role === 'orchestrator' ? '- Hive worker 派单规则:' : '- Hive worker 边界:',
     ...getHiveTeamRules(agent).map((rule) => `  - ${rule}`),
-    `请继续。如果不确定，用 team list / Read ${TASKS_RELATIVE_PATH} 自查或问 user。`,
+    `请继续。如果不确定，用 team list / Read ${TASKS_RELATIVE_PATH} 自查或问 user。`
   )
 
   return wrapSystemMessage(lines.join('\n'))

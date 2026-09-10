@@ -111,11 +111,22 @@ export const createTaskService = (db: Database) => {
     const now = Date.now()
     const status: TaskStatus = input.source === 'discussion' ? 'proposed' : 'open'
 
-    const { seq } = db.prepare(
-      `INSERT INTO tasks (id, workspace_id, title, status, source, source_ref, seq, created_at)
+    const { seq } = db
+      .prepare(
+        `INSERT INTO tasks (id, workspace_id, title, status, source, source_ref, seq, created_at)
        VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(seq), 0) + 1 FROM tasks WHERE workspace_id = ?), ?)
        RETURNING seq`
-    ).get(id, input.workspaceId, input.title, status, input.source, input.sourceRef ?? null, input.workspaceId, now) as { seq: number }
+      )
+      .get(
+        id,
+        input.workspaceId,
+        input.title,
+        status,
+        input.source,
+        input.sourceRef ?? null,
+        input.workspaceId,
+        now
+      ) as { seq: number }
 
     db.prepare(
       `INSERT INTO task_events (workspace_id, task_id, event_type, agent_id, payload, created_at)
@@ -134,13 +145,12 @@ export const createTaskService = (db: Database) => {
     }
   }
 
-  const listTasks = (
-    workspaceId: string,
-    filter?: { status?: TaskStatus }
-  ): TaskRecord[] => {
+  const listTasks = (workspaceId: string, filter?: { status?: TaskStatus }): TaskRecord[] => {
     if (filter?.status) {
       const rows = db
-        .prepare('SELECT * FROM tasks WHERE workspace_id = ? AND status = ? ORDER BY created_at DESC')
+        .prepare(
+          'SELECT * FROM tasks WHERE workspace_id = ? AND status = ? ORDER BY created_at DESC'
+        )
         .all(workspaceId, filter.status) as TaskRow[]
       return rows.map(toTaskRecord)
     }
@@ -168,9 +178,7 @@ export const createTaskService = (db: Database) => {
     }>
 
     const eventRows = db
-      .prepare(
-        'SELECT * FROM task_events WHERE task_id = ? ORDER BY created_at DESC LIMIT 20'
-      )
+      .prepare('SELECT * FROM task_events WHERE task_id = ? ORDER BY created_at DESC LIMIT 20')
       .all(taskId) as TaskEventRow[]
 
     return {
@@ -207,9 +215,7 @@ export const createTaskService = (db: Database) => {
             : 'dispatched'
 
     const payload =
-      eventType === 'dispatched'
-        ? JSON.stringify({ from: row.status, to: status })
-        : null
+      eventType === 'dispatched' ? JSON.stringify({ from: row.status, to: status }) : null
 
     db.prepare(
       `INSERT INTO task_events (workspace_id, task_id, event_type, agent_id, payload, created_at)
@@ -234,12 +240,10 @@ export const createTaskService = (db: Database) => {
     return true
   }
 
-  const linkDispatchToTask = (
-    dispatchId: string,
-    taskId: string,
-    agentId?: string
-  ): boolean => {
-    const taskRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined
+  const linkDispatchToTask = (dispatchId: string, taskId: string, agentId?: string): boolean => {
+    const taskRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as
+      | TaskRow
+      | undefined
     if (!taskRow) return false
 
     const now = Date.now()
@@ -263,7 +267,9 @@ export const createTaskService = (db: Database) => {
     payload: unknown,
     agentId?: string
   ): boolean => {
-    const taskRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined
+    const taskRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as
+      | TaskRow
+      | undefined
     if (!taskRow) return false
 
     const now = Date.now()

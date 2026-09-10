@@ -176,7 +176,11 @@ export const OrchestratorPane = ({
           </Tooltip>
         </>
       ) : state.kind === 'failed' ? (
-        <FailedBody error={state.error} onRemoveWorkspace={onRemoveWorkspace} onRestart={onRestart} />
+        <FailedBody
+          error={state.error}
+          onRemoveWorkspace={onRemoveWorkspace}
+          onRestart={onRestart}
+        />
       ) : state.kind === 'stopped' ? (
         <StoppedBody onStart={onStart} />
       ) : (

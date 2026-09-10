@@ -50,7 +50,11 @@ describe('handoff-handler', () => {
 
       expect(handler.isPendingHandoff(ctx.workspaceId, ctx.agentId)).toBe(true)
       expect(writeAgentStdin).toHaveBeenCalledOnce()
-      expect(writeAgentStdin).toHaveBeenCalledWith(ctx.workspaceId, ctx.agentId, expect.stringContaining('交接通知'))
+      expect(writeAgentStdin).toHaveBeenCalledWith(
+        ctx.workspaceId,
+        ctx.agentId,
+        expect.stringContaining('交接通知')
+      )
     })
 
     test('is idempotent — second call does not re-write stdin', () => {
@@ -61,7 +65,9 @@ describe('handoff-handler', () => {
     })
 
     test('falls back to passiveHandoff if writeAgentStdin throws', () => {
-      writeAgentStdin.mockImplementation(() => { throw new Error('PTY closed') })
+      writeAgentStdin.mockImplementation(() => {
+        throw new Error('PTY closed')
+      })
 
       handler.activeHandoff(ctx)
 
@@ -76,13 +82,20 @@ describe('handoff-handler', () => {
   describe('receiveHandover', () => {
     test('saves active report, clears pending, and deletes worker', () => {
       handler.activeHandoff(ctx)
-      const accepted = handler.receiveHandover(ctx.workspaceId, ctx.agentId, '进度50%，剩余TODO列表')
+      const accepted = handler.receiveHandover(
+        ctx.workspaceId,
+        ctx.agentId,
+        '进度50%，剩余TODO列表'
+      )
 
       expect(accepted).toBe(true)
       expect(handler.isPendingHandoff(ctx.workspaceId, ctx.agentId)).toBe(false)
       expect(deleteWorker).toHaveBeenCalledWith(ctx.workspaceId, ctx.agentId)
 
-      const rows = db.prepare('SELECT * FROM handoff_reports').all() as { mode: string; report_text: string }[]
+      const rows = db.prepare('SELECT * FROM handoff_reports').all() as {
+        mode: string
+        report_text: string
+      }[]
       expect(rows).toHaveLength(1)
       expect(rows[0]!.mode).toBe('active')
       expect(rows[0]!.report_text).toBe('进度50%，剩余TODO列表')
@@ -119,7 +132,10 @@ describe('handoff-handler', () => {
       expect(handler.isPendingHandoff(ctx.workspaceId, ctx.agentId)).toBe(false)
       expect(deleteWorker).toHaveBeenCalledWith(ctx.workspaceId, ctx.agentId)
 
-      const rows = db.prepare('SELECT * FROM handoff_reports').all() as { mode: string; report_text: string }[]
+      const rows = db.prepare('SELECT * FROM handoff_reports').all() as {
+        mode: string
+        report_text: string
+      }[]
       expect(rows).toHaveLength(1)
       expect(rows[0]!.mode).toBe('passive')
       expect(rows[0]!.report_text).toBe('checkpoint: 完成了文件A的修改')
@@ -171,7 +187,9 @@ describe('handoff-handler', () => {
 
     test('swallows error if orchestrator is not running', async () => {
       writeAgentStdin.mockImplementationOnce(() => {})
-      writeAgentStdin.mockImplementation(() => { throw new Error('orch not running') })
+      writeAgentStdin.mockImplementation(() => {
+        throw new Error('orch not running')
+      })
 
       const promise = handler.activeHandoff(ctx)
       vi.advanceTimersByTime(30_000)

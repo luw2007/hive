@@ -47,10 +47,19 @@ export const createHandoffHandler = ({
   const handoffStore = createHandoffStore(db)
   const pending = new Map<string, PendingHandoff>()
 
-  const notifyOrchestrator = (workspaceId: string, agentName: string, reportText: string, pendingDispatches?: string | null) => {
+  const notifyOrchestrator = (
+    workspaceId: string,
+    agentName: string,
+    reportText: string,
+    pendingDispatches?: string | null
+  ) => {
     const orchId = `${workspaceId}:orchestrator`
     try {
-      writeAgentStdin(workspaceId, orchId, buildHandoffNotification(agentName, reportText, pendingDispatches))
+      writeAgentStdin(
+        workspaceId,
+        orchId,
+        buildHandoffNotification(agentName, reportText, pendingDispatches)
+      )
     } catch {
       // Orchestrator may not be running — swallow
     }

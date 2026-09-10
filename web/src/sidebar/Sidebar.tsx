@@ -1,5 +1,10 @@
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { FolderPlus, GitBranch, GripVertical, Plus, Trash2, X } from 'lucide-react'
 import { useCallback, useState } from 'react'
@@ -157,7 +162,10 @@ const SortableWorkspaceItem = ({
         <button
           type="button"
           aria-label={cloneLabel}
-          onClick={(e) => { e.stopPropagation(); onClone() }}
+          onClick={(e) => {
+            e.stopPropagation()
+            onClone()
+          }}
           className="ws-row-clone absolute top-2 right-9 flex h-6 w-6 items-center justify-center rounded text-ter opacity-0 transition-colors hover:text-accent focus:opacity-100 group-hover:opacity-100"
         >
           <GitBranch size={14} aria-hidden />
@@ -317,7 +325,10 @@ export const Sidebar = ({
         </div>
       ) : (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={workspaces.map((w) => w.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={workspaces.map((w) => w.id)}
+            strategy={verticalListSortingStrategy}
+          >
             <ul className="flex-1 scroll-y pb-2">
               {workspaces.map((workspace) => {
                 const workers = workersByWorkspaceId[workspace.id]
@@ -339,29 +350,29 @@ export const Sidebar = ({
                   />
                 )
               })}
-          {/* New-workspace CTA lives at the bottom of the list (Discord-style)
+              {/* New-workspace CTA lives at the bottom of the list (Discord-style)
               so it appears next to existing workspaces in both wide and compact
               modes, instead of pinned to the sidebar footer. */}
-          <li>
-            <Tooltip label={createDisabledReason ?? t('sidebar.newWorkspace')}>
-              <button
-                type="button"
-                onClick={createDisabled ? undefined : onCreateClick}
-                disabled={createDisabled}
-                aria-label={t('sidebar.newWorkspace')}
-                /* Keep native `title` as a fallback: Radix Tooltip doesn't
+              <li>
+                <Tooltip label={createDisabledReason ?? t('sidebar.newWorkspace')}>
+                  <button
+                    type="button"
+                    onClick={createDisabled ? undefined : onCreateClick}
+                    disabled={createDisabled}
+                    aria-label={t('sidebar.newWorkspace')}
+                    /* Keep native `title` as a fallback: Radix Tooltip doesn't
                    reliably surface on a disabled <button> across browsers,
                    so screen-readers and Safari users still get the reason. */
-                title={createDisabledReason ?? undefined}
-                className="ws-add ws-add--inline mx-3 mt-1 flex items-center justify-center gap-1.5 rounded border border-dashed px-3 py-2 text-xs font-medium text-sec transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ borderColor: 'var(--border-bright)' }}
-              >
-                <Plus size={14} aria-hidden />
-                <span className="ws-add__label">{t('sidebar.newWorkspace')}</span>
-              </button>
-            </Tooltip>
-          </li>
-        </ul>
+                    title={createDisabledReason ?? undefined}
+                    className="ws-add ws-add--inline mx-3 mt-1 flex items-center justify-center gap-1.5 rounded border border-dashed px-3 py-2 text-xs font-medium text-sec transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ borderColor: 'var(--border-bright)' }}
+                  >
+                    <Plus size={14} aria-hidden />
+                    <span className="ws-add__label">{t('sidebar.newWorkspace')}</span>
+                  </button>
+                </Tooltip>
+              </li>
+            </ul>
           </SortableContext>
         </DndContext>
       )}

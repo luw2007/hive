@@ -40,7 +40,12 @@ export const DeleteWorkerDialog = ({
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(v) => { if (!handoffLoading) onOpenChange(v) }}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(v) => {
+        if (!handoffLoading) onOpenChange(v)
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content dialog-content--sm">
@@ -59,15 +64,18 @@ export const DeleteWorkerDialog = ({
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
-              <button type="button" className="icon-btn" aria-label={t('common.close')} disabled={handoffLoading}>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label={t('common.close')}
+                disabled={handoffLoading}
+              >
                 <X size={14} />
               </button>
             </Dialog.Close>
           </div>
           {handoffError ? (
-            <div className="mb-3 rounded bg-3 px-3 py-2 text-xs text-danger">
-              {handoffError}
-            </div>
+            <div className="mb-3 rounded bg-3 px-3 py-2 text-xs text-danger">{handoffError}</div>
           ) : null}
           <div className="flex items-center justify-end gap-2">
             <Dialog.Close asChild>
@@ -80,9 +88,15 @@ export const DeleteWorkerDialog = ({
                 type="button"
                 className="btn btn--primary"
                 disabled={handoffLoading}
-                onClick={() => { void handleHandoff() }}
+                onClick={() => {
+                  void handleHandoff()
+                }}
               >
-                {handoffLoading ? <Loader2 size={12} className="animate-spin" aria-hidden /> : <ArrowRightLeft size={12} aria-hidden />}
+                {handoffLoading ? (
+                  <Loader2 size={12} className="animate-spin" aria-hidden />
+                ) : (
+                  <ArrowRightLeft size={12} aria-hidden />
+                )}
                 {t('worker.handoffAndDelete')}
               </button>
             ) : null}
@@ -90,7 +104,10 @@ export const DeleteWorkerDialog = ({
               type="button"
               className="btn btn--danger"
               disabled={handoffLoading}
-              onClick={() => { onForceDelete(); onOpenChange(false) }}
+              onClick={() => {
+                onForceDelete()
+                onOpenChange(false)
+              }}
             >
               <Trash2 size={12} aria-hidden />
               {t('worker.forceDelete')}

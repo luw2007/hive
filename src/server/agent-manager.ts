@@ -160,10 +160,16 @@ export const createAgentManager = ({
           isStopped: () => false,
           pause() {},
           pid: pty.pid,
-          resize(cols, rows) { pty.resize(cols, rows) },
+          resize(cols, rows) {
+            pty.resize(cols, rows)
+          },
           resume() {},
-          stop() { pty.kill() },
-          write(input) { pty.write(typeof input === 'string' ? input : input.toString()) },
+          stop() {
+            pty.kill()
+          },
+          write(input) {
+            pty.write(typeof input === 'string' ? input : input.toString())
+          },
         },
         tmuxSession: sessionName,
       }

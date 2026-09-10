@@ -43,7 +43,9 @@ export const fetchDispatches = async (
   return (await response.json()) as DispatchItem[]
 }
 
-export const groupDispatchesByTaskId = (dispatches: DispatchItem[]): Map<string | null, TaskDispatchSummary> => {
+export const groupDispatchesByTaskId = (
+  dispatches: DispatchItem[]
+): Map<string | null, TaskDispatchSummary> => {
   const map = new Map<string | null, TaskDispatchSummary>()
   for (const d of dispatches) {
     const key = d.task_id
@@ -114,7 +116,9 @@ export const useDispatchesForWorkspace = (workspaceId: string | null) => {
       .catch(() => {
         if (!cancelled) setLoading(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [workspaceId])
 
   // 订阅全局 SSE dispatches 事件（后续增量更新覆盖初始数据）
@@ -145,14 +149,20 @@ export const fetchDispatchHistory = async (
   offset = 0
 ): Promise<DispatchItem[]> => {
   const [reported, cancelled] = await Promise.all([
-    apiFetch(`/api/ui/workspaces/${workspaceId}/dispatches?state=reported&limit=${limit}&offset=${offset}`),
-    apiFetch(`/api/ui/workspaces/${workspaceId}/dispatches?state=cancelled&limit=${limit}&offset=${offset}`),
+    apiFetch(
+      `/api/ui/workspaces/${workspaceId}/dispatches?state=reported&limit=${limit}&offset=${offset}`
+    ),
+    apiFetch(
+      `/api/ui/workspaces/${workspaceId}/dispatches?state=cancelled&limit=${limit}&offset=${offset}`
+    ),
   ])
   const [r, c] = await Promise.all([
     reported.json() as Promise<DispatchItem[]>,
     cancelled.json() as Promise<DispatchItem[]>,
   ])
-  return [...r, ...c].sort((a, b) => (b.reported_at ?? b.created_at) - (a.reported_at ?? a.created_at))
+  return [...r, ...c].sort(
+    (a, b) => (b.reported_at ?? b.created_at) - (a.reported_at ?? a.created_at)
+  )
 }
 
 export const useDispatchHistory = (workspaceId: string | null) => {
@@ -167,11 +177,13 @@ export const useDispatchHistory = (workspaceId: string | null) => {
     setHasMore(true)
     if (!workspaceId) return
     setLoading(true)
-    void fetchDispatchHistory(workspaceId).then((data) => {
-      setItems(data)
-      setHasMore(data.length >= HISTORY_PAGE_SIZE)
-      offsetRef.current = HISTORY_PAGE_SIZE
-    }).finally(() => setLoading(false))
+    void fetchDispatchHistory(workspaceId)
+      .then((data) => {
+        setItems(data)
+        setHasMore(data.length >= HISTORY_PAGE_SIZE)
+        offsetRef.current = HISTORY_PAGE_SIZE
+      })
+      .finally(() => setLoading(false))
   }, [workspaceId])
 
   const loadMore = useCallback(async () => {

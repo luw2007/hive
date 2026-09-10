@@ -85,7 +85,9 @@ export const useWorkspaceWorkers = (workspaceIds: readonly string[]) => {
     }
 
     void fetchAll()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [workspaceKey])
 
   /** 接收全局 SSE 推送的 team 数据 */

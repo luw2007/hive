@@ -93,10 +93,17 @@ describe('task-api integration: full lifecycle', () => {
       const res = await fetch(`${ctx.baseUrl}/api/team/tasks`, {
         method: 'POST',
         headers: { ...json(), cookie: ctx.cookie },
-        body: JSON.stringify({ workspace_id: ctx.workspaceId, title: 'Implement login', source: 'orch' }),
+        body: JSON.stringify({
+          workspace_id: ctx.workspaceId,
+          title: 'Implement login',
+          source: 'orch',
+        }),
       })
       expect(res.status).toBe(201)
-      const data = (await res.json()) as { ok: boolean; task: { id: string; title: string; status: string } }
+      const data = (await res.json()) as {
+        ok: boolean
+        task: { id: string; title: string; status: string }
+      }
       expect(data.ok).toBe(true)
       expect(data.task.id).toBeDefined()
       expect(data.task.title).toBe('Implement login')
@@ -120,10 +127,9 @@ describe('task-api integration: full lifecycle', () => {
         body: JSON.stringify({ workspace_id: ctx.workspaceId, title: 'Task B', source: 'orch' }),
       })
 
-      const res = await fetch(
-        `${ctx.baseUrl}/api/team/tasks?workspace_id=${ctx.workspaceId}`,
-        { headers: { cookie: ctx.cookie } }
-      )
+      const res = await fetch(`${ctx.baseUrl}/api/team/tasks?workspace_id=${ctx.workspaceId}`, {
+        headers: { cookie: ctx.cookie },
+      })
       expect(res.status).toBe(200)
       const data = (await res.json()) as { tasks: Array<{ title: string }> }
       expect(data.tasks.length).toBeGreaterThanOrEqual(2)
@@ -140,7 +146,11 @@ describe('task-api integration: full lifecycle', () => {
       const taskRes = await fetch(`${ctx.baseUrl}/api/team/tasks`, {
         method: 'POST',
         headers: { ...json(), cookie: ctx.cookie },
-        body: JSON.stringify({ workspace_id: ctx.workspaceId, title: 'Auth middleware', source: 'orch' }),
+        body: JSON.stringify({
+          workspace_id: ctx.workspaceId,
+          title: 'Auth middleware',
+          source: 'orch',
+        }),
       })
       const { task } = (await taskRes.json()) as { task: { id: string; status: string } }
       expect(task.status).toBe('open')
@@ -219,7 +229,11 @@ describe('task-api integration: full lifecycle', () => {
       const taskRes = await fetch(`${ctx.baseUrl}/api/team/tasks`, {
         method: 'POST',
         headers: { ...json(), cookie: ctx.cookie },
-        body: JSON.stringify({ workspace_id: ctx.workspaceId, title: 'Write tests', source: 'orch' }),
+        body: JSON.stringify({
+          workspace_id: ctx.workspaceId,
+          title: 'Write tests',
+          source: 'orch',
+        }),
       })
       const { task } = (await taskRes.json()) as { task: { id: string } }
 
@@ -271,7 +285,11 @@ describe('task-api integration: full lifecycle', () => {
       const taskRes = await fetch(`${ctx.baseUrl}/api/team/tasks`, {
         method: 'POST',
         headers: { ...json(), cookie: ctx.cookie },
-        body: JSON.stringify({ workspace_id: ctx.workspaceId, title: 'Finish login', source: 'orch' }),
+        body: JSON.stringify({
+          workspace_id: ctx.workspaceId,
+          title: 'Finish login',
+          source: 'orch',
+        }),
       })
       const { task } = (await taskRes.json()) as { task: { id: string } }
 
@@ -315,7 +333,11 @@ describe('task-api integration: full lifecycle', () => {
       const taskRes = await fetch(`${ctx.baseUrl}/api/team/tasks`, {
         method: 'POST',
         headers: { ...json(), cookie: ctx.cookie },
-        body: JSON.stringify({ workspace_id: ctx.workspaceId, title: 'Full detail test', source: 'orch' }),
+        body: JSON.stringify({
+          workspace_id: ctx.workspaceId,
+          title: 'Full detail test',
+          source: 'orch',
+        }),
       })
       const { task } = (await taskRes.json()) as { task: { id: string } }
 

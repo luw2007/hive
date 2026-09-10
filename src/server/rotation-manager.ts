@@ -15,7 +15,10 @@ import {
 } from './session-rotation.js'
 
 export interface RotationManagerStore {
-  getActiveRunByAgentId: (workspaceId: string, agentId: string) => { runId: string; startedAt: number } | undefined
+  getActiveRunByAgentId: (
+    workspaceId: string,
+    agentId: string
+  ) => { runId: string; startedAt: number } | undefined
   getPtyOutputBus: () => PtyOutputBus
   getDb: () => import('better-sqlite3').Database
   getAgentRuntime: () => AgentRuntime
@@ -23,7 +26,10 @@ export interface RotationManagerStore {
 
 export interface OrchRotationStore extends RotationManagerStore {
   getOrchMessageQueue?: () => OrchMessageQueue
-  getOrchRecoveryInput: (workspaceId: string, orchAgentId: string) => Promise<OrchestratorRecoveryInput>
+  getOrchRecoveryInput: (
+    workspaceId: string,
+    orchAgentId: string
+  ) => Promise<OrchestratorRecoveryInput>
   getLastUserInputTime: (workspaceId: string) => number
 }
 
@@ -120,17 +126,27 @@ export const checkAndRotateWorker = (input: CheckRotationInput): void => {
   if (!shouldRotateWorker(context, protection)) return
 
   const pendingDispatchText = hasPendingDispatch
-    ? ((db
-        .prepare(
-          `SELECT text FROM dispatches WHERE workspace_id = ? AND to_agent_id = ? AND status IN ('queued', 'submitted') ORDER BY sequence ASC LIMIT 1`
-        )
-        .get(workspaceId, agentId) as { text: string } | undefined)?.text ?? null)
+    ? ((
+        db
+          .prepare(
+            `SELECT text FROM dispatches WHERE workspace_id = ? AND to_agent_id = ? AND status IN ('queued', 'submitted') ORDER BY sequence ASC LIMIT 1`
+          )
+          .get(workspaceId, agentId) as { text: string } | undefined
+      )?.text ?? null)
     : null
 
   const key = workerKey(workspaceId, agentId)
   const runtime = store.getAgentRuntime()
   setImmediate(() => {
-    void executeWorkerRotation(workspace, agentId, agent, runtime, protection, pendingDispatchText, hivePort)
+    void executeWorkerRotation(
+      workspace,
+      agentId,
+      agent,
+      runtime,
+      protection,
+      pendingDispatchText,
+      hivePort
+    )
       .then((result) => {
         protectionMap.set(key, result.protection)
       })
@@ -161,7 +177,9 @@ export const checkAndRotateOrchestrator = (input: CheckOrchRotationInput): void 
     .get(activeRun.runId) as { inject_count: number } | undefined
   const injectCount = runRow?.inject_count ?? 0
 
-  const compactDetectedAndIdle = getDetector(store.getPtyOutputBus()).isCompactDetected(activeRun.runId)
+  const compactDetectedAndIdle = getDetector(store.getPtyOutputBus()).isCompactDetected(
+    activeRun.runId
+  )
 
   const pendingRow = db
     .prepare(
@@ -196,17 +214,29 @@ export const checkAndRotateOrchestrator = (input: CheckOrchRotationInput): void 
   const key = workerKey(workspaceId, agentId)
   const runtime = store.getAgentRuntime()
 
-  void store.getOrchRecoveryInput(workspaceId, agentId).then((recoveryInput) =>
-    setImmediate(() => {
-      void executeOrchestratorRotation(workspace, agentId, agent, runtime, protection, recoveryInput, hivePort, orchQueue)
-        .then((result) => {
-          protectionMap.set(key, result.protection)
-        })
-        .catch((err: unknown) => {
-          console.error(`[rotation-manager] orch rotation failed for ${agent.name}:`, err)
-        })
+  void store
+    .getOrchRecoveryInput(workspaceId, agentId)
+    .then((recoveryInput) =>
+      setImmediate(() => {
+        void executeOrchestratorRotation(
+          workspace,
+          agentId,
+          agent,
+          runtime,
+          protection,
+          recoveryInput,
+          hivePort,
+          orchQueue
+        )
+          .then((result) => {
+            protectionMap.set(key, result.protection)
+          })
+          .catch((err: unknown) => {
+            console.error(`[rotation-manager] orch rotation failed for ${agent.name}:`, err)
+          })
+      })
+    )
+    .catch((err: unknown) => {
+      console.error(`[rotation-manager] failed to build orch recovery for ${agent.name}:`, err)
     })
-  ).catch((err: unknown) => {
-    console.error(`[rotation-manager] failed to build orch recovery for ${agent.name}:`, err)
-  })
 }

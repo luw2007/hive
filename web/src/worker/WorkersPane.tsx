@@ -72,7 +72,9 @@ export const WorkersPane = ({
     [terminalRuns]
   )
   const [pendingDelete, setPendingDelete] = useState<TeamListItem | null>(null)
-  const [pendingStop, setPendingStop] = useState<{ worker: TeamListItem; runId: string } | null>(null)
+  const [pendingStop, setPendingStop] = useState<{ worker: TeamListItem; runId: string } | null>(
+    null
+  )
   const [renameTarget, setRenameTarget] = useState<TeamListItem | null>(null)
   const [renameBusy, setRenameBusy] = useState(false)
   const [confirmClearStopped, setConfirmClearStopped] = useState(false)
@@ -151,10 +153,17 @@ export const WorkersPane = ({
             onValueChange={handleAccordionChange}
           >
             {sections.map((section) => (
-              <Accordion.Item key={section.kind} value={section.kind} className="accordion-section mb-1 last:mb-0">
+              <Accordion.Item
+                key={section.kind}
+                value={section.kind}
+                className="accordion-section mb-1 last:mb-0"
+              >
                 <Accordion.Header asChild>
                   <div className="accordion-trigger-wrap">
-                    <Accordion.Trigger className="accordion-trigger" data-testid={`accordion-trigger-${section.kind}`}>
+                    <Accordion.Trigger
+                      className="accordion-trigger"
+                      data-testid={`accordion-trigger-${section.kind}`}
+                    >
                       <span className="inline-flex items-center gap-1.5">
                         <span className={`status-dot status-dot--${section.kind}`} aria-hidden />
                         <span className="text-xs font-medium uppercase tracking-wider text-ter">
@@ -169,7 +178,10 @@ export const WorkersPane = ({
                         type="button"
                         className="ml-auto mr-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-ter hover:bg-3 hover:text-danger"
                         data-testid="clear-all-stopped"
-                        onClick={(e) => { e.stopPropagation(); setConfirmClearStopped(true) }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setConfirmClearStopped(true)
+                        }}
                       >
                         <Trash2 size={10} aria-hidden />
                         {t('worker.clearAllStopped')}
@@ -203,7 +215,9 @@ export const WorkersPane = ({
 
       <StopWorkerDialog
         open={pendingStop !== null}
-        onOpenChange={(open) => { if (!open) setPendingStop(null) }}
+        onOpenChange={(open) => {
+          if (!open) setPendingStop(null)
+        }}
         workerName={pendingStop?.worker.name ?? ''}
         onConfirm={() => {
           if (pendingStop) onStopWorkerRun(pendingStop.runId)
@@ -219,7 +233,10 @@ export const WorkersPane = ({
         workerStatus={pendingDelete?.status ?? 'stopped'}
         onHandoff={async () => {
           if (!pendingDelete) return
-          const res = await fetch(`/api/workspaces/${workspaceId}/workers/${pendingDelete.id}?handover=true`, { method: 'DELETE' })
+          const res = await fetch(
+            `/api/workspaces/${workspaceId}/workers/${pendingDelete.id}?handover=true`,
+            { method: 'DELETE' }
+          )
           if (!res.ok) {
             const body = await res.text().catch(() => 'Handoff failed')
             throw new Error(body)

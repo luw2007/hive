@@ -24,9 +24,7 @@ const extractTag = (content: string, tag: string): string | null => {
 }
 
 const slugToName = (slug: string): string =>
-  slug
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 
 export const loadExternalAgents = (dirPath: string): ExternalRoleTemplate[] => {
   const resolved = resolve(dirPath)

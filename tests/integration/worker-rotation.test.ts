@@ -115,12 +115,14 @@ describe('checkAndRotateWorker — mock store', () => {
     path: workspacePath,
   })
 
-  const makeMockStore = (overrides: {
-    runId?: string
-    startedAt?: number
-    injectCount?: number
-    pendingCount?: number
-  } = {}) => {
+  const makeMockStore = (
+    overrides: {
+      runId?: string
+      startedAt?: number
+      injectCount?: number
+      pendingCount?: number
+    } = {}
+  ) => {
     const {
       runId = 'run-test-1',
       startedAt = Date.now() - 120_000,
@@ -133,7 +135,8 @@ describe('checkAndRotateWorker — mock store', () => {
         get: (..._args: unknown[]) => {
           if (sql.includes('inject_count')) return { inject_count: injectCount }
           if (sql.includes('COUNT(*)')) return { cnt: pendingCount }
-          if (sql.includes('SELECT text FROM dispatches')) return pendingCount > 0 ? { text: 'pending task text' } : undefined
+          if (sql.includes('SELECT text FROM dispatches'))
+            return pendingCount > 0 ? { text: 'pending task text' } : undefined
           return undefined
         },
       }),
@@ -148,12 +151,13 @@ describe('checkAndRotateWorker — mock store', () => {
       getActiveRunByAgentId: (_wsId: string, _agentId: string) => ({ runId, startedAt }),
       getPtyOutputBus: () => outputBus as never,
       getDb: () => db as never,
-      getAgentRuntime: () => ({
-        stopAgentRun: vi.fn(),
-        startAgent: vi.fn().mockResolvedValue({ runId: 'new-run-1', startedAt: Date.now() }),
-        writeAgentStdin: vi.fn(),
-        getActiveRunByAgentId: (_wsId: string, _agentId: string) => ({ runId, startedAt }),
-      } as never),
+      getAgentRuntime: () =>
+        ({
+          stopAgentRun: vi.fn(),
+          startAgent: vi.fn().mockResolvedValue({ runId: 'new-run-1', startedAt: Date.now() }),
+          writeAgentStdin: vi.fn(),
+          getActiveRunByAgentId: (_wsId: string, _agentId: string) => ({ runId, startedAt }),
+        }) as never,
     }
   }
 
@@ -326,7 +330,9 @@ describe('worker rotation — integration with real server', () => {
     if (!activeRun) throw new Error('worker has no active run')
 
     // Verify that shouldRotateWorker would return true if the session were old enough
-    const { shouldRotateWorker: shouldRotate } = await import('../../src/server/session-rotation.js')
+    const { shouldRotateWorker: shouldRotate } = await import(
+      '../../src/server/session-rotation.js'
+    )
     const db = serverStore.getDb()
 
     const agedCtx = {
@@ -336,7 +342,9 @@ describe('worker rotation — integration with real server', () => {
       messageCount: 0,
       sessionStartedAt: Date.now() - 130_000,
     }
-    expect(shouldRotate(agedCtx, { consecutiveFailures: 0, lastRotationAt: 0, suspended: false })).toBe(true)
+    expect(
+      shouldRotate(agedCtx, { consecutiveFailures: 0, lastRotationAt: 0, suspended: false })
+    ).toBe(true)
 
     // Dispatch a task and report it
     const sendRes = await fetch(`${baseUrl}/api/team/send`, {
@@ -366,7 +374,9 @@ describe('worker rotation — integration with real server', () => {
     expect(reportRes.status).toBe(202)
 
     // Verify dispatch was reported
-    const dispatches = db.prepare('SELECT status FROM dispatches WHERE id = ?').get(dispatch_id) as { status: string } | undefined
+    const dispatches = db.prepare('SELECT status FROM dispatches WHERE id = ?').get(dispatch_id) as
+      | { status: string }
+      | undefined
     expect(dispatches?.status).toBe('reported')
   })
 
@@ -375,8 +385,10 @@ describe('worker rotation — integration with real server', () => {
     if (!activeRun) throw new Error('worker has no active run')
 
     const db = serverStore.getDb()
-    db.prepare('UPDATE agent_runs SET started_at = ? WHERE run_id = ?')
-      .run(Date.now() - 130_000, activeRun.runId)
+    db.prepare('UPDATE agent_runs SET started_at = ? WHERE run_id = ?').run(
+      Date.now() - 130_000,
+      activeRun.runId
+    )
 
     // Send TWO tasks — report first, leaving second pending
     const s1 = await fetch(`${baseUrl}/api/team/send`, {
@@ -419,7 +431,9 @@ describe('worker rotation — integration with real server', () => {
 
     // Wait briefly, then verify only 1 run exists (no rotation)
     await new Promise((resolve) => setTimeout(resolve, 300))
-    const runs = db.prepare('SELECT run_id FROM agent_runs WHERE agent_id = ?').all(workerId) as Array<{ run_id: string }>
+    const runs = db
+      .prepare('SELECT run_id FROM agent_runs WHERE agent_id = ?')
+      .all(workerId) as Array<{ run_id: string }>
     expect(runs.length).toBe(1)
   })
 

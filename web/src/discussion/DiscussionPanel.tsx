@@ -165,7 +165,11 @@ const InterventionToolbar = ({
             <button type="button" className="btn btn--primary btn--sm" onClick={handleSteer}>
               {t('discussion.toolbar.steerConfirm')}
             </button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSteerOpen(false)}>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => setSteerOpen(false)}
+            >
               {t('common.cancel')}
             </button>
           </div>
@@ -178,12 +182,19 @@ const InterventionToolbar = ({
               key={n}
               type="button"
               className="btn btn--ghost btn--sm"
-              onClick={() => { onExtend?.(n); setExtendOpen(false) }}
+              onClick={() => {
+                onExtend?.(n)
+                setExtendOpen(false)
+              }}
             >
               +{n}
             </button>
           ))}
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setExtendOpen(false)}>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => setExtendOpen(false)}
+          >
             {t('common.cancel')}
           </button>
         </div>
@@ -195,12 +206,19 @@ const InterventionToolbar = ({
               key={m.agentId}
               type="button"
               className="btn btn--ghost btn--sm text-left"
-              onClick={() => { onSkipMember?.(m.agentName); setSkipOpen(false) }}
+              onClick={() => {
+                onSkipMember?.(m.agentName)
+                setSkipOpen(false)
+              }}
             >
               {m.agentName}
             </button>
           ))}
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSkipOpen(false)}>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => setSkipOpen(false)}
+          >
             {t('common.cancel')}
           </button>
         </div>
@@ -208,23 +226,51 @@ const InterventionToolbar = ({
         <div className="flex flex-col gap-2">
           <span className="text-xs text-sec">{t('discussion.toolbar.endConfirm')}</span>
           <div className="flex gap-2">
-            <button type="button" className="btn btn--primary btn--sm" onClick={() => { onEnd?.(false); setEndOpen(false) }}>
+            <button
+              type="button"
+              className="btn btn--primary btn--sm"
+              onClick={() => {
+                onEnd?.(false)
+                setEndOpen(false)
+              }}
+            >
               {t('discussion.toolbar.endSummarize')}
             </button>
-            <button type="button" className="btn btn--danger btn--sm" onClick={() => { onEnd?.(true); setEndOpen(false) }}>
+            <button
+              type="button"
+              className="btn btn--danger btn--sm"
+              onClick={() => {
+                onEnd?.(true)
+                setEndOpen(false)
+              }}
+            >
               {t('discussion.toolbar.endCancel')}
             </button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setEndOpen(false)}>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => setEndOpen(false)}
+            >
               {t('common.cancel')}
             </button>
           </div>
         </div>
       ) : (
         <div className="flex items-center gap-1.5">
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSteerOpen(true)} title={t('discussion.toolbar.steer')}>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => setSteerOpen(true)}
+            title={t('discussion.toolbar.steer')}
+          >
             <Compass size={14} />
           </button>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setExtendOpen(true)} title={t('discussion.toolbar.extend')}>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => setExtendOpen(true)}
+            title={t('discussion.toolbar.extend')}
+          >
             <FastForward size={14} />
           </button>
           <button
@@ -237,7 +283,12 @@ const InterventionToolbar = ({
             <SkipForward size={14} />
           </button>
           <div className="ml-auto">
-            <button type="button" className="btn btn--danger btn--sm" onClick={() => setEndOpen(true)} title={t('discussion.toolbar.end')}>
+            <button
+              type="button"
+              className="btn btn--danger btn--sm"
+              onClick={() => setEndOpen(true)}
+              title={t('discussion.toolbar.end')}
+            >
               <Square size={14} />
             </button>
           </div>
@@ -316,23 +367,31 @@ const DeltaReport = ({ group }: DeltaReportProps) => {
 
     result.push({
       title: DELTA_SECTIONS[0]!,
-      content: changedMembers.length > 0
-        ? changedMembers.map((m) => `${m.agentName}: ${m.finalPosition}`).join('\n')
-        : t('discussion.report.noDelta'),
+      content:
+        changedMembers.length > 0
+          ? changedMembers.map((m) => `${m.agentName}: ${m.finalPosition}`).join('\n')
+          : t('discussion.report.noDelta'),
     })
 
     result.push({
       title: DELTA_SECTIONS[1]!,
-      content: changedMembers.length > 0
-        ? changedMembers.map((m) => `${m.agentName}:\n  Before: ${m.initialPosition}\n  After: ${m.finalPosition}`).join('\n')
-        : t('discussion.report.noChange'),
+      content:
+        changedMembers.length > 0
+          ? changedMembers
+              .map(
+                (m) =>
+                  `${m.agentName}:\n  Before: ${m.initialPosition}\n  After: ${m.finalPosition}`
+              )
+              .join('\n')
+          : t('discussion.report.noChange'),
     })
 
     result.push({
       title: DELTA_SECTIONS[2]!,
-      content: unchangedMembers.length > 1
-        ? unchangedMembers.map((m) => `${m.agentName}: ${m.finalPosition}`).join('\n')
-        : t('discussion.report.noDisagreement'),
+      content:
+        unchangedMembers.length > 1
+          ? unchangedMembers.map((m) => `${m.agentName}: ${m.finalPosition}`).join('\n')
+          : t('discussion.report.noDisagreement'),
     })
 
     result.push({
@@ -369,7 +428,9 @@ const DeltaReport = ({ group }: DeltaReportProps) => {
             className="flex w-full items-center justify-between px-4 py-1.5 text-left text-xs font-medium text-sec hover:bg-surface-secondary"
             onClick={() => toggleSection(idx)}
           >
-            <span>{idx + 1}. {section.title}</span>
+            <span>
+              {idx + 1}. {section.title}
+            </span>
             <span>{expandedSections.has(idx) ? '−' : '+'}</span>
           </button>
           {expandedSections.has(idx) ? (

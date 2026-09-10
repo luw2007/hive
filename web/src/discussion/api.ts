@@ -73,7 +73,7 @@ const fromMessagePayload = (p: DiscussionMessagePayload): DiscussionMessage => (
 const apiFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   const response = await fetch(input, init)
   if (!response.ok) {
-    const body = await response.json().catch(() => ({})) as { error?: string }
+    const body = (await response.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error ?? `Request failed: ${response.status}`)
   }
   return response

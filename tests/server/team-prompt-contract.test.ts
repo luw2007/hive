@@ -228,7 +228,9 @@ describe('team prompt contract', () => {
     }, 4000)
   })
 
-  test('team report submits to a shell-wrapped Claude startup command using the selected CLI driver', { timeout: 25000 }, async () => {
+  test('team report submits to a shell-wrapped Claude startup command using the selected CLI driver', {
+    timeout: 25000,
+  }, async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'hive-shell-wrapped-claude-report-'))
     const workspacePath = join(dataDir, 'workspace')
     const binDir = join(dataDir, 'bin')

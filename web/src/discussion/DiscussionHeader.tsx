@@ -102,7 +102,9 @@ export const DiscussionHeader = ({ group, messages, onClose }: DiscussionHeaderP
           <span key={m.agentId} className="flex items-center gap-1 text-xs text-sec">
             <span>{m.agentName}</span>
             {m.modelLabel ? (
-              <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${MODEL_BADGE_COLORS[m.modelLabel] ?? 'bg-gray-100 text-gray-600'}`}>
+              <span
+                className={`rounded px-1 py-0.5 text-[10px] font-medium ${MODEL_BADGE_COLORS[m.modelLabel] ?? 'bg-gray-100 text-gray-600'}`}
+              >
                 {m.modelLabel}
               </span>
             ) : null}

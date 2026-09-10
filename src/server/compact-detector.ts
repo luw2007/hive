@@ -69,7 +69,9 @@ export const createCompactDetector = (bus: PtyOutputBus): CompactDetector => {
     onIdle(runId, callback) {
       const state = getState(runId)
       state.idleCallbacks.add(callback)
-      return () => { state.idleCallbacks.delete(callback) }
+      return () => {
+        state.idleCallbacks.delete(callback)
+      }
     },
   }
 }

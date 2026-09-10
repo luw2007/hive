@@ -330,7 +330,6 @@ export const createRuntimeStore = (options: RuntimeStoreOptions = {}): RuntimeSt
     reattachTmuxSessions: lifecycle.reattachTmuxSessions,
     registerTeamListener: (workspaceId, listener) =>
       services.teamChangeBus.subscribe(workspaceId, listener),
-    registerGlobalTeamListener: (listener) =>
-      services.teamChangeBus.subscribeAll(listener),
+    registerGlobalTeamListener: (listener) => services.teamChangeBus.subscribeAll(listener),
   }
 }

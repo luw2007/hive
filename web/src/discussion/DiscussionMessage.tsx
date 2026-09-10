@@ -31,7 +31,9 @@ export const DiscussionMessage = ({ message }: DiscussionMessageProps) => {
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-pri">{message.fromAgentName}</span>
         {message.modelLabel ? (
-          <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${MODEL_BADGE_COLORS[message.modelLabel] ?? 'bg-gray-100 text-gray-600'}`}>
+          <span
+            className={`rounded px-1 py-0.5 text-[10px] font-medium ${MODEL_BADGE_COLORS[message.modelLabel] ?? 'bg-gray-100 text-gray-600'}`}
+          >
             {message.modelLabel}
           </span>
         ) : null}

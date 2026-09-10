@@ -16,13 +16,22 @@ export const CollapsiblePanel = ({
   headerContent,
 }: CollapsiblePanelProps) => {
   return (
-    <section className="collapsible-panel" data-panel-id={id} data-collapsed={collapsed || undefined}>
+    <section
+      className="collapsible-panel"
+      data-panel-id={id}
+      data-collapsed={collapsed || undefined}
+    >
       <header
         className="collapsible-panel__header"
         onClick={onToggle}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onToggle()
+          }
+        }}
         aria-expanded={!collapsed}
         aria-controls={`panel-content-${id}`}
       >

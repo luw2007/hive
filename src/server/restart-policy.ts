@@ -64,17 +64,19 @@ export const createRestartPolicy = ({
       workspace,
     }
 
-    void getActiveDecisions(snapshot.summary.path).catch(() => []).then((decisions) => {
-      const text = buildRecoverySummary({ ...baseInput, decisions })
-      writeSystemMessage({
-        deleteMessage,
-        insertMessage,
-        record: createSystemRecoverySummaryMessage(workspace.id, agentId, text),
-        runId,
-        text,
-        writeToRun,
+    void getActiveDecisions(snapshot.summary.path)
+      .catch(() => [])
+      .then((decisions) => {
+        const text = buildRecoverySummary({ ...baseInput, decisions })
+        writeSystemMessage({
+          deleteMessage,
+          insertMessage,
+          record: createSystemRecoverySummaryMessage(workspace.id, agentId, text),
+          runId,
+          text,
+          writeToRun,
+        })
       })
-    })
     return true
   },
 })

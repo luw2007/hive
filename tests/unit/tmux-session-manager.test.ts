@@ -51,9 +51,7 @@ describe('buildSessionName', () => {
 
 describe('listHiveSessions', () => {
   test('filters sessions with hive- prefix', () => {
-    vi.mocked(execFileSync).mockReturnValue(
-      'hive-ws01-Alice\nother-session\nhive-ws02-Bob\n'
-    )
+    vi.mocked(execFileSync).mockReturnValue('hive-ws01-Alice\nother-session\nhive-ws02-Bob\n')
     expect(listHiveSessions()).toEqual(['hive-ws01-Alice', 'hive-ws02-Bob'])
   })
 

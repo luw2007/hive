@@ -312,10 +312,7 @@ export const restartAgentRun = async (
   return startAgentRun(workspaceId, agentId)
 }
 
-export const resetAgentContext = async (
-  workspaceId: string,
-  agentId: string
-): Promise<void> => {
+export const resetAgentContext = async (workspaceId: string, agentId: string): Promise<void> => {
   const response = await apiFetch(
     `/api/workspaces/${workspaceId}/agents/${agentId}/reset-context`,
     { method: 'POST' }

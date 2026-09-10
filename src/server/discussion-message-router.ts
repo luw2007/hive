@@ -122,9 +122,7 @@ export const formatInitialBundle = (
     lines.push('')
   }
   lines.push('---')
-  lines.push(
-    `讨论阶段开始（第 ${round} 轮/共 ${maxRounds} 轮）。`
-  )
+  lines.push(`讨论阶段开始（第 ${round} 轮/共 ${maxRounds} 轮）。`)
   lines.push('')
   lines.push('请按以下结构回应（每条都要回答）：')
   lines.push('1. 【最强论点】其他人最强的论点是什么？为什么强？')

@@ -118,16 +118,15 @@ export const WorkspaceDetail = ({
   const shellRuns = workspace
     ? terminalRuns.filter((run) => isWorkspaceShellRun(run, workspace.id))
     : []
-  const { closeShellTab, shellError, shellStarting, startNewShell } =
-    useWorkspaceShellLauncher({
-      onCloseFailed: (message) =>
-        toast.show({ kind: 'error', message: t('shellTerminal.closeFailed', { message }) }),
-      onShellRunClosed,
-      onShellRunStarted,
-      panelTabs,
-      shellRuns,
-      workspaceId: workspace?.id ?? null,
-    })
+  const { closeShellTab, shellError, shellStarting, startNewShell } = useWorkspaceShellLauncher({
+    onCloseFailed: (message) =>
+      toast.show({ kind: 'error', message: t('shellTerminal.closeFailed', { message }) }),
+    onShellRunClosed,
+    onShellRunStarted,
+    panelTabs,
+    shellRuns,
+    workspaceId: workspace?.id ?? null,
+  })
 
   // Surface composer / delete errors as toasts instead of inline alert bands.
   useEffect(() => {
@@ -300,17 +299,27 @@ export const WorkspaceDetail = ({
               <div className="module-header">
                 <div className="module-header__row1">
                   <span className="module-header__chevron" aria-hidden>
-                    {layout.collapsed.tasks ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                    {layout.collapsed.tasks ? (
+                      <ChevronRight size={16} />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
                   </span>
                   <span className="module-header__title">{t('workspace.panel.tasks')}</span>
                   {taskTotal > 0 ? (
-                    <span className="module-header__badge">{taskDone}/{taskTotal} · {taskPct}%</span>
+                    <span className="module-header__badge">
+                      {taskDone}/{taskTotal} · {taskPct}%
+                    </span>
                   ) : null}
                   <div className="module-header__spacer" />
                   <button
                     type="button"
                     className="icon-btn icon-btn--sm"
-                    onClick={(e) => { e.stopPropagation(); toggleCollapsed('tasks', false); setAddTaskCounter((c) => c + 1) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleCollapsed('tasks', false)
+                      setAddTaskCounter((c) => c + 1)
+                    }}
                     data-testid="panel-add-task"
                   >
                     <Plus size={14} aria-hidden />
@@ -318,16 +327,24 @@ export const WorkspaceDetail = ({
                   <button
                     type="button"
                     className="icon-btn icon-btn--sm"
-                    onClick={(e) => { e.stopPropagation(); setTaskRawMode((v) => !v) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTaskRawMode((v) => !v)
+                    }}
                     data-testid="panel-task-raw-toggle"
-                    aria-label={taskRawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')}
+                    aria-label={
+                      taskRawMode ? t('tasks.action.backToList') : t('tasks.action.viewSource')
+                    }
                   >
                     <FileCode size={14} aria-hidden />
                   </button>
                 </div>
                 {taskTotal > 0 ? (
                   <div className="module-header__row2">
-                    <span className="panel-progress-bar" style={{ '--progress': `${taskPct}%` } as React.CSSProperties} />
+                    <span
+                      className="panel-progress-bar"
+                      style={{ '--progress': `${taskPct}%` } as React.CSSProperties}
+                    />
                   </div>
                 ) : null}
               </div>
@@ -343,16 +360,22 @@ export const WorkspaceDetail = ({
                 onReload={tasksFile.onReload}
                 onSave={tasksFile.onSave}
                 onToggleTaskLine={(line) => {
-                  void tasksFile.toggleTaskAtLine(line).catch(logSwallowed('tasks.toggleTaskAtLine'))
+                  void tasksFile
+                    .toggleTaskAtLine(line)
+                    .catch(logSwallowed('tasks.toggleTaskAtLine'))
                 }}
                 onAppendTask={(text) => {
                   void tasksFile.appendTask(text).catch(logSwallowed('tasks.appendTask'))
                 }}
                 onAppendSubtask={(parentLine, text) => {
-                  void tasksFile.appendSubtask(parentLine, text).catch(logSwallowed('tasks.appendSubtask'))
+                  void tasksFile
+                    .appendSubtask(parentLine, text)
+                    .catch(logSwallowed('tasks.appendSubtask'))
                 }}
                 onUpdateTaskText={(line, nextText) => {
-                  void tasksFile.updateTaskText(line, nextText).catch(logSwallowed('tasks.updateTaskText'))
+                  void tasksFile
+                    .updateTaskText(line, nextText)
+                    .catch(logSwallowed('tasks.updateTaskText'))
                 }}
                 onDeleteTask={(line) => {
                   void tasksFile.deleteTask(line).catch(logSwallowed('tasks.deleteTask'))
@@ -377,7 +400,11 @@ export const WorkspaceDetail = ({
               <div className="module-header">
                 <div className="module-header__row1">
                   <span className="module-header__chevron" aria-hidden>
-                    {layout.collapsed.workers ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                    {layout.collapsed.workers ? (
+                      <ChevronRight size={16} />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
                   </span>
                   <span className="module-header__title">{t('worker.teamMembers')}</span>
                   <span className="module-header__badge">{workers.length}</span>
@@ -385,7 +412,11 @@ export const WorkspaceDetail = ({
                   <button
                     type="button"
                     className="icon-btn icon-btn--sm"
-                    onClick={(e) => { e.stopPropagation(); toggleCollapsed('workers', false); setComposerOpen(true) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleCollapsed('workers', false)
+                      setComposerOpen(true)
+                    }}
                     data-testid="panel-add-worker"
                   >
                     <UserPlus size={14} aria-hidden /> {t('addWorker.create')}
@@ -433,7 +464,11 @@ export const WorkspaceDetail = ({
               <div className="module-header">
                 <div className="module-header__row1">
                   <span className="module-header__chevron" aria-hidden>
-                    {layout.collapsed.terminal ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                    {layout.collapsed.terminal ? (
+                      <ChevronRight size={16} />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
                   </span>
                   <span className="module-header__title">{t('workspace.panel.terminal')}</span>
                   {shellPanelTabs.length > 0 ? (
@@ -443,7 +478,11 @@ export const WorkspaceDetail = ({
                   <button
                     type="button"
                     className="icon-btn icon-btn--sm"
-                    onClick={(e) => { e.stopPropagation(); toggleCollapsed('terminal', false); startNewShellFromPanel() }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleCollapsed('terminal', false)
+                      startNewShellFromPanel()
+                    }}
                     data-testid="panel-new-shell"
                   >
                     <Terminal size={14} aria-hidden /> {t('workspace.panel.terminal')}

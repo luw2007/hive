@@ -37,18 +37,21 @@ export const DiscussionTimeline = ({ events }: DiscussionTimelineProps) => {
         const config = EVENT_CONFIG[event.type]
         const Icon = config.icon
         const isExpanded = expandedIdx === idx
-        const summary = event.type === 'created'
-          ? t('discussion.timeline.created')
-          : event.text.length > 80
-            ? `${event.text.slice(0, 80)}…`
-            : event.text
+        const summary =
+          event.type === 'created'
+            ? t('discussion.timeline.created')
+            : event.text.length > 80
+              ? `${event.text.slice(0, 80)}…`
+              : event.text
 
         return (
           <div key={idx} className="relative flex gap-3 pb-3">
             {idx < events.length - 1 ? (
               <div className="absolute left-[11px] top-[24px] bottom-0 w-px bg-border" />
             ) : null}
-            <div className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${config.color}`}>
+            <div
+              className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${config.color}`}
+            >
               <Icon size={12} />
             </div>
             <button
@@ -62,7 +65,9 @@ export const DiscussionTimeline = ({ events }: DiscussionTimelineProps) => {
                   <span className="text-xs font-medium text-pri">{event.agent_name}</span>
                 ) : null}
                 <span className="text-[10px] text-ter">
-                  {t(`discussion.timeline.type.${event.type}` as 'discussion.timeline.type.created')}
+                  {t(
+                    `discussion.timeline.type.${event.type}` as 'discussion.timeline.type.created'
+                  )}
                 </span>
                 {event.round > 0 ? (
                   <span className="text-[10px] text-ter">R{event.round}</span>
@@ -70,7 +75,9 @@ export const DiscussionTimeline = ({ events }: DiscussionTimelineProps) => {
               </div>
               {isExpanded ? (
                 <pre className="mt-1 max-h-[200px] overflow-auto whitespace-pre-wrap rounded bg-surface-secondary p-2 text-xs leading-relaxed text-sec">
-                  {event.type === 'created' ? JSON.stringify(JSON.parse(event.text), null, 2) : event.text}
+                  {event.type === 'created'
+                    ? JSON.stringify(JSON.parse(event.text), null, 2)
+                    : event.text}
                 </pre>
               ) : (
                 <p className="truncate text-xs text-ter">{summary}</p>

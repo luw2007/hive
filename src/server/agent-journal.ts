@@ -52,7 +52,6 @@ const getManifestPath = (workspacePath: string, agentName: string) =>
 const getEntriesDir = (workspacePath: string, agentName: string) =>
   join(getJournalDir(workspacePath, agentName), ENTRIES_DIR)
 
-
 const buildFrontmatter = (entry: JournalEntryInput, ts: string): string => {
   const lines: string[] = ['---']
   lines.push(`ts: "${ts}"`)

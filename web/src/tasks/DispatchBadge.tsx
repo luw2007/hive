@@ -12,11 +12,7 @@ export const DispatchBadge = ({ summary }: DispatchBadgeProps) => {
   const label = allDone ? `all reported ✓` : `${done}/${total} done`
 
   return (
-    <span
-      className="dispatch-badge"
-      data-testid="dispatch-badge"
-      data-tone={tone}
-    >
+    <span className="dispatch-badge" data-testid="dispatch-badge" data-tone={tone}>
       {label}
     </span>
   )

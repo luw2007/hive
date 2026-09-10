@@ -1,5 +1,10 @@
 import { appendEntry } from './agent-journal.js'
-import { appendDecision, getActiveDecisions, supersede, type DecisionCategory } from './decision-ledger.js'
+import {
+  appendDecision,
+  getActiveDecisions,
+  supersede,
+  type DecisionCategory,
+} from './decision-ledger.js'
 import { BadRequestError } from './http-errors.js'
 import { readJsonBody, route, sendJson } from './route-helpers.js'
 import { checkAndRotateWorker } from './rotation-manager.js'
@@ -125,8 +130,9 @@ export const teamRoutes: RouteDefinition[] = [
       const db = store.getDb()
       const activeRun = store.getActiveRunByAgentId(projectId, fromAgentId)
       if (activeRun) {
-        db.prepare('UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?')
-          .run(body.checkpoint, Date.now(), activeRun.runId)
+        db.prepare(
+          'UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?'
+        ).run(body.checkpoint, Date.now(), activeRun.runId)
       }
     }
     const priorityTag = inferPriorityTag(
@@ -258,8 +264,20 @@ export const teamRoutes: RouteDefinition[] = [
     const source = (body.source === 'user' ? 'user' : 'orch') as 'user' | 'orch'
     const confirmedBy = (body.confirmed_by === 'user' ? 'user' : null) as 'user' | null
     const decision = body.supersede_id
-      ? await supersede(workspacePath, body.supersede_id, { category, content, reason, source, confirmed_by: confirmedBy })
-      : await appendDecision(workspacePath, { category, content, reason, source, confirmed_by: confirmedBy })
+      ? await supersede(workspacePath, body.supersede_id, {
+          category,
+          content,
+          reason,
+          source,
+          confirmed_by: confirmedBy,
+        })
+      : await appendDecision(workspacePath, {
+          category,
+          content,
+          reason,
+          source,
+          confirmed_by: confirmedBy,
+        })
     sendJson(response, 201, { ok: true, decision })
   }),
   route('GET', '/api/team/decisions', async ({ request, response, store }) => {
@@ -298,8 +316,11 @@ export const teamRoutes: RouteDefinition[] = [
     const db = store.getDb()
     const activeRun = store.getActiveRunByAgentId(projectId, fromAgentId)
     if (activeRun) {
-      db.prepare('UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?')
-        .run(text, Date.now(), activeRun.runId)
+      db.prepare('UPDATE agent_runs SET checkpoint_json = ?, updated_at = ? WHERE run_id = ?').run(
+        text,
+        Date.now(),
+        activeRun.runId
+      )
     }
     const workspacePath = store.getWorkspaceSnapshot(projectId).summary.path
     appendEntry(workspacePath, agent.name, {

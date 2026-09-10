@@ -38,7 +38,14 @@ describe('secretary 重启后重新订阅输出流', () => {
       }),
       getActiveRunByAgentId: (_wId: string, _aId: string) =>
         opts.hasActiveRun
-          ? { runId: RUN_ID, agentId: SECRETARY_ID, pid: 1234, status: 'running' as const, output: '', startedAt: Date.now() }
+          ? {
+              runId: RUN_ID,
+              agentId: SECRETARY_ID,
+              pid: 1234,
+              status: 'running' as const,
+              output: '',
+              startedAt: Date.now(),
+            }
           : undefined,
       peekAgentLaunchConfig: (wId: string, aId: string) => {
         if (aId === ORCH_ID) return { command: 'claude', args: ['--model', 'opus'] }
@@ -63,7 +70,9 @@ describe('secretary 重启后重新订阅输出流', () => {
       getPtyOutputBus: () => ({
         subscribe: (runId: string, listener: (chunk: string) => void) => {
           subscribedListeners.set(runId, listener)
-          return () => { unsubscribeCalled = true }
+          return () => {
+            unsubscribeCalled = true
+          }
         },
         publish: (_runId: string, _chunk: string) => {},
         clear: (_runId: string) => {},
@@ -100,7 +109,8 @@ describe('secretary 重启后重新订阅输出流', () => {
 
   // 找到 POST messages 路由
   const postMessagesRoute = secretaryRoutes.find(
-    (r) => r.method === 'POST' && r.path.includes('/secretary/messages') && !r.path.includes('execute')
+    (r) =>
+      r.method === 'POST' && r.path.includes('/secretary/messages') && !r.path.includes('execute')
   )!
 
   // 找到 GET messages 路由
@@ -142,8 +152,20 @@ describe('secretary 重启后重新订阅输出流', () => {
 
     const localListeners = new Map<string, (chunk: string) => void>()
     const store = {
-      getAgent: () => ({ id: secId, name: 'Secretary', role: 'secretary' as const, status: 'working' as const }),
-      getActiveRunByAgentId: () => ({ runId, agentId: secId, pid: 99, status: 'running' as const, output: '', startedAt: Date.now() }),
+      getAgent: () => ({
+        id: secId,
+        name: 'Secretary',
+        role: 'secretary' as const,
+        status: 'working' as const,
+      }),
+      getActiveRunByAgentId: () => ({
+        runId,
+        agentId: secId,
+        pid: 99,
+        status: 'running' as const,
+        output: '',
+        startedAt: Date.now(),
+      }),
       peekAgentLaunchConfig: () => undefined,
       configureAgentLaunch: vi.fn(),
       startAgent: vi.fn(),
@@ -234,11 +256,7 @@ describe('secretary 重启后重新订阅输出流', () => {
       expect.objectContaining({ command: 'claude', args: ['--model', 'opus'] })
     )
     // 验证：调用 startAgent
-    expect(store.startAgent).toHaveBeenCalledWith(
-      WORKSPACE_ID,
-      SECRETARY_ID,
-      { hivePort: '4321' }
-    )
+    expect(store.startAgent).toHaveBeenCalledWith(WORKSPACE_ID, SECRETARY_ID, { hivePort: '4321' })
     // 验证：启动后也订阅了输出
     expect(subscribedListeners.has(RUN_ID)).toBe(true)
   })

@@ -15,7 +15,9 @@ import {
   type RotationProtection,
 } from '../../src/server/session-rotation.js'
 
-const makeContext = (overrides: Partial<OrchestratorRotationContext> = {}): OrchestratorRotationContext => ({
+const makeContext = (
+  overrides: Partial<OrchestratorRotationContext> = {}
+): OrchestratorRotationContext => ({
   allWorkersIdle: false,
   compactDetectedAndIdle: false,
   messageCount: 0,
@@ -88,7 +90,9 @@ describe('shouldRotateOrchestrator — idle condition', () => {
 
   test('messageCount >= 40 → rotate', () => {
     expect(shouldRotateOrchestrator(makeContext({ messageCount: 40 }), makeProtection())).toBe(true)
-    expect(shouldRotateOrchestrator(makeContext({ messageCount: 39 }), makeProtection())).toBe(false)
+    expect(shouldRotateOrchestrator(makeContext({ messageCount: 39 }), makeProtection())).toBe(
+      false
+    )
   })
 
   test('session > 2h → rotate', () => {
@@ -130,7 +134,9 @@ describe('buildOrchestratorRotationRecovery — content', () => {
     await rm(workspacePath, { recursive: true, force: true })
   })
 
-  const makeRecoveryInput = (overrides: Partial<OrchestratorRecoveryInput> = {}): OrchestratorRecoveryInput => ({
+  const makeRecoveryInput = (
+    overrides: Partial<OrchestratorRecoveryInput> = {}
+  ): OrchestratorRecoveryInput => ({
     checkpoint: null,
     recentUserInputs: [],
     workers: [],
@@ -141,7 +147,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
 
   test('includes agent identity section', async () => {
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput()
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput()
     )
     expect(recovery).toContain('my-project')
     expect(recovery).toContain('Orchestrator')
@@ -158,7 +167,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
     }
 
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput()
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput()
     )
     // Entries 5–12 should appear
     expect(recovery).toContain('UserSaid-05')
@@ -171,7 +183,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
   test('includes worker list section', async () => {
     const workers = [makeWorker('alice'), makeWorker('bob')]
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput({ workers })
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput({ workers })
     )
     expect(recovery).toContain('alice')
     expect(recovery).toContain('bob')
@@ -182,7 +197,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
       { toWorkerName: 'alice', text: 'Implement auth module', status: 'submitted' },
     ]
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput({ activeDispatches })
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput({ activeDispatches })
     )
     expect(recovery).toContain('alice')
     expect(recovery).toContain('Implement auth module')
@@ -191,7 +209,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
   test('includes tasks.md content (truncated)', async () => {
     const tasksContent = '- [x] Task 1\n- [ ] Task 2\n'
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput({ tasksContent })
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput({ tasksContent })
     )
     expect(recovery).toContain('Task 1')
     expect(recovery).toContain('Task 2')
@@ -199,7 +220,9 @@ describe('buildOrchestratorRotationRecovery — content', () => {
 
   test('includes checkpoint when provided', async () => {
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace,
+      workspacePath,
+      agent,
+      workspace,
       makeRecoveryInput({ checkpoint: 'Progress: auth 80% done' })
     )
     expect(recovery).toContain('Progress: auth 80% done')
@@ -213,7 +236,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
     })
 
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput()
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput()
     )
     expect(recovery).toContain('Active Decisions')
     expect(recovery).toContain('PostgreSQL')
@@ -222,14 +248,20 @@ describe('buildOrchestratorRotationRecovery — content', () => {
 
   test('includes worker rules section', async () => {
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput()
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput()
     )
     expect(recovery).toContain('你的规则')
   })
 
   test('wrapped in hive-system-message tag', async () => {
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput()
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput()
     )
     expect(recovery).toMatch(/^<hive-system-message type="rotation-recovery">/)
     expect(recovery).toMatch(/<\/hive-system-message>$/)
@@ -238,7 +270,10 @@ describe('buildOrchestratorRotationRecovery — content', () => {
   test('budget control: very large tasks.md truncated so total output stays under 12000 chars', async () => {
     const tasksContent = 'x'.repeat(50_000)
     const recovery = await buildOrchestratorRotationRecovery(
-      workspacePath, agent, workspace, makeRecoveryInput({ tasksContent })
+      workspacePath,
+      agent,
+      workspace,
+      makeRecoveryInput({ tasksContent })
     )
     expect(recovery.length).toBeLessThan(12_000)
   })

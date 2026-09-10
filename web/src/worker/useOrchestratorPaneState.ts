@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { TerminalRunSummary } from '../api.js'
-import { type OrchestratorStartResult, resetAgentContext, startAgentRun, stopAgentRun } from '../api.js'
+import {
+  type OrchestratorStartResult,
+  resetAgentContext,
+  startAgentRun,
+  stopAgentRun,
+} from '../api.js'
 import { findOrchestratorRun, orchestratorAgentId } from '../terminal/useTerminalRuns.js'
 import type { OrchestratorPaneState } from './OrchestratorPane.js'
 

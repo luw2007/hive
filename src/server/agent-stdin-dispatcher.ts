@@ -76,10 +76,9 @@ export const buildWorkerCancelPayload = (dispatchId: string, reason: string): st
   ].join('\n')
 
 export const isOperationalAlert = (text: string): boolean =>
-    /^\[(STOPPED|CRASHED|FAILED|ERROR|EXPIRED|UNREACHABLE)\]/im.test(text)
+  /^\[(STOPPED|CRASHED|FAILED|ERROR|EXPIRED|UNREACHABLE)\]/im.test(text)
 
-export const isFailedReport = (text: string): boolean =>
-    /^\[(FAILED|BLOCKED|ERROR)\]/im.test(text)
+export const isFailedReport = (text: string): boolean => /^\[(FAILED|BLOCKED|ERROR)\]/im.test(text)
 
 export const createAgentStdinDispatcher = ({
   agentManager,
@@ -193,11 +192,10 @@ export const createAgentStdinDispatcher = ({
       input: { requireActiveRun?: boolean } = {}
     ) {
       const priority: MessagePriority = isFailedReport(text) ? 'high' : 'normal'
-      enqueueOrInject(
-        workspaceId,
-        buildOrchestratorReportPayload(workerName, text, artifacts),
-        { ...input, priority }
-      )
+      enqueueOrInject(workspaceId, buildOrchestratorReportPayload(workerName, text, artifacts), {
+        ...input,
+        priority,
+      })
     },
     writeStatusPrompt(
       workspaceId: string,
@@ -208,11 +206,10 @@ export const createAgentStdinDispatcher = ({
       input: { requireActiveRun?: boolean } = {}
     ) {
       if (!isOperationalAlert(text)) return
-      enqueueOrInject(
-        workspaceId,
-        buildOrchestratorStatusPayload(workerName, text, artifacts),
-        { ...input, priority: 'high' }
-      )
+      enqueueOrInject(workspaceId, buildOrchestratorStatusPayload(workerName, text, artifacts), {
+        ...input,
+        priority: 'high',
+      })
     },
     writeSendPrompt(
       workspaceId: string,

@@ -38,9 +38,7 @@ export const resetAgentContext = async (
   const agent = snapshot.agents.find((a) => a.id === agentId)
   if (!agent) throw new Error('Agent not found in workspace snapshot')
 
-  const workers = snapshot.agents.filter(
-    (a) => a.role !== 'orchestrator' && a.id !== agentId
-  )
+  const workers = snapshot.agents.filter((a) => a.role !== 'orchestrator' && a.id !== agentId)
   const messages = store.listMessagesForRecovery(workspaceId, Date.now() - RECOVERY_WINDOW_MS)
   const allTaskMessages = store.listMessagesForRecovery(workspaceId, 0)
 
@@ -86,11 +84,7 @@ export const resetAgentContext = async (
   store.writeAgentStdin(workspaceId, agentId, recoveryText)
 }
 
-const waitForPromptReady = (
-  store: RuntimeStore,
-  runId: string,
-  command: string
-): Promise<void> =>
+const waitForPromptReady = (store: RuntimeStore, runId: string, command: string): Promise<void> =>
   new Promise((resolve, reject) => {
     const startedAt = Date.now()
     const checkPrompt = () => {

@@ -250,12 +250,14 @@ const enMessages = {
   'worker.startAria': 'Start {name}',
   'worker.stopAria': 'Stop {name}',
   'worker.stopConfirm': 'Stop {name}?',
-  'worker.stopDescription': 'This will terminate the running process. Any in-progress work may be lost.',
+  'worker.stopDescription':
+    'This will terminate the running process. Any in-progress work may be lost.',
   'worker.stopSubmit': 'Stop',
   'worker.teamMembers': 'Team members',
   'worker.clearAllStopped': 'Clear all',
   'worker.clearAllStoppedConfirmTitle': 'Clear all stopped members?',
-  'worker.clearAllStoppedConfirmDesc': 'This will permanently remove {count} stopped member(s) from the workspace.',
+  'worker.clearAllStoppedConfirmDesc':
+    'This will permanently remove {count} stopped member(s) from the workspace.',
   'worker.terminalNotStarted': 'PTY not started yet — ',
   'worker.terminalStopped': 'PTY stopped — ',
   'worker.widthResize': 'Resize worker detail width',

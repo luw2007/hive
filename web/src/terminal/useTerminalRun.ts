@@ -264,7 +264,10 @@ export const useTerminalRun = (
         const fg = rs.getPropertyValue('--text-primary').trim() || '#ebebeb'
         terminal.options.theme = { background: bg, foreground: fg }
       })
-      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      })
     })
 
     return () => {

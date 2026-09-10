@@ -144,7 +144,15 @@ describe('task-service', () => {
       db.prepare(
         `INSERT INTO dispatches (id, workspace_id, from_agent_id, to_agent_id, text, status, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).run('dispatch-001', workspaceId, 'orch-agent', 'worker-1', 'Do something', 'queued', Date.now())
+      ).run(
+        'dispatch-001',
+        workspaceId,
+        'orch-agent',
+        'worker-1',
+        'Do something',
+        'queued',
+        Date.now()
+      )
 
       const result = service.linkDispatchToTask('dispatch-001', task.id, 'orch-agent')
       expect(result).toBe(true)
@@ -166,7 +174,15 @@ describe('task-service', () => {
       db.prepare(
         `INSERT INTO dispatches (id, workspace_id, from_agent_id, to_agent_id, text, status, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).run('dispatch-002', workspaceId, 'orch-agent', 'worker-2', 'More work', 'queued', Date.now())
+      ).run(
+        'dispatch-002',
+        workspaceId,
+        'orch-agent',
+        'worker-2',
+        'More work',
+        'queued',
+        Date.now()
+      )
 
       service.linkDispatchToTask('dispatch-002', task.id)
 

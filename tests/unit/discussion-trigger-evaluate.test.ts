@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { type DiscussionTriggerRule, evaluateTrigger } from '../../src/server/discussion-templates.js'
+import {
+  type DiscussionTriggerRule,
+  evaluateTrigger,
+} from '../../src/server/discussion-templates.js'
 
 describe('evaluateTrigger', () => {
   const reviewRule: DiscussionTriggerRule = {

@@ -88,9 +88,34 @@ describe('cloneWorkspaceWorkers', () => {
     const store = {
       getWorkspaceSnapshot: vi.fn().mockReturnValue({
         agents: [
-          { id: 'orch-1', name: 'Orchestrator', role: 'orchestrator', description: 'Main orch', pendingTaskCount: 0, status: 'idle', workspaceId: 'ws-source' },
-          { id: 'worker-1', name: '米芾', role: 'coder', description: 'Coder worker', pendingTaskCount: 2, status: 'working', workspaceId: 'ws-source', roleTemplateName: 'fast-coder' },
-          { id: 'worker-2', name: '莫邪', role: 'reviewer', description: 'Reviewer', pendingTaskCount: 0, status: 'idle', workspaceId: 'ws-source' },
+          {
+            id: 'orch-1',
+            name: 'Orchestrator',
+            role: 'orchestrator',
+            description: 'Main orch',
+            pendingTaskCount: 0,
+            status: 'idle',
+            workspaceId: 'ws-source',
+          },
+          {
+            id: 'worker-1',
+            name: '米芾',
+            role: 'coder',
+            description: 'Coder worker',
+            pendingTaskCount: 2,
+            status: 'working',
+            workspaceId: 'ws-source',
+            roleTemplateName: 'fast-coder',
+          },
+          {
+            id: 'worker-2',
+            name: '莫邪',
+            role: 'reviewer',
+            description: 'Reviewer',
+            pendingTaskCount: 0,
+            status: 'idle',
+            workspaceId: 'ws-source',
+          },
         ],
         summary: { id: 'ws-source', name: 'Test', path: '/tmp/test' },
       }),

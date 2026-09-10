@@ -174,9 +174,10 @@ export const settingsRoutes: RouteDefinition[] = [
   route('GET', '/api/settings/role-templates', ({ request, response, store }) => {
     requireUiTokenFromRequest(request, store.validateUiToken)
     const dbTemplates = store.settings.listRoleTemplates().map(serializeRoleTemplate)
-    const externalDir = store.settings.getAppState('external_agents_dir')?.value
-      ?? process.env.HIVE_EXTERNAL_AGENTS_DIR
-      ?? `${process.env.HOME}/ai/oh-my-claudecode/agents`
+    const externalDir =
+      store.settings.getAppState('external_agents_dir')?.value ??
+      process.env.HIVE_EXTERNAL_AGENTS_DIR ??
+      `${process.env.HOME}/ai/oh-my-claudecode/agents`
     const externalTemplates = loadExternalAgents(externalDir).map(serializeRoleTemplate)
     sendJson(response, 200, [...dbTemplates, ...externalTemplates])
   }),

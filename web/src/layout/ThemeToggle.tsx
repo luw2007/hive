@@ -9,8 +9,7 @@ const STORAGE_KEY = 'hive-theme'
 
 const listeners = new Set<() => void>()
 
-const getTheme = (): Theme =>
-  (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'dark'
+const getTheme = (): Theme => (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'dark'
 
 const setTheme = (theme: Theme) => {
   localStorage.setItem(STORAGE_KEY, theme)
@@ -20,7 +19,9 @@ const setTheme = (theme: Theme) => {
 
 const subscribe = (callback: () => void) => {
   listeners.add(callback)
-  return () => { listeners.delete(callback) }
+  return () => {
+    listeners.delete(callback)
+  }
 }
 
 export const ThemeToggle = () => {
