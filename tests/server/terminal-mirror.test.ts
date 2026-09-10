@@ -361,6 +361,7 @@ describe('terminal mirror', () => {
 
       viewer.io.close()
       viewer.control.close()
+      server.store.stopAgentRun(run.runId)
     } finally {
       await server.close()
     }
