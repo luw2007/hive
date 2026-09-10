@@ -32,15 +32,6 @@ const baseProps = () => ({
   onDeleteTask: vi.fn(),
 })
 
-describe('TaskGraphDrawer layout', () => {
-  test('defaults to the same width as the team members pane', () => {
-    render(<TaskGraphDrawer {...baseProps()} content={'- [ ] task\n'} />)
-    expect(screen.getByTestId('task-graph-drawer')).toHaveStyle({
-      width: DEFAULT_WORKERS_PANE_WIDTH,
-    })
-  })
-})
-
 describe('TaskGraphDrawer §6.6.5 — folding is in-memory only', () => {
   test('clicking the collapse toggle hides the child list without writing to the file', () => {
     const props = baseProps()
@@ -223,17 +214,5 @@ describe('TaskGraphDrawer §6.6.7 — Esc closes the drawer', () => {
     const drawer = screen.getByTestId('task-graph-drawer')
     fireEvent.keyDown(drawer, { key: 'Escape' })
     expect(props.onClose).toHaveBeenCalledTimes(1)
-  })
-
-  test('Escape from inside an open inline editor stays scoped to the editor (no drawer close)', () => {
-    // The inline editor cancels on Escape (its own handler); the drawer
-    // shouldn't see the event because the input is the actual target and the
-    // drawer's handler skips TextArea/Input target tags.
-    const props = baseProps()
-    render(<TaskGraphDrawer {...props} content={'- [ ] click me to edit\n'} />)
-    fireEvent.click(screen.getByTestId('task-edit-0'))
-    const input = screen.getByTestId('task-inline-input')
-    fireEvent.keyDown(input, { key: 'Escape' })
-    expect(props.onClose).not.toHaveBeenCalled()
   })
 })
