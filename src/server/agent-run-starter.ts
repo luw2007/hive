@@ -86,6 +86,7 @@ export const createAgentRunStarter =
         ...startEnv,
         COLORTERM: 'truecolor',
         FORCE_COLOR: '1',
+        NO_COLOR: undefined,
         TERM: 'xterm-256color',
         TERM_PROGRAM: 'hive',
         HIVE_PORT: hivePort,
