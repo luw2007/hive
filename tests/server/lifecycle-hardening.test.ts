@@ -5,6 +5,11 @@ import { join } from 'node:path'
 import Database from 'better-sqlite3'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+vi.mock('../../src/server/tmux-session-manager.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/server/tmux-session-manager.js')>()
+  return { ...actual, hasTmux: () => false }
+})
+
 import { type AgentManager, createAgentManager } from '../../src/server/agent-manager.js'
 import { createAgentRunStore } from '../../src/server/agent-run-store.js'
 import { createAgentRuntime } from '../../src/server/agent-runtime.js'

@@ -2,7 +2,12 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+
+vi.mock('../../src/server/tmux-session-manager.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/server/tmux-session-manager.js')>()
+  return { ...actual, hasTmux: () => false }
+})
 
 import { startTestServer } from '../helpers/test-server.js'
 import { getUiCookie } from '../helpers/ui-session.js'
