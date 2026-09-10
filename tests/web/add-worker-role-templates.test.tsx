@@ -47,8 +47,10 @@ const Harness = () => {
       <AddWorkerDialog
         commandPresets={composer.commandPresets}
         commandPresetId={composer.commandPresetId}
+        customRoleName={composer.customRoleName}
         creating={composer.creating}
         customTemplates={composer.customTemplates}
+        onCustomRoleNameChange={composer.setCustomRoleName}
         onApplyMarketplaceImport={composer.applyMarketplaceImport}
         onClose={() => {}}
         onDeleteTemplate={composer.deleteTemplate}
