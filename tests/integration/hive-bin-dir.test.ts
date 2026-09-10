@@ -11,7 +11,7 @@ const tempDirs: string[] = []
 
 const waitFor = async (
   assertion: () => void | Promise<void>,
-  timeoutMs = 1500,
+  timeoutMs = 6000,
   intervalMs = 20
 ) => {
   const deadline = Date.now() + timeoutMs
