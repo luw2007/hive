@@ -120,13 +120,14 @@ describe('hive cli end to end', () => {
       const baseUrl = `http://127.0.0.1:${hive.port}`
       const uiCookie = await getUiCookie(baseUrl)
 
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const runsResponse = await fetch(`${baseUrl}/api/ui/workspaces/${workspace.id}/runs`, {
-        headers: { cookie: uiCookie },
+      await waitFor(async () => {
+        const runsResponse = await fetch(`${baseUrl}/api/ui/workspaces/${workspace.id}/runs`, {
+          headers: { cookie: uiCookie },
+        })
+        expect(runsResponse.status).toBe(200)
+        const runs = (await runsResponse.json()) as unknown[]
+        expect(runs).toEqual([])
       })
-      expect(runsResponse.status).toBe(200)
-      const runs = (await runsResponse.json()) as unknown[]
-      expect(runs).toEqual([])
       expect(hive.store.listTerminalRuns(workspace.id)).toEqual([])
       expect(hive.store.listAgentRuns(orchestratorId)).toEqual([])
       expect(hive.store.listAgentRuns(worker.id)).toEqual([])
